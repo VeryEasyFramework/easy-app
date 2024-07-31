@@ -2,9 +2,20 @@
   "name": "@eveffer/easy-app",
   "version": "0.1.0",
   "exports": "./mod.ts",
+  "exclude": [
+    "references"
+  ],
   "publish": {
     "exclude": [
-      ".github"
+      ".github",
+      "references",
+      "dev"
     ]
+  },
+  "imports": {
+    "#/": "./src/"
+  },
+  "tasks": {
+    "dev": "deno run --allow-all --watch dev/main.ts"
   }
 }
