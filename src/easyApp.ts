@@ -30,17 +30,43 @@ export class EasyApp {
     this.staticFileHandler = new StaticFileHandler(this.config.staticFileRoot);
     this.actions = {};
   }
-
+  get actionDocs() {
+    const fullDocs: any[] = [];
+    for (const groupKey in this.actions) {
+      const groupDocs = this.getActionDocs(groupKey);
+      fullDocs.push(groupDocs);
+    }
+    return fullDocs as any;
+  }
   addAction<A extends Action>(group: string, action: InferredAction<A>) {
     if (!this.actions[group]) {
       this.actions[group] = {};
     }
     this.actions[group][action.name as string] = action;
   }
-  run() {
+  getActionDocs(groupName: string): any {
+    const group = this.actions[groupName];
+    const docs = {
+      name: groupName,
+      actions: {},
+    };
+    for (const key in group) {
+      const action = group[key] as any;
+      docs.actions = {
+        ...docs.actions,
+        [key]: {
+          description: action.description,
+          params: action.params,
+          response: action.response,
+        },
+      };
+    }
+    return docs;
+  }
+  run(): void {
     this.serve();
   }
-  private serve() {
+  private serve(): void {
     const options = this.config.serverOptions;
     this.server = Deno.serve(
       options,
@@ -81,15 +107,12 @@ export class EasyApp {
   }
   private async apiHandler(request: EasyRequest): Promise<Record<string, any>> {
     if (!request.group) {
-      raiseEasyException("No group specified", 400);
+      return this.actionDocs;
     }
     const requestGroup = request.group;
     const requestAction = request.action;
     if (!requestAction) {
-      raiseEasyException(
-        `No action specified for group: ${requestGroup}`,
-        400,
-      );
+      return this.getActionDocs(requestGroup);
     }
     if (!this.actions[requestGroup]) {
       raiseEasyException(`No group found for ${requestGroup}`, 404);

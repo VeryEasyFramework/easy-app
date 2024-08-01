@@ -28,7 +28,39 @@
 
   <h1>This is my app</h1>
   <p>It's a work in progress, but it's gonna be awesome!</p>
+  <button onclick="getLink()">Get Data</button>
+  <label for="link">Link</label>
+  <input type="text" id="link" placeholder="Enter Link to check">
+  <pre style="text-align: start;" id="data"></pre>
+  <img src="image.png" />
+  <script>
 
+    async function getLink() {
+      console.log('clicked')
+      const value = document.getElementById('link').value
+      if (value == '' || value == null) {
+        alert('Please enter a link')
+        return
+      }
+      const data = {
+        link: value
+      }
+      apiCall('utils', 'checkLink', data)
+
+    }
+    async function apiCall(group, action, data) {
+
+
+
+      const endpoint = `/api`
+      const response = await fetch(`${endpoint}?group=${group}&action=${action}`, {
+        body: JSON.stringify(data),
+        method: 'POST',
+      })
+      const responseData = await response.json()
+      document.getElementById('data').innerHTML = JSON.stringify(responseData, null, 2)
+    }
+  </script>
 </body>
 
 </html>
