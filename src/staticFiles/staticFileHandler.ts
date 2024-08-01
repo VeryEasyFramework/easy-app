@@ -20,6 +20,7 @@ export class StaticFileHandler {
       path += "/index.html";
     }
     console.log(`Serving file: ${path}`);
+    path = path.replaceAll("//", "/");
     try {
       const fileContent = await this.cache.loadFile(
         this.staticFilesRoot,
@@ -33,14 +34,11 @@ export class StaticFileHandler {
       });
     } catch (_e) {
       console.error(_e);
-      const fileContent = await this.cache.loadFile(
-        import.meta.dirname || ".",
-        "404.html",
-      );
-      return new Response(fileContent.content, {
+
+      return new Response("Not Found", {
         status: 404,
         headers: {
-          "Content-Type": fileContent.mimeType,
+          "Content-Type": "text/plain",
         },
       });
     }

@@ -33,6 +33,7 @@ const checkLink = createAction("checkLink", {
 });
 
 const app = new EasyApp({
+  serverOptions: { port: 8000 },
   appRootPath: "dev",
   staticFileRoot: "public",
 });
