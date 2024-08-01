@@ -12,30 +12,28 @@ interface FieldTypeMap {
 
 type EmptyObject<T extends PropertyKey = string> = Record<T, never>;
 export type Action<
-  N extends PropertyKey = PropertyKey,
   P extends {
     [K in keyof P]: {
       required: boolean;
       type: keyof FieldTypeMap;
     };
-  } = EmptyObject,
+  },
   D extends {
     [E in keyof P]: FieldTypeMap[P[E]["type"]];
   } = EmptyObject<keyof P>,
 > = {
-  name: N;
+  name: string;
   description: string;
   action: (app: EasyApp, data: D) => Promise<any> | any;
   params?: P;
   response?: string;
 };
 
-export type InferredAction<A> = A extends Action<infer N, infer P, infer D>
-  ? Action<N, P, D>
+export type InferredAction<A> = A extends Action<infer P, infer D>
+  ? Action<P, D>
   : never;
 
 export function createAction<
-  N extends PropertyKey,
   P extends {
     [K in keyof P]: {
       required: boolean;
@@ -45,7 +43,7 @@ export function createAction<
   D extends {
     [E in keyof P]: FieldTypeMap[P[E]["type"]];
   },
->(actionName: N, options: {
+>(actionName: string, options: {
   description: string;
   public?: boolean;
   action: (
@@ -54,7 +52,7 @@ export function createAction<
   ) => Promise<any> | any;
   params?: P;
   response?: string;
-}): Action<N, P, D> {
+}): Action<P, D> {
   const paramsObj = {} as D;
   const requiredParams = [] as Array<keyof P>;
   const paramKeys = [] as Array<keyof P>;

@@ -38,7 +38,10 @@ export class EasyApp {
     }
     return fullDocs as any;
   }
-  addAction<A extends Action>(group: string, action: InferredAction<A>) {
+  addAction<A extends Action<any, any>>(
+    group: string,
+    action: InferredAction<A>,
+  ) {
     if (!this.actions[group]) {
       this.actions[group] = {};
     }
