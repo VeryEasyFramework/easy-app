@@ -23,7 +23,7 @@ export class EasyResponse {
     this.cookies[key] = "";
   }
 
-  setResponseCookie() {
+  setResponseCookie(): void {
     const cookiePairs = Object.entries(this.cookies);
     const cookieStrings = cookiePairs.map(([key, value]) => {
       let cookie = `${key}=${value}`;
@@ -35,7 +35,7 @@ export class EasyResponse {
     this.headers["Set-Cookie"] = cookieStrings.join("; ");
   }
 
-  error(message: string, code: number, reason?: string) {
+  error(message: string, code: number, reason?: string): Response {
     this.content = { error: message, code: code, reason: reason };
     return new Response(
       JSON.stringify(this.content),
@@ -47,11 +47,11 @@ export class EasyResponse {
     );
   }
 
-  redirect(url: string) {
+  redirect(url: string): Response {
     return Response.redirect(url, 302);
   }
 
-  respond() {
+  respond(): Response {
     this.setResponseCookie();
     return new Response(
       JSON.stringify(this.content),

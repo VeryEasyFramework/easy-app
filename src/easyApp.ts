@@ -30,7 +30,7 @@ export class EasyApp {
     this.staticFileHandler = new StaticFileHandler(this.config.staticFileRoot);
     this.actions = {};
   }
-  get actionDocs() {
+  get actionDocs(): any {
     const fullDocs: any[] = [];
     for (const groupKey in this.actions) {
       const groupDocs = this.getActionDocs(groupKey);
