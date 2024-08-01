@@ -18,18 +18,34 @@ export class EasyRequest {
     this.extractCookies();
     this.getAuthToken();
     this.checkForSocketUpgrade();
+    this.checkForFileExtension();
   }
 
   request: Request;
   cookies: Map<string, string> = new Map();
   authToken: string | null = null;
   group: string | null = null;
-  command: string | null = null;
+  action: string | null = null;
   body: Record<string, any> = {};
   method: RequestMethod = "GET";
   params: Record<string, any> = {};
   path: string = "";
+  isFile = false;
+  fileExtension = "";
 
+  private checkForFileExtension() {
+    const pathParts = this.path.split("/");
+    const lastPart = pathParts[pathParts.length - 1];
+    const parts = lastPart.split(".");
+    if (parts.length < 2) {
+      return;
+    }
+    const ext = parts[parts.length - 1];
+    if (ext) {
+      this.isFile = true;
+      this.fileExtension = ext;
+    }
+  }
   private checkForSocketUpgrade() {
     let connection = "";
     let upgrade = "";
@@ -77,8 +93,8 @@ export class EasyRequest {
         case "group":
           this.group = value;
           break;
-        case "command":
-          this.command = value;
+        case "action":
+          this.action = value;
           break;
         default:
           this.params[key] = value;

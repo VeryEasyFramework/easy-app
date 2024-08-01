@@ -1,3 +1,5 @@
+import { raiseEasyException } from "#/easyException.ts";
+
 export interface MimeTypesMap {
   html: "text/html";
   js: "text/javascript";
@@ -15,8 +17,14 @@ export type MimeTypes = keyof MimeTypesMap;
 
 export type MimeValue = MimeTypesMap[MimeTypes];
 
-export function inferMimeType(path: string): MimeValue {
-  const ext = path.split(".").pop() as MimeTypes | undefined;
+export function inferMimeType(path: string): MimeValue | undefined {
+  const parts = path.split("/");
+  const fileName = parts[parts.length - 1];
+  const extParts = fileName.split(".");
+  if (extParts.length < 2) {
+    return undefined;
+  }
+  const ext = extParts[extParts.length - 1];
   switch (ext) {
     case "html":
       return "text/html";
@@ -36,7 +44,12 @@ export function inferMimeType(path: string): MimeValue {
       return "image/svg+xml";
     case "ico":
       return "image/x-icon";
-    default:
+    case "txt":
       return "text/plain";
+    default:
+      if (ext) {
+        raiseEasyException(`Unsupported file type: ${ext}`, 415);
+      }
+      return undefined;
   }
 }

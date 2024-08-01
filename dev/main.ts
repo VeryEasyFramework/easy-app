@@ -1,5 +1,18 @@
 import { EasyApp } from "../mod.ts";
+import { createAction } from "#/createAction.ts";
 
-const app = new EasyApp({ staticFileRoot: "./public" });
+const check = createAction("check", {
+  description: "Check if the server is running",
+  action: async (app) => {
+    return { message: "Server is running" };
+  },
+});
 
-app.serve();
+const app = new EasyApp({
+  appRootPath: "dev",
+  staticFileRoot: "public",
+  singlePageApp: false,
+});
+
+app.addAction("auth", check);
+app.run();

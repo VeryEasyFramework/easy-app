@@ -7,13 +7,16 @@ export interface CachedFile {
 }
 
 export class FileCache {
-  cache = new Map<string, CachedFile>();
-  async loadFile(root: string, path: string) {
+  private cache = new Map<string, CachedFile>();
+
+  async loadFile(root: string, path: string): Promise<CachedFile | never> {
+    const mimeType = inferMimeType(path) || "text/plain";
+
     let file = this.cache.get(path);
     if (!file) {
       file = {
         content: await Deno.readFile(joinPath(root, path)),
-        mimeType: inferMimeType(path),
+        mimeType: mimeType,
       };
       this.cache.set(path, file);
     }

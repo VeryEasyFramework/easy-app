@@ -1,5 +1,6 @@
 import type { EasyRequest } from "../easyRequest.ts";
 import { FileCache } from "./fileCache.ts";
+import { inferMimeType } from "#/staticFiles/mimeTypes.ts";
 
 export class StaticFileHandler {
   cache: FileCache;
@@ -10,11 +11,19 @@ export class StaticFileHandler {
     this.staticFilesRoot = staticFilesRoot;
   }
 
-  async serveFile(request: EasyRequest): Promise<Response> {
+  async serveFile(path: string): Promise<Response> {
+    const isFile = inferMimeType(path);
+    const endsWithSlash = path.endsWith("/");
+    if (!isFile && endsWithSlash) {
+      path += "index.html";
+    } else if (!isFile && !endsWithSlash) {
+      path += "/index.html";
+    }
+    console.log(`Serving file: ${path}`);
     try {
       const fileContent = await this.cache.loadFile(
         this.staticFilesRoot,
-        request.path,
+        path,
       );
       return new Response(fileContent.content, {
         status: 200,
@@ -23,6 +32,7 @@ export class StaticFileHandler {
         },
       });
     } catch (_e) {
+      console.error(_e);
       const fileContent = await this.cache.loadFile(
         import.meta.dirname || ".",
         "404.html",
