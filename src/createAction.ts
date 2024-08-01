@@ -20,7 +20,7 @@ export type Action<
   },
   D extends {
     [E in keyof P]: FieldTypeMap[P[E]["type"]];
-  } = EmptyObject<keyof P>,
+  },
 > = {
   name: string;
   description: string;

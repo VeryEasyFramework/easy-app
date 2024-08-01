@@ -66,6 +66,31 @@ export class EasyApp {
     }
     return docs;
   }
+
+  buildRequestTypes(): string {
+    const data = this.actionDocs;
+    let typeString = `type  RequestMap = RequestStructure<{`;
+    for (const group of data) {
+      typeString += `\n  ${group.name}: {`;
+      for (const action in group.actions) {
+        const actionData = group.actions[action];
+        typeString += `\n    ${action}: {`;
+        typeString += `\n      params: {`;
+        for (const param in actionData.params) {
+          const paramData = actionData.params[param];
+          typeString += `\n        ${param}${
+            paramData.required ? "" : "?"
+          }: FieldTypes["${paramData.type}"]`;
+        }
+        typeString += `\n      },`;
+        typeString += `\n      response: ${actionData.response || "void"}`;
+        typeString += `\n    },`;
+      }
+      typeString += `\n  },`;
+    }
+    typeString += `}>\n\n `;
+    return typeString;
+  }
   run(): void {
     this.serve();
   }
