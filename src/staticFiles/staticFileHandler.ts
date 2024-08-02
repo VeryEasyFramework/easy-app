@@ -24,7 +24,6 @@ export class StaticFileHandler {
     } else if (!isFile && !endsWithSlash) {
       path += "/index.html";
     }
-    console.log(`Serving file: ${path}`);
     path = path.replaceAll("//", "/");
     try {
       const fileContent = await this.cache.loadFile(
