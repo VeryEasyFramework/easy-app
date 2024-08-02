@@ -1,5 +1,5 @@
 import { EasyApp } from "../mod.ts";
-import { createAction } from "#/createAction.ts";
+import { createAction } from "../src/actions/createAction.ts";
 
 const someAction = createAction("someAction", {
   description: "This is a description of the action",
@@ -35,9 +35,22 @@ const checkLink = createAction("checkLink", {
 const app = new EasyApp({
   serverOptions: { port: 8000 },
   appRootPath: "dev",
-  staticFileRoot: "public",
+  staticFilesOptions: {
+    cache: false,
+    staticFilesRoot: "public",
+  },
 });
 
 app.addAction("something", someAction);
 app.addAction("utils", checkLink);
-app.run();
+app.addMiddleware(async (request) => {
+});
+
+app.addMiddleware(async (request, response) => {
+  console.log("Request received");
+  return response;
+});
+
+app.run({
+  clientProxyPort: 5174,
+});

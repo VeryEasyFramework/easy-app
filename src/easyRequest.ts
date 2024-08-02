@@ -30,6 +30,7 @@ export class EasyRequest {
   method: RequestMethod = "GET";
   params: Record<string, any> = {};
   path: string = "";
+  port?: number;
   isFile = false;
   fileExtension = "";
 
@@ -87,6 +88,7 @@ export class EasyRequest {
     const url = new URL(this.request.url);
     this.method = this.request.method as RequestMethod;
     this.path = url.pathname;
+    this.port = parseInt(url.port);
     const params = url.searchParams;
     for (const [key, value] of params) {
       switch (key) {

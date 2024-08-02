@@ -1,36 +1,54 @@
 import { EasyException, raiseEasyException } from "#/easyException.ts";
 import { EasyRequest } from "#/easyRequest.ts";
 import { EasyResponse } from "#/easyResponse.ts";
-import { StaticFileHandler } from "#/staticFiles/staticFileHandler.ts";
+import {
+  StaticFileHandler,
+  type StaticFilesOptions,
+} from "#/staticFiles/staticFileHandler.ts";
 import { joinPath } from "#/utils.ts";
-import { Action, InferredAction } from "#/createAction.ts";
+import type { Action, InferredAction } from "./actions/createAction.ts";
+import { appActions } from "#/actions/standardActions.ts";
+import type {
+  MiddlewareWithoutResponse,
+  MiddlewareWithResponse,
+} from "#/middleware/middleware.ts";
+import { fetchProxy } from "#/staticFiles/proxyFetch.ts";
 interface EasyAppOptions {
   appRootPath?: string;
-  staticFileRoot?: string;
   singlePageApp?: boolean;
+  staticFilesOptions?: StaticFilesOptions;
   serverOptions?: Deno.ListenOptions;
 }
+
 export class EasyApp {
   private server?: Deno.HttpServer;
   private config: Required<EasyAppOptions>;
   private staticFileHandler: StaticFileHandler;
+  private middleware: Array<Function> = [];
   actions: Record<string, Record<string, any>>;
+  requestTypes: string = "";
   constructor(options: EasyAppOptions) {
     const appRootPath = Deno.realPathSync(options.appRootPath || Deno.cwd());
     this.config = {
       appRootPath,
-      staticFileRoot: joinPath(
-        appRootPath,
-        options.staticFileRoot || "public",
-      ),
+      staticFilesOptions: {
+        staticFilesRoot: joinPath(
+          appRootPath,
+          options.staticFilesOptions?.staticFilesRoot || "public",
+        ),
+        cache: options.staticFilesOptions?.cache || false,
+      },
       singlePageApp: options.singlePageApp || false,
       serverOptions: options.serverOptions || { port: 8000 },
     };
 
-    this.staticFileHandler = new StaticFileHandler(this.config.staticFileRoot);
+    this.staticFileHandler = new StaticFileHandler(
+      this.config.staticFilesOptions,
+    );
     this.actions = {};
+    this.addActionGroup("app", appActions);
   }
-  get actionDocs(): any {
+  get apiDocs(): any {
     const fullDocs: any[] = [];
     for (const groupKey in this.actions) {
       const groupDocs = this.getActionDocs(groupKey);
@@ -45,9 +63,34 @@ export class EasyApp {
     if (!this.actions[group]) {
       this.actions[group] = {};
     }
+    if (this.actions[group][action.name as string]) {
+      raiseEasyException(
+        `Action ${action.name} already exists in group ${group}`,
+        500,
+      );
+    }
     this.actions[group][action.name as string] = action;
   }
-  getActionDocs(groupName: string): any {
+  addActionGroup(group: string, actions: Array<Action<any, any>>) {
+    for (const action of actions) {
+      this.addAction(group, action);
+    }
+  }
+
+  // Overload signatures for addMiddleware
+  addMiddleware(middleware: MiddlewareWithResponse): void;
+  addMiddleware(middleware: MiddlewareWithoutResponse): void;
+
+  // Implementation of addMiddleware
+  addMiddleware(
+    middleware: MiddlewareWithResponse | MiddlewareWithoutResponse,
+  ): void {
+    this.middleware.push(middleware);
+  }
+  private getActionDocs(groupName: string): {
+    name: string;
+    actions: Record<string, any>;
+  } {
     const group = this.actions[groupName];
     const docs = {
       name: groupName,
@@ -67,8 +110,8 @@ export class EasyApp {
     return docs;
   }
 
-  buildRequestTypes(): string {
-    const data = this.actionDocs;
+  private buildRequestTypes(): string {
+    const data = this.apiDocs;
     let typeString = `type  RequestMap = RequestStructure<{`;
     for (const group of data) {
       typeString += `\n  ${group.name}: {`;
@@ -91,15 +134,24 @@ export class EasyApp {
     typeString += `}>\n\n `;
     return typeString;
   }
-  run(): void {
-    this.serve();
+  run(config?: {
+    clientProxyPort?: number;
+  }): void {
+    this.boot();
+    this.serve(config);
   }
-  private serve(): void {
+  private boot(): void {
+    this.requestTypes = this.buildRequestTypes();
+  }
+  private serve(config?: {
+    clientProxyPort?: number;
+  }): void {
     const options = this.config.serverOptions;
     this.server = Deno.serve(
       options,
       async (request: Request): Promise<Response> => {
         const easyRequest = new EasyRequest(request);
+
         const easyResponse = new EasyResponse();
         if (easyRequest.method === "OPTIONS") {
           return easyResponse.respond();
@@ -111,15 +163,16 @@ export class EasyApp {
         try {
           switch (easyRequest.path) {
             case "/api":
+              for (const middleware of this.middleware) {
+                await middleware(easyRequest, easyResponse);
+              }
               easyResponse.content = await this.apiHandler(easyRequest);
               break;
-            default: {
-              let path = easyRequest.path;
-              if (this.config.singlePageApp && !easyRequest.isFile) {
-                path = "/index.html";
-              }
-              return await this.staticFileHandler.serveFile(path);
-            }
+            default:
+              return await this.clientHandler(
+                easyRequest,
+                config?.clientProxyPort,
+              );
           }
           return easyResponse.respond();
         } catch (_e: EasyException | Error | unknown) {
@@ -133,9 +186,28 @@ export class EasyApp {
       },
     );
   }
+  private async clientHandler(easyRequest: EasyRequest, proxy?: number) {
+    if (proxy) {
+      const port = easyRequest.port?.toString();
+      if (!port) {
+        raiseEasyException("Port not found for client proxy", 500);
+      }
+      const url = easyRequest.request.url.replace(
+        port,
+        proxy.toString(),
+      );
+      const response = await fetch(url);
+      return response;
+    }
+    let path = easyRequest.path;
+    if (this.config.singlePageApp && !easyRequest.isFile) {
+      path = "/index.html";
+    }
+    return await this.staticFileHandler.serveFile(path);
+  }
   private async apiHandler(request: EasyRequest): Promise<Record<string, any>> {
     if (!request.group) {
-      return this.actionDocs;
+      return this.apiDocs;
     }
     const requestGroup = request.group;
     const requestAction = request.action;

@@ -8,16 +8,24 @@ export interface CachedFile {
 
 export class FileCache {
   private cache = new Map<string, CachedFile>();
-
-  async loadFile(root: string, path: string): Promise<CachedFile | never> {
+  skipCache: boolean;
+  constructor(skipCache?: boolean) {
+    this.skipCache = skipCache || false;
+  }
+  private async getFile(root: string, path: string): Promise<CachedFile> {
     const mimeType = inferMimeType(path) || "text/plain";
-
+    return {
+      content: await Deno.readFile(joinPath(root, path)),
+      mimeType: mimeType,
+    };
+  }
+  async loadFile(root: string, path: string): Promise<CachedFile | never> {
+    if (this.skipCache) {
+      return await this.getFile(root, path);
+    }
     let file = this.cache.get(path);
     if (!file) {
-      file = {
-        content: await Deno.readFile(joinPath(root, path)),
-        mimeType: mimeType,
-      };
+      file = await this.getFile(root, path);
       this.cache.set(path, file);
     }
     return file;

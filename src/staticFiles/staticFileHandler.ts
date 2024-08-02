@@ -2,13 +2,18 @@ import type { EasyRequest } from "../easyRequest.ts";
 import { FileCache } from "./fileCache.ts";
 import { inferMimeType } from "#/staticFiles/mimeTypes.ts";
 
+export interface StaticFilesOptions {
+  cache?: boolean;
+  staticFilesRoot: string;
+}
+
 export class StaticFileHandler {
   cache: FileCache;
   staticFilesRoot: string;
   notFoundPage?: string;
-  constructor(staticFilesRoot: string) {
-    this.cache = new FileCache();
-    this.staticFilesRoot = staticFilesRoot;
+  constructor(options: StaticFilesOptions) {
+    this.cache = new FileCache(!options.cache);
+    this.staticFilesRoot = options.staticFilesRoot;
   }
 
   async serveFile(path: string): Promise<Response> {
