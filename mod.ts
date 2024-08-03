@@ -1,4 +1,4 @@
-export { EasyApi } from "./client/easyApi.ts";
+export { EasyApi } from "#/client/easyApi.ts";
 
 export { createAction } from "#/actions/createAction.ts";
 
