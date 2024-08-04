@@ -1,3 +1,5 @@
+export { EasyApp } from "#/easyApp.ts";
+
 export { createAction } from "#/actions/createAction.ts";
 
 export type { EasyResponse } from "#/easyResponse.ts";
