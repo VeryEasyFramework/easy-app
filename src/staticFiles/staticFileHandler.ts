@@ -25,6 +25,9 @@ export class StaticFileHandler {
       path += "/index.html";
     }
     path = path.replaceAll("//", "/");
+    if (path.startsWith("/")) {
+      path = path.slice(1);
+    }
     try {
       const fileContent = await this.cache.loadFile(
         this.staticFilesRoot,

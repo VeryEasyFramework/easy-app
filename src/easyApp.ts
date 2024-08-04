@@ -5,14 +5,12 @@ import {
   StaticFileHandler,
   type StaticFilesOptions,
 } from "#/staticFiles/staticFileHandler.ts";
-import { joinPath } from "#/utils.ts";
 import type { Action, InferredAction } from "./actions/createAction.ts";
 import { appActions } from "#/actions/standardActions.ts";
 import type {
   MiddlewareWithoutResponse,
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
-import { fetchProxy } from "#/staticFiles/proxyFetch.ts";
 interface EasyAppOptions {
   appRootPath?: string;
   singlePageApp?: boolean;
@@ -28,14 +26,13 @@ export class EasyApp {
   actions: Record<string, Record<string, any>>;
   requestTypes: string = "";
   constructor(options: EasyAppOptions) {
-    const appRootPath = Deno.realPathSync(options.appRootPath || Deno.cwd());
+    const appRootPath = options.appRootPath || ".";
+
     this.config = {
       appRootPath,
       staticFilesOptions: {
-        staticFilesRoot: joinPath(
-          appRootPath,
-          options.staticFilesOptions?.staticFilesRoot || "public",
-        ),
+        staticFilesRoot: options.staticFilesOptions?.staticFilesRoot ||
+          "public",
         cache: options.staticFilesOptions?.cache || false,
       },
       singlePageApp: options.singlePageApp || false,
