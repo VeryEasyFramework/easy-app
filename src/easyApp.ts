@@ -163,7 +163,10 @@ export class EasyApp {
               for (const middleware of this.middleware) {
                 await middleware(easyRequest, easyResponse);
               }
-              easyResponse.content = await this.apiHandler(easyRequest);
+              easyResponse.content = await this.apiHandler(
+                easyRequest,
+                easyResponse,
+              );
               break;
             default:
               return await this.clientHandler(
@@ -202,7 +205,10 @@ export class EasyApp {
     }
     return await this.staticFileHandler.serveFile(path);
   }
-  private async apiHandler(request: EasyRequest): Promise<Record<string, any>> {
+  private async apiHandler(
+    request: EasyRequest,
+    response: EasyResponse,
+  ): Promise<Record<string, any>> {
     if (!request.group) {
       return this.apiDocs;
     }
@@ -225,7 +231,7 @@ export class EasyApp {
 
     await request.loadBody();
 
-    const content = await action.action(this, request.body);
+    const content = await action.action(this, request.body, response);
     return content || {};
   }
 }

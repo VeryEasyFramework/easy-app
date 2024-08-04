@@ -1,5 +1,6 @@
 import type { EasyApp } from "#/easyApp.ts";
 import { raiseEasyException } from "#/easyException.ts";
+import { EasyResponse } from "#/easyResponse.ts";
 
 interface FieldTypeMap {
   string: string;
@@ -49,6 +50,7 @@ export function createAction<
   action: (
     app: EasyApp,
     data: D,
+    response?: EasyResponse,
   ) => Promise<any> | any;
   params?: P;
   response?: string;
