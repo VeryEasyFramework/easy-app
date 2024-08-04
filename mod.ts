@@ -1,4 +1,4 @@
-export { EasyException } from "#/easyException.ts";
+export { EasyException, raiseEasyException } from "#/easyException.ts";
 
 export { EasyApp } from "#/easyApp.ts";
 
