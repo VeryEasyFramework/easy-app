@@ -67,6 +67,7 @@ export function createAction<
   const newAction = async (
     app: EasyApp,
     data?: D,
+    response?: EasyResponse,
   ) => {
     if (!data && requiredParams.length > 0) {
       raiseEasyException(
@@ -90,7 +91,7 @@ export function createAction<
         );
       }
     }
-    return await options.action(app, paramsObj);
+    return await options.action(app, paramsObj, response);
   };
   return {
     name: actionName,
