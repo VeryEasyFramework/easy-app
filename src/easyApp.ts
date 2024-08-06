@@ -1,6 +1,8 @@
 import { EasyException, raiseEasyException } from "#/easyException.ts";
 import { EasyRequest } from "#/easyRequest.ts";
 import { EasyResponse } from "#/easyResponse.ts";
+
+import { EasyOrm, type Orm } from "@vef/easy-orm";
 import {
   StaticFileHandler,
   type StaticFilesOptions,
@@ -11,32 +13,43 @@ import type {
   MiddlewareWithoutResponse,
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
+import { entityActions } from "#/actions/ormActions.ts";
 interface EasyAppOptions {
   appRootPath?: string;
   singlePageApp?: boolean;
   staticFilesOptions?: StaticFilesOptions;
   serverOptions?: Deno.ListenOptions;
+  orm?: Orm;
 }
 
 export class EasyApp {
   private server?: Deno.HttpServer;
-  private config: Required<EasyAppOptions>;
+  private config: Required<Omit<EasyAppOptions, "orm">>;
   private staticFileHandler: StaticFileHandler;
-  private middleware: Array<Function> = [];
+  private middleware: Array<
+    MiddlewareWithResponse | MiddlewareWithoutResponse
+  > = [];
+  orm: Orm;
   actions: Record<string, Record<string, any>>;
   requestTypes: string = "";
-  constructor(options: EasyAppOptions) {
-    const appRootPath = options.appRootPath || ".";
-
+  constructor(options?: EasyAppOptions) {
+    const appRootPath = options?.appRootPath || ".";
+    this.orm = options?.orm || new EasyOrm({
+      databaseType: "json",
+      databaseConfig: {
+        dataPath: `${appRootPath}/.data`,
+      },
+      entities: [],
+    });
     this.config = {
       appRootPath,
       staticFilesOptions: {
-        staticFilesRoot: options.staticFilesOptions?.staticFilesRoot ||
+        staticFilesRoot: options?.staticFilesOptions?.staticFilesRoot ||
           "public",
-        cache: options.staticFilesOptions?.cache || false,
+        cache: options?.staticFilesOptions?.cache || false,
       },
-      singlePageApp: options.singlePageApp || false,
-      serverOptions: options.serverOptions || { port: 8000 },
+      singlePageApp: options?.singlePageApp || false,
+      serverOptions: options?.serverOptions || { port: 8000 },
     };
 
     this.staticFileHandler = new StaticFileHandler(
@@ -44,6 +57,7 @@ export class EasyApp {
     );
     this.actions = {};
     this.addActionGroup("app", appActions);
+    this.addActionGroup("entity", entityActions);
   }
   get apiDocs(): any {
     const fullDocs: any[] = [];
