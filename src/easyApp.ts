@@ -14,6 +14,7 @@ import type {
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
 import { entityActions } from "#/actions/ormActions.ts";
+import { user } from "#/entities/userEntity.ts";
 interface EasyAppOptions {
   appRootPath?: string;
   singlePageApp?: boolean;
@@ -39,7 +40,7 @@ export class EasyApp {
       databaseConfig: {
         dataPath: `${appRootPath}/.data`,
       },
-      entities: [],
+      entities: [user],
     });
     this.config = {
       appRootPath,
@@ -145,14 +146,15 @@ export class EasyApp {
     typeString += `}>\n\n `;
     return typeString;
   }
-  run(config?: {
+  async run(config?: {
     clientProxyPort?: number;
-  }): void {
-    this.boot();
+  }): Promise<void> {
+    await this.boot();
     this.serve(config);
   }
-  private boot(): void {
+  private async boot(): Promise<void> {
     this.requestTypes = this.buildRequestTypes();
+    await this.orm.init();
   }
   private serve(config?: {
     clientProxyPort?: number;
