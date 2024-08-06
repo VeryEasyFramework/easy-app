@@ -9,7 +9,7 @@ export const entityActions = [
     params: {
       entity: {
         required: true,
-        type: "string",
+        type: "DataField",
       },
     },
     response: "any[]",
@@ -22,11 +22,11 @@ export const entityActions = [
     params: {
       entity: {
         required: true,
-        type: "string",
+        type: "DataField",
       },
       id: {
         required: true,
-        type: "string",
+        type: "DataField",
       },
     },
     response: "any",
@@ -39,11 +39,11 @@ export const entityActions = [
     params: {
       entity: {
         required: true,
-        type: "string",
+        type: "DataField",
       },
       data: {
         required: true,
-        type: "object",
+        type: "JSONField",
       },
     },
     response: "any",
@@ -56,15 +56,15 @@ export const entityActions = [
     params: {
       entity: {
         required: true,
-        type: "string",
+        type: "DataField",
       },
       id: {
         required: true,
-        type: "string",
+        type: "DataField",
       },
       data: {
         required: true,
-        type: "object",
+        type: "JSONField",
       },
     },
     response: "any",
@@ -77,11 +77,11 @@ export const entityActions = [
     params: {
       entity: {
         required: true,
-        type: "string",
+        type: "DataField",
       },
       id: {
         required: true,
-        type: "string",
+        type: "DataField",
       },
     },
     response: "void",

@@ -1,7 +1,8 @@
 import type { EasyApp } from "#/easyApp.ts";
 import { raiseEasyException } from "#/easyException.ts";
-import { EasyResponse } from "#/easyResponse.ts";
+import type { EasyResponse } from "#/easyResponse.ts";
 
+import type { EasyFieldTypeMap } from "@vef/easy-orm";
 interface FieldTypeMap {
   string: string;
   number: number;
@@ -16,11 +17,11 @@ export type Action<
   P extends {
     [K in keyof P]: {
       required: boolean;
-      type: keyof FieldTypeMap;
+      type: keyof EasyFieldTypeMap;
     };
   },
   D extends {
-    [E in keyof P]: FieldTypeMap[P[E]["type"]];
+    [E in keyof P]: EasyFieldTypeMap[P[E]["type"]];
   },
 > = {
   name: string;
@@ -38,11 +39,11 @@ export function createAction<
   P extends {
     [K in keyof P]: {
       required: boolean;
-      type: keyof FieldTypeMap;
+      type: keyof EasyFieldTypeMap;
     };
   },
   D extends {
-    [E in keyof P]: FieldTypeMap[P[E]["type"]];
+    [E in keyof P]: EasyFieldTypeMap[P[E]["type"]];
   },
 >(actionName: string, options: {
   description: string;
