@@ -22,6 +22,9 @@ export const entityActions = [
       if (!result) {
         raiseEasyException("Entity not found", 404);
       }
+      if ("orm" in result) {
+        delete result.orm;
+      }
       return result;
     },
     params: {
