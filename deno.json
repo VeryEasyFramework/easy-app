@@ -16,7 +16,7 @@
       "src/client/**/*"
     ]
   },
-  "imports": { "#/": "./src/", "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.8" },
+  "imports": { "#/": "./src/", "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.10" },
   "tasks": {
     "dev": "deno run --allow-all --watch dev/main.ts"
   }

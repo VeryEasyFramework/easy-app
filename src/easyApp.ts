@@ -8,13 +8,14 @@ import {
   type StaticFilesOptions,
 } from "#/staticFiles/staticFileHandler.ts";
 import type { Action, InferredAction } from "./actions/createAction.ts";
-import { appActions } from "#/actions/standardActions.ts";
+
 import type {
   MiddlewareWithoutResponse,
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
-import { entityActions } from "#/actions/ormActions.ts";
-import { user } from "#/entities/userEntity.ts";
+
+import type { EasyPackage, PackageInfo } from "#/package/easyPackage.ts";
+import { basePackage } from "#/package/basePackage/basePackage.ts";
 interface EasyAppOptions {
   appRootPath?: string;
   singlePageApp?: boolean;
@@ -30,6 +31,8 @@ export class EasyApp {
   private middleware: Array<
     MiddlewareWithResponse | MiddlewareWithoutResponse
   > = [];
+
+  packages: Array<PackageInfo> = [];
   orm: EasyOrm<any, any, any, any, any>;
   actions: Record<string, Record<string, any>>;
   requestTypes: string = "";
@@ -40,7 +43,7 @@ export class EasyApp {
       databaseConfig: {
         dataPath: `${appRootPath}/.data`,
       },
-      entities: [user],
+      entities: [],
     });
     this.config = {
       appRootPath,
@@ -57,8 +60,7 @@ export class EasyApp {
       this.config.staticFilesOptions,
     );
     this.actions = {};
-    this.addActionGroup("app", appActions);
-    this.addActionGroup("entity", entityActions);
+    this.addPackage(basePackage);
   }
   get apiDocs(): any {
     const fullDocs: any[] = [];
@@ -67,6 +69,17 @@ export class EasyApp {
       fullDocs.push(groupDocs);
     }
     return fullDocs as any;
+  }
+
+  isPublicAction(group?: string, action?: string): boolean {
+    if (!group || !action) {
+      return false;
+    }
+    if (!this.actions[group]) {
+      return false;
+    }
+    const actionInfo = this.actions[group][action];
+    return actionInfo.public || false;
   }
   addAction<A extends Action<any, any>>(
     group: string,
@@ -90,8 +103,8 @@ export class EasyApp {
   }
 
   // Overload signatures for addMiddleware
-  addMiddleware(middleware: MiddlewareWithResponse): void;
   addMiddleware(middleware: MiddlewareWithoutResponse): void;
+  addMiddleware(middleware: MiddlewareWithResponse): void;
 
   // Implementation of addMiddleware
   addMiddleware(
@@ -115,11 +128,31 @@ export class EasyApp {
         [key]: {
           description: action.description,
           params: action.params,
+
           response: action.response,
         },
       };
     }
     return docs;
+  }
+
+  addPackage(easyPackage: EasyPackage): void {
+    for (const group in easyPackage.actionGroups) {
+      if (this.actions[group]) {
+        raiseEasyException(`Group ${group} already exists`, 500);
+      }
+      this.addActionGroup(group, easyPackage.actionGroups[group]);
+    }
+    for (const middleware of easyPackage.middleware) {
+      this.addMiddleware(middleware as any);
+    }
+    for (const entity of easyPackage.entities) {
+      if (this.orm.hasEntity(entity.entityId)) {
+        raiseEasyException(`Entity ${entity.entityId} already exists`, 500);
+      }
+      this.orm.addEntity(entity);
+    }
+    this.packages.push(easyPackage.packageInfo);
   }
 
   private buildRequestTypes(): string {
@@ -177,7 +210,7 @@ export class EasyApp {
           switch (easyRequest.path) {
             case "/api":
               for (const middleware of this.middleware) {
-                await middleware(easyRequest, easyResponse);
+                await middleware(this, easyRequest, easyResponse);
               }
               easyResponse.content = await this.apiHandler(
                 easyRequest,

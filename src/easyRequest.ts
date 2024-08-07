@@ -24,8 +24,8 @@ export class EasyRequest {
   request: Request;
   cookies: Map<string, string> = new Map();
   authToken: string | null = null;
-  group: string | null = null;
-  action: string | null = null;
+  group?: string;
+  action?: string;
   body: Record<string, any> = {};
   method: RequestMethod = "GET";
   params: Record<string, any> = {};

@@ -12,7 +12,6 @@ interface FieldTypeMap {
   object: Record<string, any>;
 }
 
-type EmptyObject<T extends PropertyKey = string> = Record<T, never>;
 export type Action<
   P extends {
     [K in keyof P]: {
@@ -31,21 +30,16 @@ export type Action<
   response?: string;
 };
 
+export type EasyAction = Action<any, any>;
+
 export type InferredAction<A> = A extends Action<infer P, infer D>
   ? Action<P, D>
   : never;
 
-export function createAction<
-  P extends {
-    [K in keyof P]: {
-      required: boolean;
-      type: keyof EasyFieldTypeMap;
-    };
-  },
-  D extends {
-    [E in keyof P]: EasyFieldTypeMap[P[E]["type"]];
-  },
->(actionName: string, options: {
+export interface CreateActionOptions<
+  P extends Record<string, any>,
+  D extends Record<string, any>,
+> {
   description: string;
   public?: boolean;
   action: (
@@ -55,7 +49,24 @@ export function createAction<
   ) => Promise<any> | any;
   params?: P;
   response?: string;
-}): Action<P, D> {
+}
+export type CreateActionParams<P> = {
+  [K in keyof P]: {
+    required: boolean;
+    type: keyof EasyFieldTypeMap;
+  };
+};
+
+export type ActionParams<P extends CreateActionParams<P>> = {
+  [E in keyof P]: EasyFieldTypeMap[P[E]["type"]];
+};
+export function createAction<
+  P extends CreateActionParams<P>,
+  D extends ActionParams<P>,
+>(
+  actionName: string,
+  options: CreateActionOptions<P, D>,
+): Action<P, D> {
   const paramsObj = {} as D;
   const requiredParams = [] as Array<keyof P>;
   const paramKeys = [] as Array<keyof P>;
