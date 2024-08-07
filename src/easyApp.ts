@@ -30,7 +30,7 @@ export class EasyApp {
   private middleware: Array<
     MiddlewareWithResponse | MiddlewareWithoutResponse
   > = [];
-  orm: Orm;
+  orm: EasyOrm<any, any, any, any, any>;
   actions: Record<string, Record<string, any>>;
   requestTypes: string = "";
   constructor(options?: EasyAppOptions) {

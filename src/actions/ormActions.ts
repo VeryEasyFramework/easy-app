@@ -1,4 +1,5 @@
 import { createAction } from "#/actions/createAction.ts";
+import { raiseEasyException } from "#/easyException.ts";
 
 export const entityActions = [
   createAction("getList", {
@@ -17,7 +18,11 @@ export const entityActions = [
   createAction("getEntity", {
     description: "Get a single entity",
     action: async (app, { entity, id }) => {
-      return await app.orm.getEntity(entity, id);
+      const result = await app.orm.getEntity(entity, id);
+      if (!result) {
+        raiseEasyException("Entity not found", 404);
+      }
+      return result;
     },
     params: {
       entity: {
