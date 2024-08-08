@@ -9,9 +9,6 @@ export const authMiddleware: MiddlewareWithResponse = async (
   if (app.isPublicAction(request.group, request.action)) {
     return response;
   }
-  if (request.group === "auth" && request.action === "login") {
-    return response;
-  }
 
   const sessionId = request.cookies.get("sessionId");
   if (!sessionId) {

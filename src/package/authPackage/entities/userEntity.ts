@@ -3,26 +3,37 @@ import { defineEntity } from "@vef/easy-orm";
 export const userEntity = defineEntity("user", {
   fields: [
     {
-      key: "First Name",
+      key: "firstName",
       label: "First Name",
       fieldType: "DataField",
     },
     {
-      key: "Last Name",
+      key: "lastName",
       label: "Last Name",
       fieldType: "DataField",
     },
     {
-      key: "Email",
+      key: "fullName",
+      label: "Full Name",
+      fieldType: "DataField",
+      readOnly: true,
+    },
+    {
+      key: "email",
       label: "Email",
       fieldType: "DataField",
     },
     {
-      key: "Password",
+      key: "password",
       label: "Password",
       fieldType: "DataField",
       readOnly: true,
     },
   ],
   label: "User",
+  hooks: {
+    beforeSave() {
+      this.fullName = `${this.firstName} ${this.lastName}`;
+    },
+  },
 });
