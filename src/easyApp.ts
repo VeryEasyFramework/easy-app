@@ -16,6 +16,7 @@ import type {
 
 import type { EasyPackage, PackageInfo } from "#/package/easyPackage.ts";
 import { basePackage } from "#/package/basePackage/basePackage.ts";
+import { RealtimeServer } from "#/realtime/realtimeServer.ts";
 interface EasyAppOptions {
   appRootPath?: string;
   singlePageApp?: boolean;
@@ -32,6 +33,7 @@ export class EasyApp {
     MiddlewareWithResponse | MiddlewareWithoutResponse
   > = [];
 
+  realtime = new RealtimeServer();
   packages: Array<PackageInfo> = [];
   orm: EasyOrm<any, any, any, any, any>;
   actions: Record<string, Record<string, any>>;
@@ -203,8 +205,7 @@ export class EasyApp {
           return easyResponse.respond();
         }
         if (easyRequest.upgradeSocket) {
-          // TODO: Handle WebSocket Upgrade
-          return easyResponse.error("WebSocket is not implemented", 501);
+          return this.realtime.handleUpgrade(easyRequest.request);
         }
         try {
           switch (easyRequest.path) {
