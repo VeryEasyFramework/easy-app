@@ -76,13 +76,13 @@ export class RealtimeServer {
     }
   }
 
-  addClient(socket: WebSocket) {
+  addClient(socket: WebSocket): string {
     const id = Math.random().toString(36).substring(7);
     this.clients.push({ id, socket, rooms: [] });
     return id;
   }
 
-  broadcast(message: string | Record<string, any>) {
+  broadcast(message: string | Record<string, any>): void {
     if (typeof message === "object") {
       message = JSON.stringify(message);
     }
@@ -91,7 +91,7 @@ export class RealtimeServer {
     });
   }
 
-  handleUpgrade(req: Request) {
+  handleUpgrade(req: Request): Response {
     const upgrade = req.headers.get("upgrade") || "";
     if (upgrade.toLowerCase() != "websocket") {
       return new Response("request isn't trying to upgrade to websocket.");
@@ -122,9 +122,9 @@ export class RealtimeServer {
     return response;
   }
 
-  join(room: string, clientId: string, events?: string[]) {
+  join(room: string, clientId: string, events?: string[]): void {
     if (!this.rooms[room]) {
-      return false;
+      return;
     }
     if (!events) {
       for (const event in this.rooms[room].events) {

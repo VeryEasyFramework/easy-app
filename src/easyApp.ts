@@ -33,7 +33,7 @@ export class EasyApp {
     MiddlewareWithResponse | MiddlewareWithoutResponse
   > = [];
 
-  realtime = new RealtimeServer();
+  realtime: RealtimeServer = new RealtimeServer();
   packages: Array<PackageInfo> = [];
   orm: EasyOrm<any, any, any, any, any>;
   actions: Record<string, Record<string, any>>;
