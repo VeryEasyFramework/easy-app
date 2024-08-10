@@ -1,8 +1,6 @@
 import { EasyApp } from "../mod.ts";
 
-const app = new EasyApp(
-  {
-    appRootPath: ".",
-  },
-);
-app.run();
+const app = new EasyApp();
+app.run({
+  clientProxyPort: 5174,
+});

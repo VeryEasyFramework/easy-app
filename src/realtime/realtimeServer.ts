@@ -27,16 +27,16 @@ interface SocketClient {
 }
 
 export interface SocketRoomDef {
-  name: string;
+  roomName: string;
   events: string[];
 }
 
 class SocketRoom {
-  name: string;
+  roomName: string;
   events: Record<string, string[]>;
 
-  constructor(name: string, events: string[]) {
-    this.name = name;
+  constructor(roomName: string, events: string[]) {
+    this.roomName = roomName;
     this.events = {};
     for (const event of events) {
       this.events[event] = [];
@@ -48,12 +48,16 @@ export class RealtimeServer {
   clients: SocketClient[];
   rooms: Record<string, SocketRoom> = {};
 
-  constructor(rooms?: SocketRoom[]) {
+  info: {
+    rooms: Array<SocketRoomDef>;
+  } = {
+    rooms: [],
+  };
+
+  constructor(rooms?: SocketRoomDef[]) {
     this.clients = [];
     if (rooms) {
-      for (const room of rooms) {
-        this.rooms[room.name] = room;
-      }
+      this.addRooms(rooms);
     }
     addEventListener("socket-message", (e) => {
       const event = e as SocketEvent;
@@ -66,8 +70,9 @@ export class RealtimeServer {
   }
 
   addRoom(room: SocketRoomDef) {
-    const newRoom = new SocketRoom(room.name, room.events);
-    this.rooms[room.name] = newRoom;
+    const newRoom = new SocketRoom(room.roomName, room.events);
+    this.rooms[room.roomName] = newRoom;
+    this.info.rooms.push(room);
   }
 
   addRooms(rooms: SocketRoomDef[]) {

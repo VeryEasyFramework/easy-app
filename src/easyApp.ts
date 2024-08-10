@@ -7,7 +7,6 @@ import {
   StaticFileHandler,
   type StaticFilesOptions,
 } from "#/staticFiles/staticFileHandler.ts";
-import type { Action, InferredAction } from "./actions/createAction.ts";
 
 import type {
   MiddlewareWithoutResponse,
@@ -16,7 +15,19 @@ import type {
 
 import type { EasyPackage, PackageInfo } from "#/package/easyPackage.ts";
 import { basePackage } from "#/package/basePackage/basePackage.ts";
-import { RealtimeServer } from "#/realtime/realtimeServer.ts";
+import {
+  dispatchSocketEvent,
+  RealtimeServer,
+  type SocketRoomDef,
+} from "#/realtime/realtimeServer.ts";
+import type {
+  Action,
+  DocsAction,
+  DocsActionGroup,
+  DocsActionParam,
+  EasyAction,
+  InferredAction,
+} from "#/actions/actionTypes.ts";
 interface EasyAppOptions {
   appRootPath?: string;
   singlePageApp?: boolean;
@@ -35,8 +46,8 @@ export class EasyApp {
 
   realtime: RealtimeServer = new RealtimeServer();
   packages: Array<PackageInfo> = [];
-  orm: EasyOrm<any, any, any, any, any>;
-  actions: Record<string, Record<string, any>>;
+  orm: Orm;
+  actions: Record<string, Record<string, EasyAction>>;
   requestTypes: string = "";
   constructor(options?: EasyAppOptions) {
     const appRootPath = options?.appRootPath || ".";
@@ -64,15 +75,21 @@ export class EasyApp {
     this.actions = {};
     this.addPackage(basePackage);
   }
-  get apiDocs(): any {
-    const fullDocs: any[] = [];
+  private get apiDocs(): DocsActionGroup[] {
+    const fullDocs: DocsActionGroup[] = [];
     for (const groupKey in this.actions) {
-      const groupDocs = this.getActionDocs(groupKey);
+      const groupDocs = this.getActionGroupDocs(groupKey);
       fullDocs.push(groupDocs);
     }
-    return fullDocs as any;
+    return fullDocs;
   }
-
+  notify(
+    room: string,
+    event: string,
+    data: Record<string, any>,
+  ): void {
+    dispatchSocketEvent(room, event, data);
+  }
   isPublicAction(group?: string, action?: string): boolean {
     if (!group || !action) {
       return false;
@@ -90,13 +107,13 @@ export class EasyApp {
     if (!this.actions[group]) {
       this.actions[group] = {};
     }
-    if (this.actions[group][action.name as string]) {
+    if (this.actions[group][action.actionName as string]) {
       raiseEasyException(
-        `Action ${action.name} already exists in group ${group}`,
+        `Action ${action.actionName} already exists in group ${group}`,
         500,
       );
     }
-    this.actions[group][action.name as string] = action;
+    this.actions[group][action.actionName as string] = action;
   }
   addActionGroup(group: string, actions: Array<Action<any, any>>) {
     for (const action of actions) {
@@ -104,6 +121,9 @@ export class EasyApp {
     }
   }
 
+  addSocketRooms(rooms: SocketRoomDef[]) {
+    this.realtime.addRooms(rooms);
+  }
   // Overload signatures for addMiddleware
   addMiddleware(middleware: MiddlewareWithoutResponse): void;
   addMiddleware(middleware: MiddlewareWithResponse): void;
@@ -114,26 +134,29 @@ export class EasyApp {
   ): void {
     this.middleware.push(middleware);
   }
-  private getActionDocs(groupName: string): {
-    name: string;
-    actions: Record<string, any>;
-  } {
+  getActionGroupDocs(groupName: string): DocsActionGroup {
     const group = this.actions[groupName];
-    const docs = {
-      name: groupName,
-      actions: {},
+    const docs: DocsActionGroup = {
+      groupName,
+      actions: [],
     };
     for (const key in group) {
-      const action = group[key] as any;
-      docs.actions = {
-        ...docs.actions,
-        [key]: {
-          description: action.description,
-          params: action.params,
-
-          response: action.response,
-        },
-      };
+      const action = group[key];
+      const params: DocsActionParam[] = [];
+      for (const param in action.params) {
+        params.push({
+          paramName: param,
+          required: action.params[param].required,
+          type: action.params[param].type,
+        });
+      }
+      docs.actions.push({
+        actionName: action.actionName,
+        description: action.description,
+        params,
+        public: action.public,
+        response: action.response,
+      });
     }
     return docs;
   }
@@ -154,6 +177,9 @@ export class EasyApp {
       }
       this.orm.addEntity(entity);
     }
+    for (const room of easyPackage.realtimeRooms) {
+      this.realtime.addRoom(room);
+    }
     this.packages.push(easyPackage.packageInfo);
   }
 
@@ -161,16 +187,18 @@ export class EasyApp {
     const data = this.apiDocs;
     let typeString = `type  RequestMap = RequestStructure<{`;
     for (const group of data) {
-      typeString += `\n  ${group.name}: {`;
+      typeString += `\n  ${group.groupName}: {`;
       for (const action in group.actions) {
         const actionData = group.actions[action];
         typeString += `\n    ${action}: {`;
         typeString += `\n      params: {`;
-        for (const param in actionData.params) {
-          const paramData = actionData.params[param];
-          typeString += `\n        ${param}${
-            paramData.required ? "" : "?"
-          }: FieldTypes["${paramData.type}"]`;
+        if (actionData.params) {
+          for (const param of actionData.params) {
+            const paramData = param;
+            typeString += `\n        ${param}${
+              paramData.required ? "" : "?"
+            }: FieldTypes["${paramData.type}"]`;
+          }
         }
         typeString += `\n      },`;
         typeString += `\n      response: ${actionData.response || "void"}`;
@@ -265,7 +293,7 @@ export class EasyApp {
     const requestGroup = request.group;
     const requestAction = request.action;
     if (!requestAction) {
-      return this.getActionDocs(requestGroup);
+      return this.getActionGroupDocs(requestGroup);
     }
     if (!this.actions[requestGroup]) {
       raiseEasyException(`No group found for ${requestGroup}`, 404);
@@ -282,6 +310,11 @@ export class EasyApp {
     await request.loadBody();
 
     const content = await action.action(this, request.body, response);
+    if (typeof content === "string") {
+      return {
+        message: content,
+      };
+    }
     return content || {};
   }
 }

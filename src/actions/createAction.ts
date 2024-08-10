@@ -1,65 +1,13 @@
 import type { EasyApp } from "#/easyApp.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type { EasyResponse } from "#/easyResponse.ts";
+import type {
+  Action,
+  ActionParams,
+  CreateActionOptions,
+  CreateActionParams,
+} from "#/actions/actionTypes.ts";
 
-import type { EasyFieldTypeMap } from "@vef/easy-orm";
-interface FieldTypeMap {
-  string: string;
-  number: number;
-  boolean: boolean;
-  date: Date;
-  list: any[];
-  object: Record<string, any>;
-}
-
-export type Action<
-  P extends {
-    [K in keyof P]: {
-      required: boolean;
-      type: keyof EasyFieldTypeMap;
-    };
-  },
-  D extends {
-    [E in keyof P]: EasyFieldTypeMap[P[E]["type"]];
-  },
-> = {
-  name: string;
-  description: string;
-  action: (app: EasyApp, data: D) => Promise<any> | any;
-  params?: P;
-  response?: string;
-};
-
-export type EasyAction = Action<any, any>;
-
-export type InferredAction<A> = A extends Action<infer P, infer D>
-  ? Action<P, D>
-  : never;
-
-export interface CreateActionOptions<
-  P extends Record<string, any>,
-  D extends Record<string, any>,
-> {
-  description: string;
-  public?: boolean;
-  action: (
-    app: EasyApp,
-    data: D,
-    response?: EasyResponse,
-  ) => Promise<any> | any;
-  params?: P;
-  response?: string;
-}
-export type CreateActionParams<P> = {
-  [K in keyof P]: {
-    required: boolean;
-    type: keyof EasyFieldTypeMap;
-  };
-};
-
-export type ActionParams<P extends CreateActionParams<P>> = {
-  [E in keyof P]: EasyFieldTypeMap[P[E]["type"]];
-};
 export function createAction<
   P extends CreateActionParams<P>,
   D extends ActionParams<P>,
@@ -106,7 +54,7 @@ export function createAction<
     return await options.action(app, paramsObj, response);
   };
   return {
-    name: actionName,
+    actionName,
     description: options.description,
     action: newAction,
     params: options.params,

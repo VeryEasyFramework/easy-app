@@ -1,26 +1,17 @@
-import {
+import type {
   MiddlewareWithoutResponse,
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
-import {
+import { createAction } from "#/actions/createAction.ts";
+import type { EntityDefinition } from "@vef/easy-orm";
+import type { SocketRoomDef } from "#/realtime/realtimeServer.ts";
+import { raiseEasyException } from "#/easyException.ts";
+import type {
   ActionParams,
-  createAction,
   CreateActionOptions,
   CreateActionParams,
   EasyAction,
-} from "#/actions/createAction.ts";
-import { EntityDefinition } from "@vef/easy-orm";
-
-createAction("apiDocs", {
-  action: (app, { name }) => {},
-  description: "Get the API for the app",
-  params: {
-    name: {
-      required: true,
-      type: "IntField",
-    },
-  },
-});
+} from "#/actions/actionTypes.ts";
 
 export interface PackageInfo {
   packageName: string;
@@ -31,12 +22,26 @@ export interface PackageInfo {
   middleware: Array<string>;
 }
 
+// enforce no decimal numbers
+type Integer = number & { __integer__: void };
+
+// Type guard function to check if a number is an integer
+function isInteger(value: number): value is Integer {
+  return Number.isInteger(value);
+}
+
+function validateSemverString(version: string): boolean {
+  return /^\d+\.\d+\.\d+$/.test(version);
+}
+
 export class EasyPackage {
   middleware: Array<MiddlewareWithResponse | MiddlewareWithoutResponse> = [];
   actionGroups: Record<string, Array<EasyAction>> = {};
   entities: Array<EntityDefinition> = [];
   description: string;
   packageName: string;
+  realtimeRooms: SocketRoomDef[] = [];
+
   version: string = "0.0.1";
   constructor(packageName: string, options?: {
     description?: string;
@@ -44,6 +49,9 @@ export class EasyPackage {
   }) {
     this.packageName = packageName;
     this.description = options?.description || `Package ${packageName}`;
+    if (options?.version) {
+      this.setVersion(options.version);
+    }
   }
 
   get packageInfo(): PackageInfo {
@@ -55,7 +63,7 @@ export class EasyPackage {
       actions: Object.entries(this.actionGroups).map((
         [groupName, actions],
       ) => ({
-        [groupName]: actions.map((action) => action.name),
+        [groupName]: actions.map((action) => action.actionName),
       })),
       middleware: this.middleware.map((middleware) => middleware.name),
     };
@@ -78,6 +86,41 @@ export class EasyPackage {
     this.actionGroups[options.groupName].push(action);
   }
 
+  setVersion(version: string): void;
+  setVersion(majorVersion: number): void;
+  setVersion(majorVersion: number, minorVersion: number): void;
+  setVersion(
+    majorVersion: number,
+    minorVersion: number,
+    patch: number,
+  ): void;
+  setVersion(
+    majorVersion: string | number,
+    minorVersion?: number,
+    patchVersion?: number,
+  ): void {
+    if (typeof majorVersion === "string") {
+      if (!validateSemverString(majorVersion)) {
+        raiseEasyException(
+          "Invalid format for version. Should be in the format of major.minor.patch",
+          500,
+        );
+      }
+
+      this.version = majorVersion;
+      return;
+    }
+    const major = majorVersion;
+    const minor = minorVersion || 0;
+    const patch = patchVersion || 0;
+
+    if (!isInteger(major) || !isInteger(minor) || !isInteger(patch)) {
+      raiseEasyException(
+        "Version numbers must be integers",
+        500,
+      );
+    }
+  }
   addActionToGroup(group: string, action: EasyAction) {
     if (!this.actionGroups[group]) {
       this.actionGroups[group] = [];
@@ -100,6 +143,9 @@ export class EasyPackage {
     this.middleware.push(middleware);
   }
 
+  addRealtimeRoom(room: SocketRoomDef) {
+    this.realtimeRooms.push(room);
+  }
   addEntity(entity: EntityDefinition) {
     this.entities.push(entity);
   }
