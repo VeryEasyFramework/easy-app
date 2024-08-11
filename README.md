@@ -1,2 +1,3 @@
 # easy-app
-A super easy web app maker for your Deno project
+
+A super easy web app builder for your Deno project
