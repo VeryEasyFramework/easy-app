@@ -2,7 +2,7 @@ import { EasyException, raiseEasyException } from "#/easyException.ts";
 import { EasyRequest } from "#/easyRequest.ts";
 import { EasyResponse } from "#/easyResponse.ts";
 
-import { EasyOrm, type Orm } from "@vef/easy-orm";
+import { EasyOrm, type EntityDefinition, type Orm } from "@vef/easy-orm";
 import {
   StaticFileHandler,
   type StaticFilesOptions,
@@ -22,7 +22,6 @@ import {
 } from "#/realtime/realtimeServer.ts";
 import type {
   Action,
-  DocsAction,
   DocsActionGroup,
   DocsActionParam,
   EasyAction,
@@ -161,7 +160,7 @@ export class EasyApp {
     return docs;
   }
 
-  get entityInfo() {
+  get entityInfo(): EntityDefinition[] {
     return this.orm.entityInfo;
   }
   addPackage(easyPackage: EasyPackage): void {
