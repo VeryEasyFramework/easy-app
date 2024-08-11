@@ -1,5 +1,5 @@
 import { createAction } from "#/actions/createAction.ts";
-import type { PackageInfo } from "#/package/easyPackage.ts";
+import type { EasyPackInfo } from "#/package/easyPack.ts";
 import type { SocketRoomDef } from "#/realtime/realtimeServer.ts";
 import type { DocsActionGroup } from "#/actions/actionTypes.ts";
 import type { EntityDefinition } from "@vef/easy-orm";
@@ -33,7 +33,7 @@ export const appActions = [
   }),
   createAction("listPackages", {
     description: "List all packages",
-    action: (app): PackageInfo[] => {
+    action: (app): EasyPackInfo[] => {
       return app.packages;
     },
     response: "PackageInfo[]",

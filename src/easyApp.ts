@@ -13,8 +13,8 @@ import type {
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
 
-import type { EasyPackage, PackageInfo } from "#/package/easyPackage.ts";
-import { basePackage } from "#/package/basePackage/basePackage.ts";
+import type { EasyPack, EasyPackInfo } from "./package/easyPack.ts";
+import { basePackage } from "./package/basePack/basePack.ts";
 import {
   dispatchSocketEvent,
   RealtimeServer,
@@ -44,7 +44,7 @@ export class EasyApp {
   > = [];
 
   realtime: RealtimeServer = new RealtimeServer();
-  packages: Array<PackageInfo> = [];
+  packages: Array<EasyPackInfo> = [];
   orm: Orm;
   actions: Record<string, Record<string, EasyAction>>;
   requestTypes: string = "";
@@ -163,7 +163,7 @@ export class EasyApp {
   get entityInfo(): EntityDefinition[] {
     return this.orm.entityInfo;
   }
-  addPackage(easyPackage: EasyPackage): void {
+  addPackage(easyPackage: EasyPack): void {
     for (const group in easyPackage.actionGroups) {
       if (this.actions[group]) {
         raiseEasyException(`Group ${group} already exists`, 500);
@@ -182,7 +182,7 @@ export class EasyApp {
     for (const room of easyPackage.realtimeRooms) {
       this.realtime.addRoom(room);
     }
-    this.packages.push(easyPackage.packageInfo);
+    this.packages.push(easyPackage.easyPackInfo);
   }
 
   private buildRequestTypes(): string {

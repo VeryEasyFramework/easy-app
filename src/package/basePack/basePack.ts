@@ -1,8 +1,8 @@
-import { EasyPackage } from "#/package/easyPackage.ts";
-import { appActions } from "./actions/appActions.ts";
+import { EasyPack } from "#/package/easyPack.ts";
+import { appActions } from "#/package/basePack/actions/appActions.ts";
 
 import { entityActions } from "./actions/entityActions.ts";
-const basePackage = new EasyPackage("base", {
+const basePackage = new EasyPack("base", {
   description:
     "This is the base package for EasyApp. It includes basic actions for interacting with entities and the app itself.",
 });

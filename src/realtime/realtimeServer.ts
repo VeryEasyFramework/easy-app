@@ -28,6 +28,7 @@ interface SocketClient {
 
 export interface SocketRoomDef {
   roomName: string;
+  description?: string;
   events: string[];
 }
 
