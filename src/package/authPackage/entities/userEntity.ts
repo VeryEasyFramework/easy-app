@@ -6,6 +6,8 @@ export const userEntity = defineEntity("user", {
       key: "firstName",
       label: "First Name",
       fieldType: "DataField",
+      required: true,
+      inList: true,
     },
     {
       key: "lastName",
@@ -32,7 +34,7 @@ export const userEntity = defineEntity("user", {
   ],
   label: "User",
   hooks: {
-    beforeSave() {
+    async beforeSave() {
       this.fullName = `${this.firstName} ${this.lastName}`;
     },
   },

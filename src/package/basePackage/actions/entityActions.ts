@@ -25,7 +25,7 @@ export const entityActions = [
       if ("orm" in result) {
         delete result.orm;
       }
-      return result;
+      return result.data;
     },
     params: {
       entity: {
@@ -42,7 +42,13 @@ export const entityActions = [
   createAction("createEntity", {
     description: "Create a new entity",
     action: async (app, { entity, data }) => {
-      return await app.orm.createEntity(entity, data);
+      const newEntity = await app.orm.createEntity(entity, data);
+
+      app.notify("entity", "create", {
+        entity,
+        data: newEntity,
+      });
+      return newEntity.data;
     },
     params: {
       entity: {
@@ -59,7 +65,12 @@ export const entityActions = [
   createAction("updateEntity", {
     description: "Update an entity",
     action: async (app, { entity, id, data }) => {
-      return await app.orm.updateEntity(entity, id, data);
+      const updatedEntity = await app.orm.updateEntity(entity, id, data);
+      app.notify("entity", "update", {
+        entity,
+        data: updatedEntity.data,
+      });
+      return updatedEntity.data;
     },
     params: {
       entity: {
@@ -80,7 +91,12 @@ export const entityActions = [
   createAction("deleteEntity", {
     description: "Delete an entity",
     action: async (app, { entity, id }) => {
-      return await app.orm.deleteEntity(entity, id);
+      const deleted = await app.orm.deleteEntity(entity, id);
+      app.notify("entity", "delete", {
+        entity,
+        id,
+      });
+      return deleted;
     },
     params: {
       entity: {

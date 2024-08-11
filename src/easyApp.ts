@@ -161,6 +161,9 @@ export class EasyApp {
     return docs;
   }
 
+  get entityInfo() {
+    return this.orm.entityInfo;
+  }
   addPackage(easyPackage: EasyPackage): void {
     for (const group in easyPackage.actionGroups) {
       if (this.actions[group]) {

@@ -8,6 +8,6 @@ const authPackage = new EasyPackage("auth", {
 
 authPackage.addEntity(userEntity);
 
-authPackage.addMiddleware(authMiddleware);
+// authPackage.addMiddleware(authMiddleware);
 
 export { authPackage };

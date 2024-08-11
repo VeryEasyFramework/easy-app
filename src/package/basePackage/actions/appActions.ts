@@ -2,6 +2,7 @@ import { createAction } from "#/actions/createAction.ts";
 import type { PackageInfo } from "#/package/easyPackage.ts";
 import type { SocketRoomDef } from "#/realtime/realtimeServer.ts";
 import type { DocsActionGroup } from "#/actions/actionTypes.ts";
+import { EntityDefinition } from "../../../../../easy-orm/mod.ts";
 export const appActions = [
   createAction("apiDocs", {
     description: "Get the API information for the app",
@@ -42,6 +43,13 @@ export const appActions = [
       return "alive and well!";
     },
     response: "string",
+  }),
+  createAction("entities", {
+    description: "Get the entities for the app",
+    action: (app): EntityDefinition[] => {
+      return app.entityInfo;
+    },
+    response: "EntityDefinition[]",
   }),
   createAction("notify", {
     description: "Send a realtime notification",
