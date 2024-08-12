@@ -20,11 +20,6 @@ packagee.defineEntity("User", {
       required: true,
     },
   ],
-  hooks: {
-    async beforeSave() {
-      this.email;
-    },
-  },
   actions: {
     async login(email: string, password: string) {
     },

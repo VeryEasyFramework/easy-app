@@ -5,13 +5,14 @@ import type {
 import { createAction } from "#/actions/createAction.ts";
 import {
   defineEntity,
-  EasyField,
-  EasyFieldType,
-  EntityConfig,
+  type EasyField,
+  type EasyFieldType,
+  type EntityActionRecord,
+  type EntityConfig,
   type EntityDefinition,
-  EntityHooks,
-  ExtractEntityFields,
-  Orm,
+  type EntityHooks,
+  type ExtractEntityFields,
+  type Orm,
 } from "@vef/easy-orm";
 import type { SocketRoomDef } from "#/realtime/realtimeServer.ts";
 import { raiseEasyException } from "#/easyException.ts";
@@ -359,13 +360,8 @@ export class EasyPack {
     T extends EasyFieldType,
     F extends EasyField<P, T>[],
     H extends Partial<EntityHooks>,
-    AP extends PropertyKey,
-    A extends Record<
-      AP,
-      (
-        ...args: any[]
-      ) => Promise<void>
-    > = {},
+    AP extends PropertyKey | undefined,
+    A extends EntityActionRecord<AP>,
   >(entityId: Id, options: {
     label: string;
     fields: F;
@@ -373,7 +369,9 @@ export class EasyPack {
     config?: EntityConfig;
     hooks?:
       & H
-      & ThisType<EntityHooks & ExtractEntityFields<F> & A & { orm: Orm }>;
+      & ThisType<
+        EntityHooks & ExtractEntityFields<F> & A & { orm: Orm }
+      >;
     actions?:
       & A
       & ThisType<A & EntityHooks & ExtractEntityFields<F> & { orm: Orm }>;
