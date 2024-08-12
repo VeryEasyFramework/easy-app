@@ -2,8 +2,29 @@ import type { EasyRequest } from "../easyRequest.ts";
 import { FileCache } from "./fileCache.ts";
 import { inferMimeType } from "#/staticFiles/mimeTypes.ts";
 
+/**
+ * Options for the static files handler
+ *
+ * **`cache`** - Whether to cache files or not. Default: `true`
+ *
+ * **`staticFilesRoot`** - The root directory of the static files.
+ */
 export interface StaticFilesOptions {
+  /**
+   * Whether to cache files or not *Default*: `true`
+   */
   cache?: boolean;
+
+  /**
+   * The root directory of the static files.
+   *
+   * **Note:** The path should be an absolute path.
+   *
+   * Example:
+   * ```ts
+   * "/home/user/my-app/static-files"
+   *  ```
+   */
   staticFilesRoot: string;
 }
 

@@ -3,7 +3,16 @@ import type {
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
 import { createAction } from "#/actions/createAction.ts";
-import type { EntityDefinition } from "@vef/easy-orm";
+import {
+  defineEntity,
+  EasyField,
+  EasyFieldType,
+  EntityConfig,
+  type EntityDefinition,
+  EntityHooks,
+  ExtractEntityFields,
+  Orm,
+} from "@vef/easy-orm";
 import type { SocketRoomDef } from "#/realtime/realtimeServer.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
@@ -327,12 +336,12 @@ export class EasyPack {
   }
 
   /**
-   * Add an entity to the EasyPack. Entities are used to define the structure of the data that is stored in the database.
+   * Define an entity directly in the EasyPack. Entities are used to define the structure of the data that is stored in the database.
    * Entities are defined using the EasyORM library.
    *
    * **Example**
    * ```ts
-   *  const entity = defineEntity("user",{
+   *  myEasyPack.defineEntity("user",{
    *   label: "User",
    *   fields: [
    *    {
@@ -340,11 +349,60 @@ export class EasyPack {
    *      fieldType: "DataField",
    *      label: "Username",
    *     },
-   *   });
-   *
-   *  easyPack.addEntity(entity);
+   *   ],
+   *  });
    * ```
    */
+  defineEntity<
+    Id extends string,
+    P extends PropertyKey,
+    T extends EasyFieldType,
+    F extends EasyField<P, T>[],
+    H extends Partial<EntityHooks>,
+    AP extends PropertyKey,
+    A extends Record<
+      AP,
+      (
+        ...args: any[]
+      ) => Promise<void>
+    > = {},
+  >(entityId: Id, options: {
+    label: string;
+    fields: F;
+    tableName?: string;
+    config?: EntityConfig;
+    hooks?:
+      & H
+      & ThisType<EntityHooks & ExtractEntityFields<F> & A & { orm: Orm }>;
+    actions?:
+      & A
+      & ThisType<A & EntityHooks & ExtractEntityFields<F> & { orm: Orm }>;
+  }) {
+    this.entities.push(defineEntity(entityId, options));
+  }
+
+  /**
+   * Add an entity to the EasyPack. This is an alternative to `defineEntity` that allows you to add an entity that you may have created elsewhere.
+   * Typically this would be the case if you have many entities and want to organize their declarations in other files and import them here.
+   *
+   * **Example**
+   * ```ts
+   * // Create an entity
+   * const userEntity = defineEntity("user", {
+   *      label: "User",
+   *      fields: [
+   *        {
+   *          key: "username",
+   *          fieldType: "DataField",
+   *          label: "Username",
+   *        },
+   *      ],
+   *    });
+   *
+   * // Add the entity to the EasyPack
+   * easyPack.addEntity(userEntity);
+   */
+
   addEntity(entity: EntityDefinition) {
     this.entities.push(entity);
   }

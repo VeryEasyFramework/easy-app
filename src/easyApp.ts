@@ -27,14 +27,77 @@ import type {
   EasyAction,
   InferredAction,
 } from "#/actions/actionTypes.ts";
+
 interface EasyAppOptions {
+  /**
+   * The root path of the app. Defaults to the current directory.
+   * This is used to serve static files and to store the database file for
+   * the ORM when using the default database type {json}.
+   *
+   * > **Note:** This path should be an absolute path.
+   *
+   * > **Note:** Use the forward slash `/` as the path separator even on Windows.
+   *  The app will handle the path correctly.
+   * ```ts
+   * const app = new EasyApp({
+   *  appRootPath: "/path/to/app/root",
+   * });
+   * ```
+   */
   appRootPath?: string;
+
+  /**
+   * Set to true if the app is a single page app (SPA)
+   * that has a single entry point.
+   *
+   * This will serve the index.html file for all requests that are not files.
+   */
   singlePageApp?: boolean;
+
+  /**
+   * Options for the static files handler
+   *
+   * **`cache`** - Whether to cache files or not. Default: `true`
+   *
+   * **`staticFilesRoot`** - The root directory of the static files.
+   */
   staticFilesOptions?: StaticFilesOptions;
+
+  /**
+   * Options for the Deno server
+   *
+   * **`port`** - The port to run the server on. Default: `8000`
+   *
+   * **`hostname`** - The hostname to run the server on. Default: `
+   */
   serverOptions?: Deno.ListenOptions;
+  /**
+   * An instance of EasyOrm to use for the app. If not provided, a new instance
+   * of EasyOrm will be created with the default options for the database type {json}.
+   *
+   * **Example:**
+   * ```ts
+   * const app = new EasyApp({
+   *    orm: new EasyOrm({
+   *      databaseType: "postgres",
+   *      databaseConfig: {
+   *        host: "localhost",
+   *        port: 5432,
+   *        user: "user",
+   *        password: "password",
+   *        database: "mydb",
+   *      },
+   *      entities: [],
+   *   }),
+   *  });
+   * ```
+   */
   orm?: Orm;
 }
 
+/**
+ * The EasyApp class is the starting point for creating an Easy App.
+ */
 export class EasyApp {
   private server?: Deno.HttpServer;
   private config: Required<Omit<EasyAppOptions, "orm">>;
@@ -48,6 +111,31 @@ export class EasyApp {
   orm: Orm;
   actions: Record<string, Record<string, EasyAction>>;
   requestTypes: string = "";
+  /**
+   * The starting point for the creating an Easy App
+   *
+   * **Quick Start:**
+   *
+   * ```ts
+   * import { EasyApp } from "@vef/easy-app";
+   * // Create a new instance of EasyApp
+   * const app = new EasyApp();
+   *  // Run the app
+   * app.run();
+   *
+   * ```
+   * Now you can visit http://localhost:8000 to see your app in action!
+   *
+   * Alternatively, you can pass in options to the EasyApp constructor:
+   * ```ts
+   * const app = new EasyApp(options: EasyAppOptions);
+   * ```
+   * - **`appRootPath`** (optional) - The root path of the app
+   * - **`singlePageApp`** (optional) - Set to true if the app is a single page app (SPA)
+   * - **`staticFilesOptions`** (optional) - Options for serving static files
+   * - **`serverOptions`** (optional) - Options for the Deno server
+   * - **`orm`** (optional) - An instance of EasyOrm to use for the app
+   */
   constructor(options?: EasyAppOptions) {
     const appRootPath = options?.appRootPath || ".";
     this.orm = options?.orm || new EasyOrm({
