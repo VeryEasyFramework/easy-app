@@ -160,7 +160,7 @@ export class EasyApp {
       this.config.staticFilesOptions,
     );
     this.actions = {};
-    this.addPackage(basePackage);
+    this.addEasyPack(basePackage);
   }
   private get apiDocs(): DocsActionGroup[] {
     const fullDocs: DocsActionGroup[] = [];
@@ -251,26 +251,26 @@ export class EasyApp {
   get entityInfo(): EntityDefinition[] {
     return this.orm.entityInfo;
   }
-  addPackage(easyPackage: EasyPack): void {
-    for (const group in easyPackage.actionGroups) {
+  addEasyPack(easyPack: EasyPack): void {
+    for (const group in easyPack.actionGroups) {
       if (this.actions[group]) {
         raiseEasyException(`Group ${group} already exists`, 500);
       }
-      this.addActionGroup(group, easyPackage.actionGroups[group]);
+      this.addActionGroup(group, easyPack.actionGroups[group]);
     }
-    for (const middleware of easyPackage.middleware) {
+    for (const middleware of easyPack.middleware) {
       this.addMiddleware(middleware as any);
     }
-    for (const entity of easyPackage.entities) {
+    for (const entity of easyPack.entities) {
       if (this.orm.hasEntity(entity.entityId)) {
         raiseEasyException(`Entity ${entity.entityId} already exists`, 500);
       }
       this.orm.addEntity(entity);
     }
-    for (const room of easyPackage.realtimeRooms) {
+    for (const room of easyPack.realtimeRooms) {
       this.realtime.addRoom(room);
     }
-    this.packages.push(easyPackage.easyPackInfo);
+    this.packages.push(easyPack.easyPackInfo);
   }
 
   private buildRequestTypes(): string {

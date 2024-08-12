@@ -26,7 +26,7 @@ packagee.defineEntity("User", {
   },
 });
 const app = new EasyApp({});
-app.addPackage(authPackage);
+app.addEasyPack(authPackage);
 app.run({
   clientProxyPort: 5174,
 });
