@@ -16,12 +16,12 @@ const box = printUtils.symbol.box;
 export const easyLog = {
   message: (content: any | any[], subject?: string) =>
     log(content, "Message", subject),
-  error: (content: any | any[], subject?: string) =>
-    log(content, "Error", subject),
+  error: (content: any | any[], subject?: string, hideTrace?: boolean) =>
+    log(content, "Error", subject, hideTrace),
   info: (content: any | any[], subject?: string) =>
     log(content, "Info", subject),
-  warning: (content: any | any[], subject?: string) =>
-    log(content, "Warning", subject),
+  warning: (content: any | any[], subject?: string, hideTrace?: boolean) =>
+    log(content, "Warning", subject, hideTrace),
   debug: (content: any | any[], subject?: string) =>
     log(content, "Debug", subject),
 } as const;
@@ -29,6 +29,7 @@ function log(
   content: any | any[],
   type?: LogType,
   subject?: string,
+  hideTrace?: boolean,
 ) {
   if (!type && !subject) {
     type = "Debug";
@@ -36,8 +37,9 @@ function log(
   const message: string[] = [];
 
   const title = subject || type || "Log";
-
-  if (type == "Debug" || type == "Error" || type == "Warning") {
+  const showTrace = type === "Error" || type === "Warning";
+  const shouldHideTrace = hideTrace && type != "Debug";
+  if (showTrace && !shouldHideTrace) {
     //get the calling function
     const stack = new Error().stack;
     let lines: string[] = [];

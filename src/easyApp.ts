@@ -28,7 +28,7 @@ import type {
   EasyAction,
   InferredAction,
 } from "#/actions/actionTypes.ts";
-import { BootAction } from "#/types.ts";
+import type { BootAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
 import { printUtils } from "@vef/easy-cli";
 import { asyncPause } from "#/utils.ts";
@@ -378,7 +378,7 @@ export class EasyApp {
       const errorClass = e instanceof Error ? e.constructor.name : "Unknown";
       easyLog.error(`Error booting app: ${message} (${errorClass})`);
 
-      Deno.exit(1);
+      this.exit(1);
     }
     this.serve(config);
   }
@@ -395,8 +395,13 @@ export class EasyApp {
       },
     });
   }
+  exit(code?: number): void {
+    this.server?.shutdown();
+    Deno.exit(code);
+  }
   private async boot(): Promise<void> {
     console.clear();
+
     asyncPause(100);
     easyLog.info("Booting EasyApp...", "Boot");
     this.requestTypes = this.buildRequestTypes();
@@ -404,8 +409,8 @@ export class EasyApp {
       await this.orm.init();
     } catch (e) {
       if (e instanceof OrmException) {
-        easyLog.error(e.message, e.type);
-        Deno.exit(1);
+        easyLog.error(e.message, e.type, true);
+        this.exit(1);
       }
       e.message = `Error initializing ORM: ${e.message}`;
       throw e;
@@ -427,6 +432,7 @@ export class EasyApp {
     const serveOptions: Deno.ServeOptions = {
       hostname: options.hostname,
       port: options.port,
+
       onListen: (addr) => {
         const { hostname, port, transport } = addr;
         let protocol = "";
@@ -478,7 +484,7 @@ export class EasyApp {
         } catch (_e) {
           if (_e instanceof EasyException) {
             const subject = `${_e.status} - ${_e.name}`;
-            easyLog.error(_e.message, subject);
+            easyLog.error(_e.message, subject, true);
             return easyResponse.error(_e.message, _e.status);
           }
 
