@@ -106,6 +106,7 @@ interface EasyAppOptions {
  * The EasyApp class is the starting point for creating an Easy App.
  */
 export class EasyApp {
+  private hasError: boolean = false;
   private server?: Deno.HttpServer;
   private config: Required<Omit<EasyAppOptions, "orm">>;
   private staticFileHandler: StaticFileHandler;
@@ -150,6 +151,8 @@ export class EasyApp {
    * - **`orm`** (optional) - An instance of EasyOrm to use for the app
    */
   constructor(options?: EasyAppOptions) {
+    console.clear();
+    easyLog.message("Building EasyApp...", "Init");
     const appRootPath = options?.appRootPath || ".";
     this.orm = options?.orm || new EasyOrm({
       databaseType: "json",
@@ -222,10 +225,13 @@ export class EasyApp {
       this.actions[group] = {};
     }
     if (this.actions[group][action.actionName as string]) {
-      raiseEasyException(
+      easyLog.error(
         `Action ${action.actionName} already exists in group ${group}`,
-        500,
+        "Add Action Error",
+        true,
       );
+      this.hasError = true;
+      return;
     }
     this.actions[group][action.actionName as string] = action;
   }
@@ -306,25 +312,37 @@ export class EasyApp {
    * Add an EasyPack to the app
    */
   addEasyPack(easyPack: EasyPack): void {
-    for (const group in easyPack.actionGroups) {
-      if (this.actions[group]) {
-        raiseEasyException(`Group ${group} already exists`, 500);
+    try {
+      for (const group in easyPack.actionGroups) {
+        if (this.actions[group]) {
+          raiseEasyException(`Group ${group} already exists`, 500);
+        }
+        this.addActionGroup(group, easyPack.actionGroups[group]);
       }
-      this.addActionGroup(group, easyPack.actionGroups[group]);
-    }
-    for (const middleware of easyPack.middleware) {
-      this.addMiddleware(middleware as any);
-    }
-    for (const entity of easyPack.entities) {
-      if (this.orm.hasEntity(entity.entityId)) {
-        raiseEasyException(`Entity ${entity.entityId} already exists`, 500);
+      for (const middleware of easyPack.middleware) {
+        this.addMiddleware(middleware as any);
       }
-      this.orm.addEntity(entity);
+      for (const entity of easyPack.entities) {
+        if (this.orm.hasEntity(entity.entityId)) {
+          raiseEasyException(`Entity ${entity.entityId} already exists`, 500);
+        }
+        this.orm.addEntity(entity);
+      }
+      for (const room of easyPack.realtimeRooms) {
+        this.realtime.addRoom(room);
+      }
+      this.packages.push(easyPack.easyPackInfo);
+    } catch (e) {
+      if (e instanceof EasyException) {
+        const subject = `EasyPack Error: ${easyPack.easyPackInfo.EasyPackName}`;
+
+        easyLog.error(e.message, subject, true);
+        this.hasError = true;
+        return;
+      }
+      e.message = `Error adding EasyPack: ${e.message}`;
+      throw e;
     }
-    for (const room of easyPack.realtimeRooms) {
-      this.realtime.addRoom(room);
-    }
-    this.packages.push(easyPack.easyPackInfo);
   }
 
   private buildRequestTypes(): string {
@@ -371,6 +389,10 @@ export class EasyApp {
   async run(config?: {
     clientProxyPort?: number;
   }): Promise<void> {
+    if (this.hasError) {
+      easyLog.warning("App has errors. Exiting...", "Boot", true);
+      this.exit(1);
+    }
     try {
       await this.boot();
     } catch (e) {
@@ -378,8 +400,9 @@ export class EasyApp {
       const errorClass = e instanceof Error ? e.constructor.name : "Unknown";
       easyLog.error(`Error booting app: ${message} (${errorClass})`);
 
-      this.exit(1);
+      this.exit(0);
     }
+
     this.serve(config);
   }
 
@@ -400,6 +423,11 @@ export class EasyApp {
     Deno.exit(code);
   }
   private async boot(): Promise<void> {
+    if (this.hasError) {
+      easyLog.message("App has errors. Exiting...", "Boot");
+      prompt("Press any key to exit...");
+      this.exit(1);
+    }
     console.clear();
 
     asyncPause(100);

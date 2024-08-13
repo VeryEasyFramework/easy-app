@@ -25,8 +25,16 @@ packagee.defineEntity("User", {
     },
   },
 });
+packagee.addAction({
+  groupName: "thing",
+  actionName: "test",
+  action: async () => {
+    console.log("Hello World");
+  },
+  description: "Test action",
+});
 const app = new EasyApp({});
-app.addEasyPack(authPackage);
+app.addEasyPack(packagee);
 app.run({
   clientProxyPort: 5174,
 });
