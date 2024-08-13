@@ -28,6 +28,12 @@ import type {
   EasyAction,
   InferredAction,
 } from "#/actions/actionTypes.ts";
+import { BootAction } from "#/types.ts";
+import { easyLog } from "#/log/logging.ts";
+import { printUtils } from "@vef/easy-cli";
+import { asyncPause } from "#/utils.ts";
+import { colorMe } from "@vef/color-me";
+import { OrmException } from "../../easy-orm/src/ormException.ts";
 
 interface EasyAppOptions {
   /**
@@ -112,6 +118,12 @@ export class EasyApp {
   orm: Orm;
   actions: Record<string, Record<string, EasyAction>>;
   requestTypes: string = "";
+
+  /**
+   * An array of boot actions that are run when the app is booted
+   */
+  bootActions: Array<BootAction> = [];
+
   /**
    * The starting point for the creating an Easy App
    *
@@ -171,6 +183,10 @@ export class EasyApp {
     }
     return fullDocs;
   }
+
+  /**
+   * Send a realtime notification to a room
+   */
   notify(
     room: string,
     event: string,
@@ -178,6 +194,12 @@ export class EasyApp {
   ): void {
     dispatchSocketEvent(room, event, data);
   }
+
+  /**
+   * Check if an action is a public action  (does not require authentication)
+   * This is useful for authorization middleware that needs to determine if an action is allowed
+   * without the user being authenticated.
+   */
   isPublicAction(group?: string, action?: string): boolean {
     if (!group || !action) {
       return false;
@@ -188,6 +210,10 @@ export class EasyApp {
     const actionInfo = this.actions[group][action];
     return actionInfo.public || false;
   }
+
+  /**
+   * Add an action to the app
+   */
   addAction<A extends Action<any, any>>(
     group: string,
     action: InferredAction<A>,
@@ -203,25 +229,45 @@ export class EasyApp {
     }
     this.actions[group][action.actionName as string] = action;
   }
+
+  /**
+   * Add a group of actions to the app
+   */
   addActionGroup(group: string, actions: Array<Action<any, any>>) {
     for (const action of actions) {
       this.addAction(group, action);
     }
   }
 
+  /**
+   * Add a list of rooms to the realtime server
+   */
   addSocketRooms(rooms: SocketRoomDef[]) {
     this.realtime.addRooms(rooms);
   }
-  // Overload signatures for addMiddleware
+
+  /**
+   * Add a middleware to the app that does not return a response
+   */
   addMiddleware(middleware: MiddlewareWithoutResponse): void;
+
+  /**
+   * Add a middleware to the app that returns a response
+   */
   addMiddleware(middleware: MiddlewareWithResponse): void;
 
-  // Implementation of addMiddleware
+  /**
+   * Add a middleware to the app
+   */
   addMiddleware(
     middleware: MiddlewareWithResponse | MiddlewareWithoutResponse,
   ): void {
     this.middleware.push(middleware);
   }
+
+  /**
+   *  Get the documentation for a specific group of actions
+   */
   getActionGroupDocs(groupName: string): DocsActionGroup {
     const group = this.actions[groupName];
     const docs: DocsActionGroup = {
@@ -249,9 +295,16 @@ export class EasyApp {
     return docs;
   }
 
+  /**
+   * Get a list of all the registered entities and their properties
+   */
   get entityInfo(): EntityDefinition[] {
     return this.orm.entityInfo;
   }
+
+  /**
+   * Add an EasyPack to the app
+   */
   addEasyPack(easyPack: EasyPack): void {
     for (const group in easyPack.actionGroups) {
       if (this.actions[group]) {
@@ -300,22 +353,100 @@ export class EasyApp {
     typeString += `}>\n\n `;
     return typeString;
   }
+
+  /**
+   * This is the main entry point for the app. It boots the app and starts the server.
+   *
+   * You can pass in a configuration object to change the static files behavior to act as a reverse proxy.
+   *
+   * This is useful when developing a frontend that's running on a different port during development such as `vite` or `create-react-app`.
+   *
+   * **Example:**
+   * ```ts
+   * app.run({
+   *  clientProxyPort: 3000,
+   * });
+   * ```
+   */
   async run(config?: {
     clientProxyPort?: number;
   }): Promise<void> {
-    await this.boot();
+    try {
+      await this.boot();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Unknown error";
+      const errorClass = e instanceof Error ? e.constructor.name : "Unknown";
+      easyLog.error(`Error booting app: ${message} (${errorClass})`);
+
+      Deno.exit(1);
+    }
     this.serve(config);
   }
+
+  addBootAction(actionName: string, action: () => Promise<void>): void;
+  addBootAction(
+    actionName: string,
+    action: (app: EasyApp) => Promise<void>,
+  ): void {
+    this.bootActions.push({
+      actionName,
+      action: async () => {
+        await action(this);
+      },
+    });
+  }
   private async boot(): Promise<void> {
+    console.clear();
+    asyncPause(100);
+    easyLog.info("Booting EasyApp...", "Boot");
     this.requestTypes = this.buildRequestTypes();
-    await this.orm.init();
+    try {
+      await this.orm.init();
+    } catch (e) {
+      if (e instanceof OrmException) {
+        easyLog.error(e.message, e.type);
+        Deno.exit(1);
+      }
+      e.message = `Error initializing ORM: ${e.message}`;
+      throw e;
+    }
+    try {
+      for (const action of this.bootActions) {
+        await action.action();
+      }
+    } catch (e) {
+      e.message = `Error running boot action ${e.actionName}: ${e.message}`;
+      throw e;
+    }
   }
   private serve(config?: {
     clientProxyPort?: number;
   }): void {
     const options = this.config.serverOptions;
+
+    const serveOptions: Deno.ServeOptions = {
+      hostname: options.hostname,
+      port: options.port,
+      onListen: (addr) => {
+        const { hostname, port, transport } = addr;
+        let protocol = "";
+        let host = "";
+        if (transport === "tcp") {
+          protocol = "http";
+        }
+        if (hostname === "0.0.0.0") {
+          host = "localhost";
+        }
+        easyLog.info(
+          `${colorMe.brightCyan("EasyApp")} is running on ${
+            colorMe.brightYellow(` ${protocol}://${host}:${port}`)
+          }`,
+          "Server",
+        );
+      },
+    };
     this.server = Deno.serve(
-      options,
+      serveOptions,
       async (request: Request): Promise<Response> => {
         const easyRequest = new EasyRequest(request);
 
@@ -344,12 +475,15 @@ export class EasyApp {
               );
           }
           return easyResponse.respond();
-        } catch (_e: EasyException | Error | unknown) {
+        } catch (_e) {
           if (_e instanceof EasyException) {
+            const subject = `${_e.status} - ${_e.name}`;
+            easyLog.error(_e.message, subject);
             return easyResponse.error(_e.message, _e.status);
           }
-          console.error(_e);
 
+          const subject = _e.name;
+          easyLog.error(_e.message, subject);
           return easyResponse.error("Internal Server Error", 500);
         }
       },
