@@ -1,6 +1,6 @@
 {
   "name": "@vef/easy-app",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "exports": "./mod.ts",
   "exclude": [
     "references"
@@ -19,8 +19,8 @@
   "imports": {
     "#/": "./src/",
     "@vef/color-me": "jsr:@vef/color-me@^1.0.3",
-    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.1.13",
-    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.21"
+    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.1.15",
+    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.23"
   },
   "tasks": {
     "dev": "deno run --allow-all --watch dev/main.ts"

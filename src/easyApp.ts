@@ -2,7 +2,12 @@ import { EasyException, raiseEasyException } from "#/easyException.ts";
 import { EasyRequest } from "#/easyRequest.ts";
 import { EasyResponse } from "#/easyResponse.ts";
 
-import { EasyOrm, type EntityDefinition, type Orm } from "@vef/easy-orm";
+import {
+  EasyOrm,
+  type EntityDefinition,
+  type Orm,
+  OrmException,
+} from "@vef/easy-orm";
 
 import {
   StaticFileHandler,
@@ -30,10 +35,8 @@ import type {
 } from "#/actions/actionTypes.ts";
 import type { BootAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
-import { printUtils } from "@vef/easy-cli";
 import { asyncPause } from "#/utils.ts";
 import { colorMe } from "@vef/color-me";
-import { OrmException } from "../../easy-orm/src/ormException.ts";
 
 interface EasyAppOptions {
   /**
