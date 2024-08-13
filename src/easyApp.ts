@@ -37,6 +37,7 @@ import type { BootAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
 import { colorMe } from "@vef/color-me";
+import { PgError } from "../../easy-orm/src/database/adapter/adapters/postgres/pgError.ts";
 
 interface EasyAppOptions {
   /**
@@ -512,15 +513,25 @@ export class EasyApp {
               );
           }
           return easyResponse.respond();
-        } catch (_e) {
-          if (_e instanceof EasyException) {
-            const subject = `${_e.status} - ${_e.name}`;
-            easyLog.error(_e.message, subject, true);
-            return easyResponse.error(_e.message, _e.status);
+        } catch (e) {
+          if (e instanceof EasyException) {
+            const subject = `${e.status} - ${e.name}`;
+            easyLog.error(e.message, subject, true);
+            return easyResponse.error(e.message, e.status);
+          }
+          if (e instanceof PgError) {
+            e.fullMessage;
+            e.name;
+            e.detail;
+
+            const subject = e.name;
+            const message = e.fullMessage;
+            easyLog.error(message, e.name);
+            return easyResponse.error("Internal Server Error", 500);
           }
 
-          const subject = _e.name;
-          easyLog.error(_e.message, subject);
+          const subject = e.name;
+          easyLog.error(e.message, subject);
           return easyResponse.error("Internal Server Error", 500);
         }
       },
