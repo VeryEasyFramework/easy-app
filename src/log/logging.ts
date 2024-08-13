@@ -14,15 +14,18 @@ const typeColors: Record<LogType, ColorName> = {
 
 const box = printUtils.symbol.box;
 export const easyLog = {
-  message: (content: any | any[], subject?: string) =>
+  message: (content: any | any[], subject?: string): void =>
     log(content, "Message", subject),
-  error: (content: any | any[], subject?: string, hideTrace?: boolean) =>
+  error: (content: any | any[], subject?: string, hideTrace?: boolean): void =>
     log(content, "Error", subject, hideTrace),
-  info: (content: any | any[], subject?: string) =>
+  info: (content: any | any[], subject?: string): void =>
     log(content, "Info", subject),
-  warning: (content: any | any[], subject?: string, hideTrace?: boolean) =>
-    log(content, "Warning", subject, hideTrace),
-  debug: (content: any | any[], subject?: string) =>
+  warning: (
+    content: any | any[],
+    subject?: string,
+    hideTrace?: boolean,
+  ): void => log(content, "Warning", subject, hideTrace),
+  debug: (content: any | any[], subject?: string): void =>
     log(content, "Debug", subject),
 } as const;
 function log(
