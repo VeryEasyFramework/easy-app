@@ -23,6 +23,7 @@
     "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.23"
   },
   "tasks": {
-    "dev": "deno run --allow-all --watch dev/main.ts"
+    "dev": "deno run --allow-all --watch dev/main.ts",
+    "check": "deno publish --dry-run"
   }
 }
