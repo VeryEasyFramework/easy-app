@@ -37,7 +37,7 @@ import type { BootAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
 import { colorMe } from "@vef/color-me";
-import { PgError } from "../../easy-orm/src/database/adapter/adapters/postgres/pgError.ts";
+import { PgError } from "@vef/easy-orm";
 
 interface EasyAppOptions {
   /**
