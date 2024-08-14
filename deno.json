@@ -1,6 +1,6 @@
 {
   "name": "@vef/easy-app",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "exports": "./mod.ts",
   "exclude": [
     "references"
@@ -19,7 +19,7 @@
   "imports": {
     "#/": "./src/",
     "@vef/color-me": "jsr:@vef/color-me@^1.0.3",
-    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.1.15",
+    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.1.16",
     "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.23"
   },
   "tasks": {

@@ -90,6 +90,7 @@ function log(
     if (typeof arg === "object") {
       return JSON.stringify(arg, null, 2);
     }
+
     return formatUtils.center(arg);
   });
   message.push(...contentStr);
