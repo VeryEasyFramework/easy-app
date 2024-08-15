@@ -12,15 +12,17 @@ type RequestMethod =
 export class EasyRequest {
   upgradeSocket!: boolean;
 
-  constructor(request: Request) {
+  constructor(request: Request, prefix: string) {
     this.request = request;
+    this.prefix = prefix;
     this.parseParams();
     this.extractCookies();
     this.getAuthToken();
     this.checkForSocketUpgrade();
     this.checkForFileExtension();
   }
-
+  cleanedUrl: string = "";
+  prefix?: string;
   request: Request;
   cookies: Map<string, string> = new Map();
   authToken: string | null = null;
@@ -85,7 +87,11 @@ export class EasyRequest {
   }
 
   private parseParams() {
-    const url = new URL(this.request.url);
+    this.cleanedUrl = this.request.url;
+    if (this.prefix) {
+      this.cleanedUrl = this.request.url.replace(this.prefix, "");
+    }
+    const url = new URL(this.cleanedUrl);
     this.method = this.request.method as RequestMethod;
     this.path = url.pathname;
     this.port = parseInt(url.port);

@@ -59,6 +59,18 @@ interface EasyAppOptions {
   appRootPath?: string;
 
   /**
+   * The path prefix for the app. This is useful when the app is running behind a reverse proxy.
+   *
+   * **Example:**
+   * ```ts
+   * const app = new EasyApp({
+   * pathPrefix: "/myapp",
+   * });
+   * ```
+   */
+  pathPrefix?: string;
+
+  /**
    * Set to true if the app is a single page app (SPA)
    * that has a single entry point.
    *
@@ -168,6 +180,7 @@ export class EasyApp {
     });
     this.config = {
       appRootPath,
+      pathPrefix: options?.pathPrefix || "",
       staticFilesOptions: {
         staticFilesRoot: options?.staticFilesOptions?.staticFilesRoot ||
           "public",
@@ -487,21 +500,22 @@ export class EasyApp {
     this.server = Deno.serve(
       serveOptions,
       async (request: Request): Promise<Response> => {
-        const easyRequest = new EasyRequest(request);
+        const easyRequest = new EasyRequest(request, this.config.pathPrefix);
 
         const easyResponse = new EasyResponse();
-        if (easyRequest.method === "OPTIONS") {
-          return easyResponse.respond();
-        }
-        if (easyRequest.upgradeSocket) {
-          return this.realtime.handleUpgrade(easyRequest.request);
-        }
+
         try {
+          for (const middleware of this.middleware) {
+            await middleware(this, easyRequest, easyResponse);
+          }
+          if (easyRequest.method === "OPTIONS") {
+            return easyResponse.respond();
+          }
+          if (easyRequest.upgradeSocket) {
+            return this.realtime.handleUpgrade(easyRequest.request);
+          }
           switch (easyRequest.path) {
             case "/api":
-              for (const middleware of this.middleware) {
-                await middleware(this, easyRequest, easyResponse);
-              }
               easyResponse.content = await this.apiHandler(
                 easyRequest,
                 easyResponse,
@@ -550,14 +564,16 @@ export class EasyApp {
       if (!port) {
         raiseEasyException("Port not found for client proxy", 500);
       }
-      const url = easyRequest.request.url.replace(
+      const url = easyRequest.cleanedUrl.replace(
         port,
         proxy.toString(),
       );
+
       const response = await fetch(url);
       return response;
     }
     let path = easyRequest.path;
+
     if (this.config.singlePageApp && !easyRequest.isFile) {
       path = "/index.html";
     }
