@@ -1,15 +1,65 @@
 import { createAction } from "#/actions/createAction.ts";
 import { raiseEasyException } from "#/easyException.ts";
+import type { ListOptions } from "@vef/easy-orm";
 
 export const entityActions = [
   createAction("getList", {
     description: "Get a list of items",
-    action: async (app, { entity }) => {
-      return await app.orm.getEntityList(entity);
+    action: async (app, data) => {
+      const options = {} as ListOptions;
+      if (data.filter) {
+        options.filter = data.filter;
+      }
+      if (data.limit) {
+        options.limit = data.limit;
+      }
+      if (data.offset) {
+        options.offset = data.offset;
+      }
+      if (data.orderBy) {
+        options.orderBy = data.orderBy;
+      }
+      if (data.order) {
+        if (data.order !== "asc" && data.order !== "desc") {
+          raiseEasyException(
+            "Invalid order value. Must be 'asc' or 'desc'",
+            400,
+          );
+        }
+        options.order = data.order as "asc" | "desc";
+      }
+      if (data.columns) {
+        options.columns = data.columns as unknown as string[];
+      }
+      return await app.orm.getEntityList(data.entity, options);
     },
     params: {
       entity: {
         required: true,
+        type: "DataField",
+      },
+      filter: {
+        required: false,
+        type: "JSONField",
+      },
+      limit: {
+        required: false,
+        type: "IntField",
+      },
+      offset: {
+        required: false,
+        type: "IntField",
+      },
+      orderBy: {
+        required: false,
+        type: "DataField",
+      },
+      order: {
+        required: false,
+        type: "DataField",
+      },
+      columns: {
+        required: false,
         type: "DataField",
       },
     },

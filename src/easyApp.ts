@@ -38,6 +38,7 @@ import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
 import { colorMe } from "@vef/color-me";
 import { PgError } from "@vef/easy-orm";
+import { toTitleCase } from "jsr:@vef/string-utils@^0.1.2";
 
 interface EasyAppOptions {
   /**
@@ -517,22 +518,28 @@ export class EasyApp {
           if (e instanceof EasyException) {
             const subject = `${e.status} - ${e.name}`;
             easyLog.error(e.message, subject, true);
-            return easyResponse.error(e.message, e.status);
+            return easyResponse.error(e.message, e.status, subject);
           }
           if (e instanceof PgError) {
             e.fullMessage;
             e.name;
             e.detail;
 
-            const subject = e.name;
-            const message = e.fullMessage;
-            easyLog.error(message, e.name);
-            return easyResponse.error("Internal Server Error", 500);
+            const subject = toTitleCase(e.name);
+            const message = `${subject}: ${e.message}`;
+            easyLog.error(message, "Database Error (Postgres)", true);
+            return easyResponse.error(message, 500, subject);
+          }
+          if (e instanceof OrmException) {
+            const subject = toTitleCase(e.type);
+            const message = `${e.type}: ${e.message}`;
+            easyLog.error(message, "ORM Error", true);
+            return easyResponse.error(message, 500, e.type);
           }
 
           const subject = e.name;
           easyLog.error(e.message, subject);
-          return easyResponse.error("Internal Server Error", 500);
+          return easyResponse.error(e.message, 500, subject);
         }
       },
     );
