@@ -20,7 +20,7 @@ import type {
 } from "#/middleware/middleware.ts";
 
 import type { EasyPack, EasyPackInfo } from "./package/easyPack.ts";
-import { basePackage } from "./package/basePack/basePack.ts";
+import { basePackage } from "#/package/basePack/basePack.ts";
 import {
   dispatchSocketEvent,
   RealtimeServer,
@@ -38,7 +38,9 @@ import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
 import { colorMe } from "@vef/color-me";
 import { PgError } from "@vef/easy-orm";
-import { toTitleCase } from "jsr:@vef/string-utils@^0.1.2";
+import { camelToTitleCase, toTitleCase } from "@vef/string-utils";
+import { AddActionOptions, EasyCli } from "@vef/easy-cli";
+import { AddMenuOptions } from "../../easy-cli/src/easyCli.ts";
 
 interface EasyAppOptions {
   /**
@@ -57,7 +59,11 @@ interface EasyAppOptions {
    * ```
    */
   appRootPath?: string;
+  /**
+   * The name of the app. This is used in the logs and other places where the app name is needed.
+   */
 
+  appName?: string;
   /**
    * The path prefix for the app. This is useful when the app is running behind a reverse proxy.
    *
@@ -142,6 +148,7 @@ export class EasyApp {
    */
   bootActions: Array<BootAction> = [];
 
+  private cli!: EasyCli;
   /**
    * The starting point for the creating an Easy App
    *
@@ -167,6 +174,7 @@ export class EasyApp {
    * - **`serverOptions`** (optional) - Options for the Deno server
    * - **`orm`** (optional) - An instance of EasyOrm to use for the app
    */
+
   constructor(options?: EasyAppOptions) {
     console.clear();
     easyLog.message("Building EasyApp...", "Init");
@@ -179,6 +187,7 @@ export class EasyApp {
       entities: [],
     });
     this.config = {
+      appName: options?.appName || "EasyApp",
       appRootPath,
       pathPrefix: options?.pathPrefix || "",
       staticFilesOptions: {
@@ -411,6 +420,8 @@ export class EasyApp {
       easyLog.warning("App has errors. Exiting...", "Boot", true);
       this.exit(1);
     }
+    const args = Deno.args;
+
     try {
       await this.boot();
     } catch (e) {
@@ -419,6 +430,11 @@ export class EasyApp {
       easyLog.error(`Error booting app: ${message} (${errorClass})`);
 
       this.exit(0);
+    }
+
+    if (args.includes("cli")) {
+      this.cli.run();
+      return;
     }
 
     this.serve(config);
@@ -439,6 +455,77 @@ export class EasyApp {
   exit(code?: number): void {
     this.server?.shutdown();
     Deno.exit(code);
+  }
+  private buildCli() {
+    const name = this.config.appName;
+    const description = `Welcome to the ${name} CLI`;
+    this.cli = new EasyCli(this.config.appName, description);
+    this.cli.addMenu({
+      menuName: "Main Menu",
+      description,
+      actions: [{
+        name: "App Actions",
+        description: "Select an action in the app",
+        action: () => {
+          this.cli.changeMenu("App Actions");
+        },
+      }],
+    });
+    const actionGroups: AddActionOptions[] = [];
+
+    const actionGroupMenus: Record<string, AddMenuOptions> = {};
+
+    for (const group in this.actions) {
+      actionGroups.push({
+        name: camelToTitleCase(group),
+        description: `Select an action in the ${group} group`,
+        action: () => {
+          this.cli.changeMenu(group);
+        },
+      });
+
+      const actions: AddActionOptions[] = [];
+      for (const action in this.actions[group]) {
+        const actionData = this.actions[group][action];
+        actions.push({
+          name: camelToTitleCase(action),
+          description: actionData.description,
+          action: () => {
+            this.cli.changeMenu(`${group}:${action}`);
+          },
+        });
+      }
+
+      actionGroupMenus[group] = {
+        menuName: camelToTitleCase(group),
+        description: `Select an action in the ${group} group`,
+        actions,
+        exitAction: {
+          name: "Back",
+          description: "Go back to App Actions",
+          action: () => {
+            this.cli.changeMenu("App Actions");
+          },
+        },
+      };
+
+      this.cli.addMenu(actionGroupMenus[group]);
+    }
+
+    this.cli.addMenu({
+      menuName: "App Actions",
+      description: "Select an action in the app",
+      actions: actionGroups,
+      exitAction: {
+        name: "Back",
+        description: "Go back to the main menu",
+        action: () => {
+          this.cli.changeMenu("Main Menu");
+        },
+      },
+    });
+
+    this.cli.startingMenu = "Main Menu";
   }
   private async boot(): Promise<void> {
     if (this.hasError) {
@@ -469,6 +556,7 @@ export class EasyApp {
       e.message = `Error running boot action ${e.actionName}: ${e.message}`;
       throw e;
     }
+    this.buildCli();
   }
   private serve(config?: {
     clientProxyPort?: number;
