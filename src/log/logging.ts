@@ -1,10 +1,13 @@
-import { colorMe, ColorName } from "@vef/color-me";
-
-import { formatUtils, printUtils } from "@vef/easy-cli";
+import {
+  type BasicFgColor,
+  ColorMe,
+  formatUtils,
+  printUtils,
+} from "@vef/easy-cli";
 const tab = "  ";
 export type LogType = "Error" | "Info" | "Warning" | "Debug" | "Message";
 
-const typeColors: Record<LogType, ColorName> = {
+const typeColors: Record<LogType, BasicFgColor> = {
   Error: "red",
   Info: "green",
   Warning: "yellow",
@@ -53,11 +56,16 @@ function log(
       let func = args[0];
       if (func.includes(".")) {
         const fullFunc = func.split(".");
-        func = `${colorMe.brightGreen(fullFunc[fullFunc.length - 2])}.${
-          colorMe.brightYellow(
-            fullFunc[fullFunc.length - 1],
-          )
-        }${colorMe.brightWhite("()")}`;
+        func = ColorMe.chain().content(fullFunc[fullFunc.length - 2])
+          .color("brightGreen")
+          .content(".")
+          .color("white")
+          .content(fullFunc[fullFunc.length - 1])
+          .color("brightYellow")
+          .content("()")
+          .color("brightWhite")
+          .end();
+
         // func = `${fgGreen}${fullFunc[fullFunc.length - 2]}.${fgYellow}${
         //   fullFunc[fullFunc.length - 1]
         // }${fgWhite}()${reset}`;

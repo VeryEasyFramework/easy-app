@@ -36,11 +36,9 @@ import type {
 import type { BootAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
-import { colorMe } from "@vef/color-me";
 import { PgError } from "@vef/easy-orm";
 import { camelToTitleCase, toTitleCase } from "@vef/string-utils";
-import { AddActionOptions, EasyCli } from "@vef/easy-cli";
-import { AddMenuOptions } from "../../easy-cli/src/easyCli.ts";
+import { ColorMe, EasyCli, MenuView } from "@vef/easy-cli";
 
 interface EasyAppOptions {
   /**
@@ -434,6 +432,7 @@ export class EasyApp {
 
     if (args.includes("cli")) {
       this.cli.run();
+      this.cli.changeView("main");
       return;
     }
 
@@ -459,73 +458,122 @@ export class EasyApp {
   private buildCli() {
     const name = this.config.appName;
     const description = `Welcome to the ${name} CLI`;
-    this.cli = new EasyCli(this.config.appName, description);
-    this.cli.addMenu({
-      menuName: "Main Menu",
+    this.cli = new EasyCli({
+      appName: name,
       description,
-      actions: [{
-        name: "App Actions",
-        description: "Select an action in the app",
-        action: () => {
-          this.cli.changeMenu("App Actions");
-        },
-      }],
+      theme: {
+        backgroundColor: "bgBlack",
+        primaryColor: "brightCyan",
+      },
     });
-    const actionGroups: AddActionOptions[] = [];
-
-    const actionGroupMenus: Record<string, AddMenuOptions> = {};
-
-    for (const group in this.actions) {
-      actionGroups.push({
-        name: camelToTitleCase(group),
-        description: `Select an action in the ${group} group`,
-        action: () => {
-          this.cli.changeMenu(group);
-        },
-      });
-
-      const actions: AddActionOptions[] = [];
-      for (const action in this.actions[group]) {
-        const actionData = this.actions[group][action];
-        actions.push({
-          name: camelToTitleCase(action),
-          description: actionData.description,
-          action: () => {
-            this.cli.changeMenu(`${group}:${action}`);
-          },
-        });
-      }
-
-      actionGroupMenus[group] = {
-        menuName: camelToTitleCase(group),
-        description: `Select an action in the ${group} group`,
-        actions,
-        exitAction: {
-          name: "Back",
-          description: "Go back to App Actions",
-          action: () => {
-            this.cli.changeMenu("App Actions");
-          },
-        },
-      };
-
-      this.cli.addMenu(actionGroupMenus[group]);
-    }
-
-    this.cli.addMenu({
-      menuName: "App Actions",
+    const mainMenu = new MenuView("Main Menu", "Select an action to perform");
+    mainMenu.addAction({
+      name: "App Actions",
       description: "Select an action in the app",
-      actions: actionGroups,
-      exitAction: {
-        name: "Back",
-        description: "Go back to the main menu",
-        action: () => {
-          this.cli.changeMenu("Main Menu");
-        },
+      action: () => {
+        this.cli.changeView("groups");
+      },
+    });
+    this.cli.addView(mainMenu, "main");
+
+    const groupsMenu = new MenuView(
+      "App Actions",
+      "Select an action in the app",
+    );
+
+    groupsMenu.setExitAction({
+      name: "Back",
+      description: "Go back to the main menu",
+      action: () => {
+        this.cli.changeView("main");
       },
     });
 
-    this.cli.startingMenu = "Main Menu";
+    for (const group in this.actions) {
+      groupsMenu.addAction({
+        name: camelToTitleCase(group),
+        description: `Select an action in the ${group} group`,
+        action: () => {
+          this.cli.changeView(group);
+        },
+      });
+
+      const groupMenu = new MenuView(
+        camelToTitleCase(group),
+        `Select an action in the ${group} group`,
+      );
+      groupMenu.setExitAction({
+        name: "Back",
+        description: "Go back to App Actions",
+        action: () => {
+          this.cli.changeView("groups");
+        },
+      });
+      for (const action in this.actions[group]) {
+        const actionData = this.actions[group][action];
+        groupMenu.addAction({
+          name: camelToTitleCase(action),
+          description: actionData.description,
+          action: () => {
+            this.cli.changeView(`${group}:${action}`);
+          },
+        });
+      }
+      this.cli.addView(groupMenu, group);
+    }
+    this.cli.addView(groupsMenu, "groups");
+
+    // for (const group in this.actions) {
+    //   actionGroups.push({
+    //     name: camelToTitleCase(group),
+    //     description: `Select an action in the ${group} group`,
+    //     action: () => {
+    //       this.cli.changeMenu(group);
+    //     },
+    //   });
+
+    //   const actions: AddActionOptions[] = [];
+    //   for (const action in this.actions[group]) {
+    //     const actionData = this.actions[group][action];
+    //     actions.push({
+    //       name: camelToTitleCase(action),
+    //       description: actionData.description,
+    //       action: () => {
+    //         this.cli.changeMenu(`${group}:${action}`);
+    //       },
+    //     });
+    //   }
+
+    //   actionGroupMenus[group] = {
+    //     menuName: camelToTitleCase(group),
+    //     description: `Select an action in the ${group} group`,
+    //     actions,
+    //     exitAction: {
+    //       name: "Back",
+    //       description: "Go back to App Actions",
+    //       action: () => {
+    //         this.cli.changeMenu("App Actions");
+    //       },
+    //     },
+    //   };
+
+    //   this.cli.addMenu(actionGroupMenus[group]);
+    // }
+
+    // this.cli.addMenu({
+    //   menuName: "App Actions",
+    //   description: "Select an action in the app",
+    //   actions: actionGroups,
+    //   exitAction: {
+    //     name: "Back",
+    //     description: "Go back to the main menu",
+    //     action: () => {
+    //       this.cli.changeMenu("Main Menu");
+    //     },
+    //   },
+    // });
+
+    // this.cli.startingMenu = "Main Menu";
   }
   private async boot(): Promise<void> {
     if (this.hasError) {
@@ -570,17 +618,22 @@ export class EasyApp {
       onListen: (addr) => {
         const { hostname, port, transport } = addr;
         let protocol = "";
-        let host = "";
+        let host = hostname;
         if (transport === "tcp") {
           protocol = "http";
         }
         if (hostname === "0.0.0.0") {
           host = "localhost";
         }
+        const message = ColorMe.chain().content("EasyApp")
+          .color("brightCyan")
+          .content(" is running on ")
+          .color("brightWhite")
+          .content(` ${protocol}://${host}:${port}`)
+          .color("brightYellow")
+          .end();
         easyLog.info(
-          `${colorMe.brightCyan("EasyApp")} is running on ${
-            colorMe.brightYellow(` ${protocol}://${host}:${port}`)
-          }`,
+          message,
           "Server",
         );
       },
