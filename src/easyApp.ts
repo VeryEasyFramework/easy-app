@@ -38,7 +38,7 @@ import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
 import { PgError } from "@vef/easy-orm";
 import { camelToTitleCase, toTitleCase } from "@vef/string-utils";
-import { ColorMe, EasyCli, MenuView } from "@vef/easy-cli";
+import { ColorMe, EasyCli, MenuView, TaskView } from "@vef/easy-cli";
 
 interface EasyAppOptions {
   /**
@@ -511,11 +511,40 @@ export class EasyApp {
       });
       for (const action in this.actions[group]) {
         const actionData = this.actions[group][action];
+        const actionView = new TaskView();
+        actionView.onDone(() => {
+          this.cli.changeView(group);
+        });
+        actionView.addTask("Run Action", {
+          action: async ({ fail, output, success }) => {
+            const response = await actionData.action(
+              this,
+              {},
+              new EasyResponse(),
+            );
+            if (typeof response === "string") {
+              output(response);
+            } else {
+              const responseLines: string[] = [];
+              const json = JSON.stringify(response, null, 2);
+              json.split("\n").forEach((line) => {
+                responseLines.push(line);
+              });
+              output(responseLines);
+              success();
+              actionView.done();
+            }
+          },
+          style: "loop",
+        });
+        this.cli.addView(actionView, `${group}:${action}`);
+
         groupMenu.addAction({
           name: camelToTitleCase(action),
           description: actionData.description,
           action: () => {
             this.cli.changeView(`${group}:${action}`);
+            actionView.start();
           },
         });
       }
