@@ -22,6 +22,8 @@ import type {
   CreateActionParams,
   EasyAction,
 } from "#/actions/actionTypes.ts";
+import type { EasyApp } from "#/easyApp.ts";
+import { BootAction } from "#/types.ts";
 
 export interface EasyPackInfo {
   EasyPackName: string;
@@ -30,6 +32,7 @@ export interface EasyPackInfo {
   entities: Array<string>;
   actions: Array<Record<string, string[]>>;
   middleware: Array<string>;
+  bootActions: Array<{ actionName: string; description: string }>;
 }
 
 // enforce no decimal numbers
@@ -83,6 +86,7 @@ export class EasyPack {
   middleware: Array<MiddlewareWithResponse | MiddlewareWithoutResponse> = [];
   actionGroups: Record<string, Array<EasyAction>> = {};
   entities: Array<EntityDefinition> = [];
+  bootActions: Array<BootAction> = [];
   description: string;
 
   /**
@@ -121,6 +125,10 @@ export class EasyPack {
         [groupName, actions],
       ) => ({
         [groupName]: actions.map((action) => action.actionName),
+      })),
+      bootActions: this.bootActions.map((action) => ({
+        actionName: action.actionName,
+        description: action.description || "",
       })),
       middleware: this.middleware.map((middleware) => middleware.name),
     };
@@ -319,6 +327,23 @@ export class EasyPack {
     this.middleware.push(middleware);
   }
 
+  /**
+   *  Add a boot action to the EasyPack. Boot actions are run once when the app starts up.
+   *
+   * **Example**
+   * ```ts
+   * easyPack.onBoot({
+   * name: "myBootAction",
+   * description: "My boot action",
+   * action: (app:EasyApp) => {
+   *   // your boot action code here
+   *    }
+   * });
+   * ```
+   */
+  onBoot(bootAction: BootAction): void {
+    this.bootActions.push(bootAction);
+  }
   /**
    * Add a realtime room to the EasyPack. Realtime rooms are used to group together clients that are connected to the
    * realtime server. You can send messages to all clients in a room by sending a message to the room.

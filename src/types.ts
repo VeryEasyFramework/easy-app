@@ -1,4 +1,7 @@
+import type { EasyApp } from "#/easyApp.ts";
+
 export interface BootAction {
   actionName: string;
-  action: () => Promise<void> | void;
+  description?: string;
+  action: (app: EasyApp) => Promise<void> | void;
 }

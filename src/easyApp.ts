@@ -129,7 +129,7 @@ interface EasyAppOptions {
 export class EasyApp {
   private hasError: boolean = false;
   private server?: Deno.HttpServer;
-  private config: Required<Omit<EasyAppOptions, "orm">>;
+  config: Required<Omit<EasyAppOptions, "orm">>;
   private staticFileHandler: StaticFileHandler;
   private middleware: Array<
     MiddlewareWithResponse | MiddlewareWithoutResponse
@@ -146,7 +146,7 @@ export class EasyApp {
    */
   bootActions: Array<BootAction> = [];
 
-  private cli!: EasyCli;
+  cli!: EasyCli;
   /**
    * The starting point for the creating an Easy App
    *
@@ -357,6 +357,10 @@ export class EasyApp {
         this.realtime.addRoom(room);
       }
       this.packages.push(easyPack.easyPackInfo);
+
+      for (const bootAction of easyPack.bootActions) {
+        this.addBootAction(bootAction);
+      }
     } catch (e) {
       if (e instanceof EasyException) {
         const subject = `EasyPack Error: ${easyPack.easyPackInfo.EasyPackName}`;
@@ -439,171 +443,17 @@ export class EasyApp {
     this.serve(config);
   }
 
-  addBootAction(actionName: string, action: () => Promise<void>): void;
-  addBootAction(
-    actionName: string,
-    action: (app: EasyApp) => Promise<void>,
-  ): void {
-    this.bootActions.push({
-      actionName,
-      action: async () => {
-        await action(this);
-      },
-    });
+  /**
+   * Add a boot action to the app
+   */
+  addBootAction(bootAction: BootAction): void {
+    this.bootActions.push(bootAction);
   }
   exit(code?: number): void {
     this.server?.shutdown();
     Deno.exit(code);
   }
-  private buildCli() {
-    const name = this.config.appName;
-    const description = `Welcome to the ${name} CLI`;
-    this.cli = new EasyCli({
-      appName: name,
-      description,
-      theme: {
-        backgroundColor: "bgBlack",
-        primaryColor: "brightCyan",
-      },
-    });
-    const mainMenu = new MenuView("Main Menu", "Select an action to perform");
-    mainMenu.addAction({
-      name: "App Actions",
-      description: "Select an action in the app",
-      action: () => {
-        this.cli.changeView("groups");
-      },
-    });
-    this.cli.addView(mainMenu, "main");
 
-    const groupsMenu = new MenuView(
-      "App Actions",
-      "Select an action in the app",
-    );
-
-    groupsMenu.setExitAction({
-      name: "Back",
-      description: "Go back to the main menu",
-      action: () => {
-        this.cli.changeView("main");
-      },
-    });
-
-    for (const group in this.actions) {
-      groupsMenu.addAction({
-        name: camelToTitleCase(group),
-        description: `Select an action in the ${group} group`,
-        action: () => {
-          this.cli.changeView(group);
-        },
-      });
-
-      const groupMenu = new MenuView(
-        camelToTitleCase(group),
-        `Select an action in the ${group} group`,
-      );
-      groupMenu.setExitAction({
-        name: "Back",
-        description: "Go back to App Actions",
-        action: () => {
-          this.cli.changeView("groups");
-        },
-      });
-      for (const action in this.actions[group]) {
-        const actionData = this.actions[group][action];
-        const actionView = new TaskView();
-        actionView.onDone(() => {
-          this.cli.changeView(group);
-        });
-        actionView.addTask("Run Action", {
-          action: async ({ fail, output, success }) => {
-            const response = await actionData.action(
-              this,
-              {},
-              new EasyResponse(),
-            );
-            if (typeof response === "string") {
-              output(response);
-            } else {
-              const responseLines: string[] = [];
-              const json = JSON.stringify(response, null, 2);
-              json.split("\n").forEach((line) => {
-                responseLines.push(line);
-              });
-              output(responseLines);
-              success();
-              actionView.done();
-            }
-          },
-          style: "loop",
-        });
-        this.cli.addView(actionView, `${group}:${action}`);
-
-        groupMenu.addAction({
-          name: camelToTitleCase(action),
-          description: actionData.description,
-          action: () => {
-            this.cli.changeView(`${group}:${action}`);
-            actionView.start();
-          },
-        });
-      }
-      this.cli.addView(groupMenu, group);
-    }
-    this.cli.addView(groupsMenu, "groups");
-
-    // for (const group in this.actions) {
-    //   actionGroups.push({
-    //     name: camelToTitleCase(group),
-    //     description: `Select an action in the ${group} group`,
-    //     action: () => {
-    //       this.cli.changeMenu(group);
-    //     },
-    //   });
-
-    //   const actions: AddActionOptions[] = [];
-    //   for (const action in this.actions[group]) {
-    //     const actionData = this.actions[group][action];
-    //     actions.push({
-    //       name: camelToTitleCase(action),
-    //       description: actionData.description,
-    //       action: () => {
-    //         this.cli.changeMenu(`${group}:${action}`);
-    //       },
-    //     });
-    //   }
-
-    //   actionGroupMenus[group] = {
-    //     menuName: camelToTitleCase(group),
-    //     description: `Select an action in the ${group} group`,
-    //     actions,
-    //     exitAction: {
-    //       name: "Back",
-    //       description: "Go back to App Actions",
-    //       action: () => {
-    //         this.cli.changeMenu("App Actions");
-    //       },
-    //     },
-    //   };
-
-    //   this.cli.addMenu(actionGroupMenus[group]);
-    // }
-
-    // this.cli.addMenu({
-    //   menuName: "App Actions",
-    //   description: "Select an action in the app",
-    //   actions: actionGroups,
-    //   exitAction: {
-    //     name: "Back",
-    //     description: "Go back to the main menu",
-    //     action: () => {
-    //       this.cli.changeMenu("Main Menu");
-    //     },
-    //   },
-    // });
-
-    // this.cli.startingMenu = "Main Menu";
-  }
   private async boot(): Promise<void> {
     if (this.hasError) {
       easyLog.message("App has errors. Exiting...", "Boot");
@@ -614,6 +464,7 @@ export class EasyApp {
 
     asyncPause(100);
     easyLog.info("Booting EasyApp...", "Boot");
+
     this.requestTypes = this.buildRequestTypes();
     try {
       await this.orm.init();
@@ -627,13 +478,18 @@ export class EasyApp {
     }
     try {
       for (const action of this.bootActions) {
-        await action.action();
+        easyLog.info(
+          `Running boot action ${
+            ColorMe.fromOptions(action.actionName, { color: "brightCyan" })
+          }`,
+          "Boot",
+        );
+        await action.action(this);
       }
     } catch (e) {
       e.message = `Error running boot action ${e.actionName}: ${e.message}`;
       throw e;
     }
-    this.buildCli();
   }
   private serve(config?: {
     clientProxyPort?: number;

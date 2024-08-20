@@ -4,7 +4,7 @@ import type { ListOptions } from "@vef/easy-orm";
 
 export const entityActions = [
   createAction("getList", {
-    description: "Get a list of items",
+    description: "Get a list of entities",
     action: async (app, data) => {
       const options = {} as ListOptions;
       if (data.filter) {
