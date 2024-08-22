@@ -565,13 +565,14 @@ export class EasyApp {
             e.name;
             e.detail;
 
-            const subject = toTitleCase(e.name);
+            // const subject = toTitleCase(e.name);
+            const subject = e.name;
             const message = `${subject}: ${e.message}`;
             easyLog.error(message, "Database Error (Postgres)", true);
             return easyResponse.error(message, 500, subject);
           }
           if (e instanceof OrmException) {
-            const subject = toTitleCase(e.type);
+            // const subject = toTitleCase(e.type);
             const message = `${e.type}: ${e.message}`;
             easyLog.error(message, "ORM Error", true);
             return easyResponse.error(message, 500, e.type);
