@@ -68,7 +68,7 @@ export const buildCli: BootAction = {
               actionView.done();
             }
           },
-          style: "loop",
+          style: "moon",
         });
         cli.addView(actionView, `${group}:${action}`);
 
