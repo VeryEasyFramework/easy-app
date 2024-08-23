@@ -14,7 +14,7 @@ import {
   type ExtractEntityFields,
   type Orm,
 } from "@vef/easy-orm";
-import type { SocketRoomDef } from "#/realtime/realtimeServer.ts";
+import type { SocketRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
   ActionParams,
@@ -22,8 +22,7 @@ import type {
   CreateActionParams,
   EasyAction,
 } from "#/actions/actionTypes.ts";
-import type { EasyApp } from "#/easyApp.ts";
-import { BootAction } from "#/types.ts";
+import type { BootAction } from "#/types.ts";
 
 export interface EasyPackInfo {
   EasyPackName: string;

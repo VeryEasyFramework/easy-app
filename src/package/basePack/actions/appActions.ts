@@ -1,6 +1,6 @@
 import { createAction } from "#/actions/createAction.ts";
 import type { EasyPackInfo } from "#/package/easyPack.ts";
-import type { SocketRoomDef } from "#/realtime/realtimeServer.ts";
+import type { SocketRoomDef } from "#/realtime/realtimeTypes.ts";
 import type { DocsActionGroup } from "#/actions/actionTypes.ts";
 import type { EntityDefinition } from "@vef/easy-orm";
 

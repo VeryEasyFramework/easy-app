@@ -21,11 +21,8 @@ import type {
 
 import type { EasyPack, EasyPackInfo } from "./package/easyPack.ts";
 import { basePackage } from "#/package/basePack/basePack.ts";
-import {
-  dispatchSocketEvent,
-  RealtimeServer,
-  type SocketRoomDef,
-} from "#/realtime/realtimeServer.ts";
+import { RealtimeServer } from "#/realtime/realtimeServer.ts";
+
 import type {
   Action,
   DocsActionGroup,
@@ -35,10 +32,12 @@ import type {
 } from "#/actions/actionTypes.ts";
 import type { BootAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
-import { asyncPause } from "#/utils.ts";
+import { asyncPause, getCoreCount } from "#/utils.ts";
 import { PgError } from "@vef/easy-orm";
-import { camelToTitleCase, toTitleCase } from "@vef/string-utils";
-import { ColorMe, EasyCli, MenuView, TaskView } from "@vef/easy-cli";
+import { ColorMe, type EasyCli } from "@vef/easy-cli";
+import { MessageBroker } from "#/realtime/messageBroker.ts";
+import { SocketRoomDef } from "#/realtime/realtimeTypes.ts";
+import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
 
 interface EasyAppOptions {
   /**
@@ -57,6 +56,13 @@ interface EasyAppOptions {
    * ```
    */
   appRootPath?: string;
+
+  /**
+   * The file name of the main module for the app.
+   *
+   * For example `main.ts` or `app.ts`
+   */
+  mainModule?: string;
   /**
    * The name of the app. This is used in the logs and other places where the app name is needed.
    */
@@ -98,7 +104,7 @@ interface EasyAppOptions {
    *
    * **`hostname`** - The hostname to run the server on. Default: `
    */
-  serverOptions?: Deno.ListenOptions;
+  serverOptions?: Deno.ServeOptions;
   /**
    * An instance of EasyOrm to use for the app. If not provided, a new instance
    * of EasyOrm will be created with the default options for the database type {json}.
@@ -135,6 +141,13 @@ export class EasyApp {
     MiddlewareWithResponse | MiddlewareWithoutResponse
   > = [];
 
+  mode: "development" | "production" = "development";
+  workers: Array<{
+    path: string;
+    name: string;
+  }> = [];
+
+  workersMap: Record<string, Worker> = {};
   realtime: RealtimeServer = new RealtimeServer();
   packages: Array<EasyPackInfo> = [];
   orm: Orm;
@@ -174,8 +187,6 @@ export class EasyApp {
    */
 
   constructor(options?: EasyAppOptions) {
-    console.clear();
-    easyLog.message("Building EasyApp...", "Init");
     const appRootPath = options?.appRootPath || ".";
     this.orm = options?.orm || new EasyOrm({
       databaseType: "json",
@@ -187,6 +198,7 @@ export class EasyApp {
     this.config = {
       appName: options?.appName || "EasyApp",
       appRootPath,
+      mainModule: options?.mainModule || "main.ts",
       pathPrefix: options?.pathPrefix || "",
       staticFilesOptions: {
         staticFilesRoot: options?.staticFilesOptions?.staticFilesRoot ||
@@ -212,6 +224,17 @@ export class EasyApp {
     return fullDocs;
   }
 
+  set mainModule(module: string) {
+    let mainFile = "main.ts";
+    let mainDir = module;
+    if (module.endsWith(".ts")) {
+      mainFile = module.split("/").pop() || "main.ts";
+      mainDir = module.split("/").slice(0, -1).join("/");
+    }
+    this.config.appRootPath = mainDir.replace("file://", "");
+    this.config.mainModule = mainFile;
+  }
+
   /**
    * Send a realtime notification to a room
    */
@@ -220,7 +243,7 @@ export class EasyApp {
     event: string,
     data: Record<string, any>,
   ): void {
-    dispatchSocketEvent(room, event, data);
+    this.realtime.notify(room, event, data);
   }
 
   /**
@@ -333,6 +356,30 @@ export class EasyApp {
     return this.orm.entityInfo;
   }
 
+  addWorker(name: string, path: string) {
+    this.workers.push({ name, path });
+    easyLog.info(`Worker ${name} at ${path} added`, "Worker");
+    // Deno.exit(0);
+    // const worker = new Worker(path, { type: "module", name: name });
+    // if (!worker) {
+    //   raiseEasyException(`Worker ${name} not found`, 404);
+    // }
+    // if (this.workers[name]) {
+    //   raiseEasyException(`Worker ${name} already exists`, 500);
+    // }
+    // this.workers[name] = worker;
+  }
+
+  queryWorker(name: string, data: Record<string, any>) {
+    const worker = this.workersMap[name];
+    if (!worker) {
+      raiseEasyException(`Worker ${name} not found`, 404);
+    }
+    worker.postMessage(data);
+  }
+  queueTask(taskName: string, params?: Record<string, any>) {
+    this.queryWorker("task", { taskName, params });
+  }
   /**
    * Add an EasyPack to the app
    */
@@ -401,6 +448,68 @@ export class EasyApp {
     return typeString;
   }
 
+  private runMessageBroker() {
+    const broker = new MessageBroker();
+    broker.run();
+  }
+
+  startProcess(options?: {
+    args?: string[];
+    flags?: string[];
+  }) {
+    if (Deno.build.os !== "linux") {
+      easyLog.error(
+        "Process management is only supported on Linux",
+        "Process",
+        true,
+      );
+      raiseEasyException("Process management is only supported on Linux", 500);
+    }
+    const cwd = Deno.cwd();
+
+    const args = options?.args || [];
+    const flags = options?.flags || [];
+    if (args.includes("--prod")) {
+      const bin = "./app";
+      const cmd = new Deno.Command(bin, {
+        args,
+        cwd,
+      });
+      const process = cmd.spawn();
+      return process.pid;
+    }
+    const denoBin = Deno.execPath();
+    const mainModule = "main.ts";
+    const cmdArgs = [
+      "run",
+      "-A",
+      "--unstable-net",
+      ...flags,
+      `${mainModule}`,
+      ...args,
+    ];
+
+    const cmd = new Deno.Command(denoBin, {
+      args: cmdArgs,
+      cwd,
+    });
+
+    const process = cmd.spawn();
+    return process.pid;
+  }
+
+  async begin(args: string[]) {
+    this.startProcess({ args: ["broker", ...args] });
+    const cores = await getCoreCount();
+    const pids: number[] = [];
+    for (let i = 0; i < cores; i++) {
+      pids.push(
+        this.startProcess({ args: ["app", "-n", i.toString(), ...args] }),
+      );
+    }
+
+    easyLog.info(`Started ${cores} app processes ${pids.join(", ")}`, "Boot");
+  }
   /**
    * This is the main entry point for the app. It boots the app and starts the server.
    *
@@ -423,7 +532,25 @@ export class EasyApp {
       this.exit(1);
     }
     const args = Deno.args;
-
+    const argsRecord: Record<string, any> = {};
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === "-n") {
+        argsRecord.name = args[i + 1];
+        i++;
+        continue;
+      }
+      if (args[i] === "--prod") {
+        argsRecord.prod = true;
+        continue;
+      }
+      argsRecord[args[i]] = true;
+    }
+    if (args.length === 0) {
+    }
+    if (argsRecord.broker) {
+      this.runMessageBroker();
+      return;
+    }
     try {
       await this.boot();
     } catch (e) {
@@ -434,13 +561,32 @@ export class EasyApp {
       this.exit(0);
     }
 
-    if (args.includes("cli")) {
+    if (argsRecord.cli) {
+      buildCli.action(this);
       this.cli.run();
       this.cli.changeView("main");
       return;
     }
 
-    this.serve(config);
+    if (argsRecord.app) {
+      this.runApp({
+        name: argsRecord.name,
+        clientProxyPort: config?.clientProxyPort,
+      });
+      return;
+    }
+    await this.begin(args);
+    return;
+  }
+
+  runApp(config?: {
+    name?: string;
+    clientProxyPort?: number;
+  }) {
+    this.serve({
+      clientProxyPort: config?.clientProxyPort,
+      name: config?.name,
+    });
   }
 
   /**
@@ -476,6 +622,8 @@ export class EasyApp {
       e.message = `Error initializing ORM: ${e.message}`;
       throw e;
     }
+    // this.bootWorkers();
+    this.realtime.boot();
     try {
       for (const action of this.bootActions) {
         easyLog.info(
@@ -491,14 +639,21 @@ export class EasyApp {
       throw e;
     }
   }
+  stop() {
+    this.server?.shutdown();
+    this.realtime.stop();
+    this.orm.stop();
+  }
   private serve(config?: {
     clientProxyPort?: number;
+    name?: string;
   }): void {
     const options = this.config.serverOptions;
 
     const serveOptions: Deno.ServeOptions = {
       hostname: options.hostname,
       port: options.port,
+      reusePort: options.reusePort,
 
       onListen: (addr) => {
         const { hostname, port, transport } = addr;
@@ -519,7 +674,9 @@ export class EasyApp {
           .end();
         easyLog.info(
           message,
-          "Server",
+          `Server (${this.config.appName}${
+            config?.name ? ` - ${config.name}` : ""
+          })`,
         );
       },
     };
@@ -538,7 +695,7 @@ export class EasyApp {
             return easyResponse.respond();
           }
           if (easyRequest.upgradeSocket) {
-            return this.realtime.handleUpgrade(easyRequest.request);
+            return this.realtime.handleUpgrade(easyRequest);
           }
           switch (easyRequest.path) {
             case "/api":

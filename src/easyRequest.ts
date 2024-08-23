@@ -12,7 +12,7 @@ type RequestMethod =
 export class EasyRequest {
   upgradeSocket!: boolean;
 
-  constructor(request: Request, prefix: string) {
+  constructor(request: Request, prefix?: string) {
     this.request = request;
     this.prefix = prefix;
     this.parseParams();

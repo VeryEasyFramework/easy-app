@@ -20,6 +20,5 @@ basePackage.addRealtimeRoom({
   events: ["announce"],
 });
 
-basePackage.onBoot(buildCli);
 basePackage.setVersion(0, 1, 0);
 export { basePackage };
