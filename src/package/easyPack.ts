@@ -14,7 +14,7 @@ import {
   type ExtractEntityFields,
   type Orm,
 } from "@vef/easy-orm";
-import type { SocketRoomDef } from "#/realtime/realtimeTypes.ts";
+import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
   ActionParams,
@@ -96,7 +96,7 @@ export class EasyPack {
   /**
    * The realtime rooms that this EasyPack uses
    */
-  realtimeRooms: SocketRoomDef[] = [];
+  realtimeRooms: RealtimeRoomDef[] = [];
 
   version: string = "0.0.1";
 
@@ -331,7 +331,7 @@ export class EasyPack {
    *
    * **Example**
    * ```ts
-   * easyPack.onBoot({
+   * easyPack.addBootAction({
    * name: "myBootAction",
    * description: "My boot action",
    * action: (app:EasyApp) => {
@@ -340,7 +340,7 @@ export class EasyPack {
    * });
    * ```
    */
-  onBoot(bootAction: BootAction): void {
+  addBootAction(bootAction: BootAction): void {
     this.bootActions.push(bootAction);
   }
   /**
@@ -356,7 +356,7 @@ export class EasyPack {
    * });
    * ```
    */
-  addRealtimeRoom(room: SocketRoomDef) {
+  addRealtimeRoom(room: RealtimeRoomDef) {
     this.realtimeRooms.push(room);
   }
 

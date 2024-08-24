@@ -4,7 +4,7 @@ export interface RealtimeClient {
   rooms: string[];
 }
 
-export interface SocketRoomDef {
+export interface RealtimeRoomDef {
   roomName: string;
   description?: string;
   events: string[];

@@ -36,7 +36,7 @@ import { asyncPause, getCoreCount } from "#/utils.ts";
 import { PgError } from "@vef/easy-orm";
 import { ColorMe, type EasyCli } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
-import { SocketRoomDef } from "#/realtime/realtimeTypes.ts";
+import { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
 
 interface EasyAppOptions {
@@ -296,7 +296,7 @@ export class EasyApp {
   /**
    * Add a list of rooms to the realtime server
    */
-  addSocketRooms(rooms: SocketRoomDef[]) {
+  addRealtimeRooms(rooms: RealtimeRoomDef[]) {
     this.realtime.addRooms(rooms);
   }
 

@@ -1,6 +1,6 @@
 import { createAction } from "#/actions/createAction.ts";
 import type { EasyPackInfo } from "#/package/easyPack.ts";
-import type { SocketRoomDef } from "#/realtime/realtimeTypes.ts";
+import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import type { DocsActionGroup } from "#/actions/actionTypes.ts";
 import type { EntityDefinition } from "@vef/easy-orm";
 
@@ -17,16 +17,10 @@ export const appActions = [
     },
     response: "DocsActionGroup[]",
   }),
-  createAction("apiTypes", {
-    description: "Get the types for the app",
-    action: (app): string => {
-      return app.requestTypes;
-    },
-    response: "string",
-  }),
+
   createAction("listRooms", {
     description: "List all realtime rooms",
-    action: (app): Array<SocketRoomDef> => {
+    action: (app): Array<RealtimeRoomDef> => {
       return app.realtime.info.rooms;
     },
     response: "Array<SocketRoomDef>",

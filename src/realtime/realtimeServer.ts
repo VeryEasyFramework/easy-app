@@ -2,7 +2,7 @@ import { WebsocketBase } from "#/realtime/websocketBase.ts";
 import type {
   RealtimeClient,
   RealtimeClientMessage,
-  SocketRoomDef,
+  RealtimeRoomDef,
 } from "#/realtime/realtimeTypes.ts";
 import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
@@ -113,7 +113,7 @@ export class RealtimeServer extends WebsocketBase {
   rooms: Record<string, SocketRoom> = {};
 
   info: {
-    rooms: Array<SocketRoomDef>;
+    rooms: Array<RealtimeRoomDef>;
   } = {
     rooms: [],
   };
@@ -135,13 +135,13 @@ export class RealtimeServer extends WebsocketBase {
       data,
     });
   }
-  addRoom(room: SocketRoomDef) {
+  addRoom(room: RealtimeRoomDef) {
     const newRoom = new SocketRoom(room.roomName, room.events);
     this.rooms[room.roomName] = newRoom;
     this.info.rooms.push(room);
   }
 
-  addRooms(rooms: SocketRoomDef[]) {
+  addRooms(rooms: RealtimeRoomDef[]) {
     for (const room of rooms) {
       this.addRoom(room);
     }
