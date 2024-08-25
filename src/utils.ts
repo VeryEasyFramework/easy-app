@@ -48,3 +48,12 @@ export async function getCoreCount(): Promise<number> {
   }
   return coreCount;
 }
+
+export function checkForFile(path: string): boolean {
+  try {
+    Deno.statSync(joinPath(Deno.cwd(), path));
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}

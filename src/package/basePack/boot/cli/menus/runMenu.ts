@@ -1,6 +1,7 @@
 import { InputListener, MenuView } from "@vef/easy-cli";
 import { EasyApp } from "#/easyApp.ts";
 import { cli } from "#/package/basePack/boot/cli/cli.ts";
+import { checkForFile, joinPath } from "#/utils.ts";
 export const runMenu = new MenuView({
   clock: true,
   title: "Run the app",
@@ -22,56 +23,79 @@ export function setupRunMenu(app: EasyApp) {
     abortController,
     hideCursor: true,
   });
-  runMenu.addAction({
-    name: "Development",
-    description: "Run the app in development mode",
-    action: () => {
-      cli.stop();
 
-      listener.listen();
-      signal.addEventListener("abort", (event) => {
+  const dev = checkForFile("main.ts");
+
+  if (dev) {
+    runMenu.addAction({
+      name: "Development",
+      description: "Run the app in development mode",
+      action: () => {
+        cli.stop();
+
+        listener.listen();
+        signal.addEventListener("abort", (event) => {
+          app.stop();
+          Deno.exit();
+        });
         app.stop();
-        Deno.exit();
-      });
-      app.stop();
-      app.startProcess();
-    },
-  });
+        app.startProcess({
+          flags: ["serve"],
+        });
+      },
+    });
 
-  runMenu.addAction({
-    name: "Development Watch",
-    description: "Run the app in development mode with a file watcher",
-    action: () => {
-      cli.stop();
+    runMenu.addAction({
+      name: "Development Watch",
+      description: "Run the app in development mode with a file watcher",
+      action: () => {
+        cli.stop();
 
-      listener.listen();
-      signal.addEventListener("abort", (event) => {
+        listener.listen();
+        signal.addEventListener("abort", (event) => {
+          app.stop();
+          Deno.exit();
+        });
         app.stop();
-        Deno.exit();
-      });
-      app.stop();
-      app.startProcess({
-        flags: ["--watch"],
-      });
-    },
-  });
+        app.startProcess({
+          flags: ["serve", "--watch"],
+        });
+      },
+    });
+    return;
+  }
+  const platform = Deno.build.os;
+  let prodBinary = "app";
+  switch (platform) {
+    case "windows":
+      prodBinary = "app.exe";
+      break;
+    case "darwin":
+      prodBinary = "app";
+      break;
+    default:
+      prodBinary = "app";
+      break;
+  }
 
-  runMenu.addAction({
-    name: "Production",
-    description: "Run the app in production mode",
-    action: () => {
-      cli.stop();
+  if (checkForFile(prodBinary)) {
+    runMenu.addAction({
+      name: "Production",
+      description: "Run the app in production mode",
+      action: () => {
+        cli.stop();
 
-      listener.listen();
-      signal.addEventListener("abort", (event) => {
+        listener.listen();
+        signal.addEventListener("abort", (event) => {
+          app.stop();
+          Deno.exit();
+        });
         app.stop();
-        Deno.exit();
-      });
-      app.stop();
 
-      app.startProcess({
-        flags: ["--prod"],
-      });
-    },
-  });
+        app.startProcess({
+          flags: ["serve", "--prod"],
+        });
+      },
+    });
+  }
 }

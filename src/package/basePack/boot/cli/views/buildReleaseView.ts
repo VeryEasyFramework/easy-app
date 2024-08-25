@@ -14,21 +14,14 @@ export const releaseView = new TaskView({
   clock: true,
 });
 
-releaseView.addTask("Compile", {
+releaseView.addTask("Compile Linux", {
   messages: {
     pending: "Waiting to start the build",
-    running: "Compiling the app",
-    failed: "Failed to compile the app",
-    done: "App compiled successfully",
+    running: "Building the linux binary ",
+    failed: "Failed to build the linux binary",
+    done: "Built the linux binary successfully",
   },
   action: async ({ fail, output, success }) => {
-    // output("Compiling the app...");
-    // easyOp.session.stdErrCallback = (line) => {
-    //   output(new TextDecoder().decode(line));
-    // };
-    // easyOp.session.stdOutCallback = (line) => {
-    //   output(new TextDecoder().decode(line));
-    // };
     const results = await easyOp.runTask("deno", "compile", {
       script: "main.ts",
       permission: {
@@ -39,10 +32,52 @@ releaseView.addTask("Compile", {
       target: "x86_64-unknown-linux-gnu",
     });
     output(results.status);
-    output("App compiled successfully");
+    output("Built the linux binary successfully");
     success();
-
-    // Compile the app
+  },
+});
+releaseView.addTask("Compile Windows", {
+  messages: {
+    pending: "Waiting to start the build",
+    running: "Building the windows executable",
+    failed: "Failed to build the windows executable",
+    done: "Built the windows executable successfully",
+  },
+  action: async ({ fail, output, success }) => {
+    const results = await easyOp.runTask("deno", "compile", {
+      script: "main.ts",
+      permission: {
+        allow: ["all"],
+      },
+      unstable: ["net"],
+      output: "release/app",
+      target: "x86_64-pc-windows-msvc",
+    });
+    output(results.status);
+    output("Built the windows executable successfully");
+    success();
+  },
+});
+releaseView.addTask("Compile MacOs", {
+  messages: {
+    pending: "Waiting to start the build",
+    running: "Building the macos binary",
+    failed: "Failed to build the macos binary",
+    done: "Built the macos binary successfully",
+  },
+  action: async ({ fail, output, success }) => {
+    const results = await easyOp.runTask("deno", "compile", {
+      script: "main.ts",
+      permission: {
+        allow: ["all"],
+      },
+      unstable: ["net"],
+      output: "release/appOsx",
+      target: "x86_64-apple-darwin",
+    });
+    output(results.status);
+    output("Built the macos binary successfully");
+    success();
   },
 });
 

@@ -20,11 +20,10 @@
     "#/": "./src/",
     "@vef/easy-cli": "jsr:@vef/easy-cli@^0.1.16",
     "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.24",
-    "@vef/string-utils": "jsr:@vef/string-utils"
+    "@vef/string-utils": "jsr:@vef/string-utils^0.1.5"
   },
   "tasks": {
     "dev": "cd dev && deno run -A main.ts",
-    "cli": "cd dev && deno run -A main.ts cli",
     "check": "deno publish --dry-run"
   }
 }

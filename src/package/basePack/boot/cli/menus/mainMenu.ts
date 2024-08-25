@@ -3,6 +3,7 @@ import { cli } from "#/package/basePack/boot/cli/cli.ts";
 import { EasyApp } from "#/easyApp.ts";
 import { InputListener, printUtils } from "@vef/easy-cli";
 import { releaseView } from "#/package/basePack/boot/cli/views/buildReleaseView.ts";
+import { checkForFile } from "#/utils.ts";
 
 export const mainMenu = new MenuView(
   {
@@ -27,6 +28,8 @@ export function setupMainMenu(app: EasyApp) {
     action: () => {
       cli.stop();
       app.stop();
+      console.clear();
+      Deno.exit();
     },
   });
 
@@ -37,13 +40,15 @@ export function setupMainMenu(app: EasyApp) {
       cli.changeView("run");
     },
   });
-
-  mainMenu.addAction({
-    name: "Build Release",
-    description: "Build a release of the app",
-    action: () => {
-      cli.changeView("release");
-      releaseView.start();
-    },
-  });
+  const dev = checkForFile("main.ts");
+  if (dev) {
+    mainMenu.addAction({
+      name: "Build Release",
+      description: "Build a release of the app",
+      action: () => {
+        cli.changeView("release");
+        releaseView.start();
+      },
+    });
+  }
 }

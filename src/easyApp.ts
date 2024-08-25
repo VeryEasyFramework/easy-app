@@ -470,7 +470,21 @@ export class EasyApp {
     const args = options?.args || [];
     const flags = options?.flags || [];
     if (args.includes("--prod")) {
-      const bin = "./app";
+      const platform = Deno.build.os;
+      let bin = "./app";
+      switch (platform) {
+        case "windows":
+          bin = "./app.exe";
+          break;
+        case "darwin":
+          bin = "./appOsx";
+          break;
+        case "linux":
+          bin = "./app";
+          break;
+        default:
+          raiseEasyException(`Platform ${platform} not supported`, 500);
+      }
       const cmd = new Deno.Command(bin, {
         args,
         cwd,
@@ -560,13 +574,6 @@ export class EasyApp {
       this.exit(0);
     }
 
-    if (argsRecord.cli) {
-      buildCli.action(this);
-      this.cli.run();
-      this.cli.changeView("main");
-      return;
-    }
-
     if (argsRecord.app) {
       this.runApp({
         name: argsRecord.name,
@@ -574,7 +581,13 @@ export class EasyApp {
       });
       return;
     }
-    await this.begin(args);
+    if (argsRecord.serve) {
+      await this.begin(args);
+      return;
+    }
+    buildCli.action(this);
+    this.cli.run();
+    this.cli.changeView("main");
     return;
   }
 
