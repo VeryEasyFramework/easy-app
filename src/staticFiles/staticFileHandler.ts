@@ -49,26 +49,17 @@ export class StaticFileHandler {
     if (path.startsWith("/")) {
       path = path.slice(1);
     }
-    try {
-      const fileContent = await this.cache.loadFile(
-        this.staticFilesRoot,
-        path,
-      );
-      return new Response(fileContent.content, {
-        status: 200,
-        headers: {
-          "Content-Type": fileContent.mimeType,
-        },
-      });
-    } catch (_e) {
-      console.error(_e);
 
-      return new Response("Not Found", {
-        status: 404,
-        headers: {
-          "Content-Type": "text/plain",
-        },
-      });
-    }
+    const fileContent = await this.cache.loadFile(
+      this.staticFilesRoot,
+      path,
+    );
+
+    return new Response(fileContent.content, {
+      status: 200,
+      headers: {
+        "Content-Type": fileContent.mimeType,
+      },
+    });
   }
 }

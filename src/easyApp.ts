@@ -457,14 +457,14 @@ export class EasyApp {
     args?: string[];
     flags?: string[];
   }) {
-    if (Deno.build.os !== "linux") {
-      easyLog.error(
-        "Process management is only supported on Linux",
-        "Process",
-        true,
-      );
-      raiseEasyException("Process management is only supported on Linux", 500);
-    }
+    // if (Deno.build.os !== "linux") {
+    //   easyLog.error(
+    //     "Process management is only supported on Linux",
+    //     "Process",
+    //     true,
+    //   );
+    //   raiseEasyException("Process management is only supported on Linux", 500);
+    // }
     const cwd = Deno.cwd();
 
     const args = options?.args || [];
@@ -545,8 +545,7 @@ export class EasyApp {
       }
       argsRecord[args[i]] = true;
     }
-    if (args.length === 0) {
-    }
+
     if (argsRecord.broker) {
       this.runMessageBroker();
       return;
@@ -761,7 +760,8 @@ export class EasyApp {
     if (this.config.singlePageApp && !easyRequest.isFile) {
       path = "/index.html";
     }
-    return await this.staticFileHandler.serveFile(path);
+    const file = await this.staticFileHandler.serveFile(path);
+    return file;
   }
   private async apiHandler(
     request: EasyRequest,

@@ -68,6 +68,7 @@ export function setupRunMenu(app: EasyApp) {
         Deno.exit();
       });
       app.stop();
+
       app.startProcess({
         flags: ["--prod"],
       });
