@@ -665,7 +665,7 @@ export class EasyApp {
     const serveOptions: Deno.ServeOptions = {
       hostname: options.hostname,
       port: options.port,
-      reusePort: options.reusePort,
+      reusePort: options.reusePort || true,
 
       onListen: (addr) => {
         const { hostname, port, transport } = addr;

@@ -40,7 +40,7 @@ export function setupRunMenu(app: EasyApp) {
         });
         app.stop();
         app.startProcess({
-          flags: ["serve"],
+          args: ["serve"],
         });
       },
     });
@@ -58,7 +58,8 @@ export function setupRunMenu(app: EasyApp) {
         });
         app.stop();
         app.startProcess({
-          flags: ["serve", "--watch"],
+          flags: ["--watch"],
+          args: ["serve"],
         });
       },
     });
@@ -93,7 +94,7 @@ export function setupRunMenu(app: EasyApp) {
         app.stop();
 
         app.startProcess({
-          flags: ["serve", "--prod"],
+          args: ["serve", "--prod"],
         });
       },
     });
