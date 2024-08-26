@@ -3,6 +3,7 @@ import { EasyRequest } from "#/easyRequest.ts";
 import { EasyResponse } from "#/easyResponse.ts";
 
 import {
+  DatabaseConfig,
   EasyOrm,
   type EntityDefinition,
   type Orm,
@@ -39,7 +40,7 @@ import { MessageBroker } from "#/realtime/messageBroker.ts";
 import { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
 
-interface EasyAppOptions {
+export interface EasyAppOptions {
   /**
    * The root path of the app. Defaults to the current directory.
    * This is used to serve static files and to store the database file for
@@ -127,6 +128,10 @@ interface EasyAppOptions {
    * ```
    */
   orm?: Orm;
+  ormOptions?: {
+    databaseType: keyof DatabaseConfig;
+    databaseConfig: DatabaseConfig[keyof DatabaseConfig];
+  };
 }
 
 /**
@@ -188,13 +193,7 @@ export class EasyApp {
 
   constructor(options?: EasyAppOptions) {
     const appRootPath = options?.appRootPath || ".";
-    this.orm = options?.orm || new EasyOrm({
-      databaseType: "json",
-      databaseConfig: {
-        dataPath: `${appRootPath}/.data`,
-      },
-      entities: [],
-    });
+
     this.config = {
       appName: options?.appName || "EasyApp",
       appRootPath,
@@ -207,8 +206,17 @@ export class EasyApp {
       },
       singlePageApp: options?.singlePageApp || false,
       serverOptions: options?.serverOptions || { port: 8000 },
+      ormOptions: {
+        databaseType: options?.ormOptions?.databaseType || "json",
+        databaseConfig: options?.ormOptions?.databaseConfig || {
+          dataPath: `${appRootPath}/.data`,
+        },
+      } as any,
     };
-
+    this.orm = options?.orm || new EasyOrm({
+      ...this.config.ormOptions,
+      entities: [],
+    });
     this.staticFileHandler = new StaticFileHandler(
       this.config.staticFilesOptions,
     );

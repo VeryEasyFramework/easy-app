@@ -11,3 +11,4 @@ export type {
   MiddlewareWithoutResponse,
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
+export type { EasyAppOptions } from "#/easyApp.ts";

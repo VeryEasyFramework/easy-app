@@ -2,6 +2,7 @@ import { TaskView } from "@vef/easy-cli";
 import { cli } from "#/package/basePack/boot/cli/cli.ts";
 import { CommandSession } from "@vef/easy-ops";
 import { EasyOps } from "@vef/easy-ops";
+import { joinPath } from "#/utils.ts";
 
 const easyOp = new EasyOps({
   sessionType: "local",
@@ -32,6 +33,7 @@ releaseView.addTask("Compile Linux", {
       target: "x86_64-unknown-linux-gnu",
     });
     output(results.status);
+
     output("Built the linux binary successfully");
     success();
   },
@@ -97,7 +99,6 @@ releaseView.addTask("Copy Assets", {
       fail();
       return;
     }
-
     output("Assets copied successfully");
     success();
     releaseView.done();
