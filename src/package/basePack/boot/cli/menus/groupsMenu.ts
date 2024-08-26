@@ -58,16 +58,17 @@ export function setupGroupsMenu(app: EasyApp) {
           );
           if (typeof response === "string") {
             output(response);
-          } else {
+          } else if (Array.isArray(response)) {
             const responseLines: string[] = [];
             const json = JSON.stringify(response, null, 2);
             json.split("\n").forEach((line) => {
               responseLines.push(line);
             });
             output(responseLines);
-            success();
-            actionView.done();
           }
+
+          success();
+          actionView.done();
         },
         style: "moon",
       });
