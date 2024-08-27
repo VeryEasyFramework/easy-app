@@ -29,15 +29,15 @@ type ConnectionStatus =
 class BrokerConnection {
   broker?: WebSocket;
 
-  private _stop = false;
+  private _stop: boolean = false;
   stop() {
     this._stop = true;
     this.broker?.close();
   }
-  get connected() {
+  get connected(): boolean {
     return this.broker?.readyState === WebSocket.OPEN;
   }
-  get closed() {
+  get closed(): boolean {
     if (!this.broker) {
       return true;
     }
@@ -45,11 +45,11 @@ class BrokerConnection {
     return this.broker.readyState === WebSocket.CLOSED;
   }
 
-  get closing() {
+  get closing(): boolean {
     return this.broker?.readyState === WebSocket.CLOSING;
   }
 
-  get connecting() {
+  get connecting(): boolean {
     return this.broker?.readyState === WebSocket.CONNECTING;
   }
 

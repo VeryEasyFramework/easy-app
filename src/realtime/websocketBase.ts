@@ -10,7 +10,7 @@ export abstract class WebsocketBase {
     this.clients = [];
   }
 
-  handleUpgrade(easyRequest: EasyRequest) {
+  handleUpgrade(easyRequest: EasyRequest): Response {
     if (easyRequest.upgradeSocket) {
       const { socket, response } = Deno.upgradeWebSocket(easyRequest.request);
       this.addClient(socket);

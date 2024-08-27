@@ -451,7 +451,7 @@ export class EasyApp<D extends DBType = "denoKv"> {
   startProcess(options?: {
     args?: string[];
     flags?: string[];
-  }) {
+  }): number {
     const cwd = Deno.cwd();
 
     const args = options?.args || [];
