@@ -1,7 +1,6 @@
 import { MenuView } from "@vef/easy-cli";
 import { cli } from "#/package/basePack/boot/cli/cli.ts";
 import { EasyApp } from "#/easyApp.ts";
-import { InputListener, printUtils } from "@vef/easy-cli";
 import { releaseView } from "#/package/basePack/boot/cli/views/buildReleaseView.ts";
 import { checkForFile } from "#/utils.ts";
 
@@ -12,14 +11,6 @@ export const mainMenu = new MenuView(
     clock: true,
   },
 );
-
-mainMenu.addAction({
-  name: "App Actions",
-  description: "Select an action in the app",
-  action: () => {
-    cli.changeView("groups");
-  },
-});
 
 export function setupMainMenu(app: EasyApp) {
   mainMenu.setExitAction({
@@ -38,6 +29,21 @@ export function setupMainMenu(app: EasyApp) {
     description: "Run the app",
     action: () => {
       cli.changeView("run");
+    },
+  });
+
+  mainMenu.addAction({
+    name: "App Actions",
+    description: "Select an action in the app",
+    action: () => {
+      cli.changeView("groups");
+    },
+  });
+  mainMenu.addAction({
+    name: "Database Ops",
+    description: "Various database related operations",
+    action: () => {
+      cli.changeView("database");
     },
   });
   const dev = checkForFile("main.ts");

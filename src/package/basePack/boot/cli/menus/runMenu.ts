@@ -1,7 +1,7 @@
 import { InputListener, MenuView } from "@vef/easy-cli";
 import { EasyApp } from "#/easyApp.ts";
 import { cli } from "#/package/basePack/boot/cli/cli.ts";
-import { checkForFile, joinPath } from "#/utils.ts";
+import { checkForFile } from "#/utils.ts";
 export const runMenu = new MenuView({
   clock: true,
   title: "Run the app",

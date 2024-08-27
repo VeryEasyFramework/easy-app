@@ -23,7 +23,7 @@
     "@vef/string-utils": "jsr:@vef/string-utils@^0.1.5"
   },
   "tasks": {
-    "dev": "cd dev && deno run -A main.ts",
+    "dev": "cd dev && deno run -A --unstable-kv main.ts",
     "check": "deno publish --dry-run"
   }
 }

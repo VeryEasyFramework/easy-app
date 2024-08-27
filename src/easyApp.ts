@@ -3,7 +3,7 @@ import { EasyRequest } from "#/easyRequest.ts";
 import { EasyResponse } from "#/easyResponse.ts";
 
 import {
-  DatabaseConfig,
+  type DatabaseConfig,
   EasyOrm,
   type EntityDefinition,
   type Orm,
@@ -39,8 +39,9 @@ import { ColorMe, type EasyCli } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
 import { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
+import { DBType } from "@vef/easy-orm";
 
-export interface EasyAppOptions {
+export interface EasyAppOptions<D extends DBType> {
   /**
    * The root path of the app. Defaults to the current directory.
    * This is used to serve static files and to store the database file for
@@ -106,28 +107,14 @@ export interface EasyAppOptions {
    * **`hostname`** - The hostname to run the server on. Default: `
    */
   serverOptions?: Deno.ServeOptions;
+
   /**
-   * An instance of EasyOrm to use for the app. If not provided, a new instance
-   * of EasyOrm will be created with the default options for the database type {json}.
+   * Options for the ORM
    *
-   * **Example:**
-   * ```ts
-   * const app = new EasyApp({
-   *    orm: new EasyOrm({
-   *      databaseType: "postgres",
-   *      databaseConfig: {
-   *        host: "localhost",
-   *        port: 5432,
-   *        user: "user",
-   *        password: "password",
-   *        database: "mydb",
-   *      },
-   *      entities: [],
-   *   }),
-   *  });
-   * ```
+   * **`databaseType`** - The type of database to use. Default: `denoKv`
+   *
+   * **`databaseConfig`** - The configuration object for the database
    */
-  orm?: Orm;
   ormOptions?: {
     databaseType: keyof DatabaseConfig;
     databaseConfig: DatabaseConfig[keyof DatabaseConfig];
@@ -137,10 +124,10 @@ export interface EasyAppOptions {
 /**
  * The EasyApp class is the starting point for creating an Easy App.
  */
-export class EasyApp {
+export class EasyApp<D extends DBType = "denoKv"> {
   private hasError: boolean = false;
   private server?: Deno.HttpServer;
-  config: Required<Omit<EasyAppOptions, "orm">>;
+  config: Required<EasyAppOptions<DBType>>;
   private staticFileHandler: StaticFileHandler;
   private middleware: Array<
     MiddlewareWithResponse | MiddlewareWithoutResponse
@@ -191,9 +178,14 @@ export class EasyApp {
    * - **`orm`** (optional) - An instance of EasyOrm to use for the app
    */
 
-  constructor(options?: EasyAppOptions) {
+  constructor(options?: EasyAppOptions<D>) {
     const appRootPath = options?.appRootPath || ".";
-
+    const ormOptions = options?.ormOptions || {
+      databaseType: "denoKv",
+      databaseConfig: {
+        path: `${appRootPath}/.data/kv.db`,
+      },
+    };
     this.config = {
       appName: options?.appName || "EasyApp",
       appRootPath,
@@ -206,14 +198,9 @@ export class EasyApp {
       },
       singlePageApp: options?.singlePageApp || false,
       serverOptions: options?.serverOptions || { port: 8000 },
-      ormOptions: {
-        databaseType: options?.ormOptions?.databaseType || "json",
-        databaseConfig: options?.ormOptions?.databaseConfig || {
-          dataPath: `${appRootPath}/.data`,
-        },
-      } as any,
+      ormOptions,
     };
-    this.orm = options?.orm || new EasyOrm({
+    this.orm = new EasyOrm({
       ...this.config.ormOptions,
       entities: [],
     });
@@ -465,18 +452,14 @@ export class EasyApp {
     args?: string[];
     flags?: string[];
   }) {
-    // if (Deno.build.os !== "linux") {
-    //   easyLog.error(
-    //     "Process management is only supported on Linux",
-    //     "Process",
-    //     true,
-    //   );
-    //   raiseEasyException("Process management is only supported on Linux", 500);
-    // }
     const cwd = Deno.cwd();
 
     const args = options?.args || [];
     const flags = options?.flags || [];
+
+    if (this.orm.dbType === "denoKv") {
+      flags.push("--unstable-kv");
+    }
     if (args.includes("--prod")) {
       const platform = Deno.build.os;
       let bin = "./app";

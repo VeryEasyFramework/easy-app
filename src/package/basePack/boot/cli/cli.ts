@@ -15,6 +15,14 @@ import {
   setupRunMenu,
 } from "#/package/basePack/boot/cli/menus/runMenu.ts";
 import { releaseView } from "#/package/basePack/boot/cli/views/buildReleaseView.ts";
+import {
+  dbMenu,
+  setupDbMenu,
+} from "#/package/basePack/boot/cli/menus/databaseMenu.ts";
+import {
+  migrateDbView,
+  setupMigrateDbView,
+} from "#/package/basePack/boot/cli/views/migrateDbView.ts";
 export const cli = new EasyCli({
   theme: {
     backgroundColor: "bgBlack",
@@ -26,6 +34,8 @@ cli.addView(mainMenu, "main");
 cli.addView(groupsMenu, "groups");
 cli.addView(runMenu, "run");
 cli.addView(releaseView, "release");
+cli.addView(migrateDbView, "migrateDb");
+cli.addView(dbMenu, "database");
 export const buildCli: BootAction = {
   actionName: "buildCli",
   description: "Build the CLI for the app",
@@ -35,6 +45,8 @@ export const buildCli: BootAction = {
     setupMainMenu(app);
     setupRunMenu(app);
     setupGroupsMenu(app);
+    setupDbMenu(app);
+    setupMigrateDbView(app);
     app.cli = cli;
   },
 };
