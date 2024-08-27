@@ -1,6 +1,6 @@
 {
   "name": "@vef/easy-app",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "exports": "./mod.ts",
   "exclude": [
     "references"
@@ -18,9 +18,9 @@
   },
   "imports": {
     "#/": "./src/",
-    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.2.0",
+    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.2.1",
     "@vef/easy-ops": "jsr:@vef/easy-ops@^0.1.1",
-    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.2.0",
+    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.2.1",
     "@vef/string-utils": "jsr:@vef/string-utils@^0.1.5"
   },
   "tasks": {
