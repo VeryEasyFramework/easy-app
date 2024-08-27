@@ -58,3 +58,10 @@ export function checkForFile(path: string): boolean {
     return false;
   }
 }
+
+export function savePID(pid: number, path: string) {
+  const pidString = `${pid.toString()}\n`;
+  Deno.writeTextFileSync(path, pidString, {
+    append: true,
+  });
+}

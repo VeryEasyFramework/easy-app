@@ -1,7 +1,7 @@
 import { InputListener, MenuView } from "@vef/easy-cli";
 import { EasyApp } from "#/easyApp.ts";
 import { cli } from "#/package/basePack/boot/cli/cli.ts";
-import { checkForFile } from "#/utils.ts";
+import { asyncPause, checkForFile } from "#/utils.ts";
 export const runMenu = new MenuView({
   clock: true,
   title: "Run the app",
@@ -17,15 +17,13 @@ runMenu.setExitAction({
 });
 
 export function setupRunMenu(app: EasyApp) {
+  const dev = checkForFile("main.ts");
   const abortController = new AbortController();
   const signal = abortController.signal;
   const listener = new InputListener({
     abortController,
     hideCursor: true,
   });
-
-  const dev = checkForFile("main.ts");
-
   if (dev) {
     runMenu.addAction({
       name: "Development",
@@ -33,14 +31,14 @@ export function setupRunMenu(app: EasyApp) {
       action: () => {
         cli.stop();
 
-        listener.listen();
-        signal.addEventListener("abort", (event) => {
-          app.stop();
-          Deno.exit();
+        app.begin({
+          args: [],
+          signal,
         });
-        app.stop();
-        app.startProcess({
-          args: ["serve"],
+        listener.listen();
+        signal.addEventListener("abort", async (event) => {
+          await asyncPause(1000);
+          Deno.exit();
         });
       },
     });
@@ -51,15 +49,15 @@ export function setupRunMenu(app: EasyApp) {
       action: () => {
         cli.stop();
 
-        listener.listen();
-        signal.addEventListener("abort", (event) => {
-          app.stop();
-          Deno.exit();
-        });
-        app.stop();
-        app.startProcess({
+        app.begin({
+          args: [],
           flags: ["--watch"],
-          args: ["serve"],
+          signal,
+        });
+        listener.listen();
+        signal.addEventListener("abort", async (event) => {
+          await asyncPause(1000);
+          Deno.exit();
         });
       },
     });

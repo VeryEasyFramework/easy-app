@@ -33,7 +33,7 @@ import type {
 } from "#/actions/actionTypes.ts";
 import type { BootAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
-import { asyncPause, getCoreCount } from "#/utils.ts";
+import { asyncPause, getCoreCount, savePID } from "#/utils.ts";
 import { PgError } from "@vef/easy-orm";
 import { ColorMe, type EasyCli, MenuView } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
@@ -453,7 +453,9 @@ export class EasyApp<D extends DBType = "denoKv"> {
   startProcess(options?: {
     args?: string[];
     flags?: string[];
+    signal?: AbortSignal;
   }): number {
+    const pidPath = ".pids";
     const cwd = Deno.cwd();
 
     const args = options?.args || [];
@@ -481,6 +483,7 @@ export class EasyApp<D extends DBType = "denoKv"> {
       const cmd = new Deno.Command(bin, {
         args,
         cwd,
+        signal: options?.signal,
       });
       const process = cmd.spawn();
       return process.pid;
@@ -499,19 +502,31 @@ export class EasyApp<D extends DBType = "denoKv"> {
     const cmd = new Deno.Command(denoBin, {
       args: cmdArgs,
       cwd,
+      signal: options?.signal,
     });
 
     const process = cmd.spawn();
+
     return process.pid;
   }
 
-  async begin(args: string[]) {
-    this.startProcess({ args: ["broker", ...args] });
+  async begin(
+    options: { args: string[]; flags?: string[]; signal?: AbortSignal },
+  ): Promise<void> {
+    this.startProcess({
+      args: ["broker", ...options.args],
+      flags: options.flags,
+      signal: options.signal,
+    });
     const cores = await getCoreCount();
     const pids: number[] = [];
     for (let i = 0; i < cores; i++) {
       pids.push(
-        this.startProcess({ args: ["app", "-n", i.toString(), ...args] }),
+        this.startProcess({
+          args: ["app", "-n", i.toString(), ...options.args],
+          flags: options.flags,
+          signal: options.signal,
+        }),
       );
     }
 
@@ -576,7 +591,7 @@ export class EasyApp<D extends DBType = "denoKv"> {
       return;
     }
     if (argsRecord.serve) {
-      await this.begin(args);
+      await this.begin({ args });
       return;
     }
 
