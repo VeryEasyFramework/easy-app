@@ -35,7 +35,7 @@ import type { BootAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
 import { asyncPause, getCoreCount } from "#/utils.ts";
 import { PgError } from "@vef/easy-orm";
-import { ColorMe, type EasyCli } from "@vef/easy-cli";
+import { ColorMe, type EasyCli, MenuView } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
 import { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
@@ -150,6 +150,8 @@ export class EasyApp<D extends DBType = "denoKv"> {
    * An array of boot actions that are run when the app is booted
    */
   bootActions: Array<BootAction> = [];
+
+  cliMenu!: MenuView;
 
   cli!: EasyCli;
   /**
@@ -555,6 +557,7 @@ export class EasyApp<D extends DBType = "denoKv"> {
       this.runMessageBroker();
       return;
     }
+    buildCli.action(this);
     try {
       await this.boot();
     } catch (e) {
@@ -576,7 +579,7 @@ export class EasyApp<D extends DBType = "denoKv"> {
       await this.begin(args);
       return;
     }
-    buildCli.action(this);
+
     this.cli.run();
     this.cli.changeView("main");
     return;

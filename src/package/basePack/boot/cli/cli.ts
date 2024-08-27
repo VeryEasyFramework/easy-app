@@ -40,7 +40,9 @@ export const buildCli: BootAction = {
   actionName: "buildCli",
   description: "Build the CLI for the app",
   action(app) {
+    app.cliMenu = mainMenu;
     const name = app.config.appName;
+
     cli.appName = name;
     setupMainMenu(app);
     setupRunMenu(app);

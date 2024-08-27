@@ -33,7 +33,8 @@ export async function getCoreCount(): Promise<number> {
   if (Deno.build.os === "windows") {
     return 1;
   }
-
+  return 1;
+  /// Uncomment the following code to get the core count on Unix-based systems
   const cmd = new Deno.Command("nproc", {
     stdout: "piped",
   });
