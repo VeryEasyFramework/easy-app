@@ -1,36 +1,11 @@
-export interface SocketEventInit {
-  room: string;
-  event: string;
-  data: Record<string, any>;
-}
-
-export class SocketEvent extends CustomEvent<SocketEventInit> {
-}
-
-export function dispatchSocketEvent(
-  room: string,
-  event: string,
-  data: Record<string, any>,
-) {
-  const eventInit: SocketEventInit = {
-    room,
-    event,
-    data,
-  };
-  dispatchEvent(new SocketEvent("socket-message", { detail: eventInit }));
-}
-
-interface SocketClient {
-  id: string;
-  socket: WebSocket;
-  rooms: string[];
-}
-
-export interface SocketRoomDef {
-  roomName: string;
-  description?: string;
-  events: string[];
-}
+import { WebsocketBase } from "#/realtime/websocketBase.ts";
+import type {
+  RealtimeClient,
+  RealtimeClientMessage,
+  RealtimeRoomDef,
+} from "#/realtime/realtimeTypes.ts";
+import { easyLog } from "#/log/logging.ts";
+import { asyncPause } from "#/utils.ts";
 
 class SocketRoom {
   roomName: string;
@@ -45,87 +20,142 @@ class SocketRoom {
   }
 }
 
-export class RealtimeServer {
-  clients: SocketClient[];
+type ConnectionStatus =
+  | "CONNECTING"
+  | "OPEN"
+  | "CLOSING"
+  | "CLOSED"
+  | "UNKNOWN";
+class BrokerConnection {
+  broker?: WebSocket;
+
+  private _stop: boolean = false;
+  stop() {
+    this._stop = true;
+    this.broker?.close();
+  }
+  get connected(): boolean {
+    return this.broker?.readyState === WebSocket.OPEN;
+  }
+  get closed(): boolean {
+    if (!this.broker) {
+      return true;
+    }
+
+    return this.broker.readyState === WebSocket.CLOSED;
+  }
+
+  get closing(): boolean {
+    return this.broker?.readyState === WebSocket.CLOSING;
+  }
+
+  get connecting(): boolean {
+    return this.broker?.readyState === WebSocket.CONNECTING;
+  }
+
+  get connectionStatus(): ConnectionStatus {
+    const status = this.broker?.readyState;
+    switch (status) {
+      case WebSocket.CONNECTING:
+        return "CONNECTING";
+      case WebSocket.OPEN:
+        return "OPEN";
+      case WebSocket.CLOSING:
+        return "CLOSING";
+      case WebSocket.CLOSED:
+        return "CLOSED";
+      default:
+        return "UNKNOWN";
+    }
+  }
+  private _connect() {
+    this.broker = new WebSocket("ws://127.0.0.1:11254/ws");
+
+    return new Promise<void>((resolve, reject) => {
+      setTimeout(() => {
+        resolve();
+      }, 2000);
+      this.broker!.onopen = () => {
+        // easyLog.info("Broker connection established");
+        this.broker!.onmessage = (event) => {
+          // easyLog.info(event.data, "Broker message");
+        };
+        this.broker!.onclose = () => {
+          // easyLog.error("Broker connection closed", "Broker", true);
+          this.reconnect();
+        };
+        resolve();
+      };
+    });
+  }
+  async connect() {
+    await this.reconnect();
+  }
+  private async reconnect() {
+    while (this.closed) {
+      if (this.connected || this._stop) {
+        break;
+      }
+      await this._connect();
+      await asyncPause(1000);
+    }
+  }
+  broadcast(message: Record<string, any>) {
+    if (!this.connected) {
+      easyLog.error("Broker not connected", "Broker", true);
+      return;
+    }
+    this.broker!.send(JSON.stringify(message));
+  }
+}
+
+export class RealtimeServer extends WebsocketBase {
   rooms: Record<string, SocketRoom> = {};
 
   info: {
-    rooms: Array<SocketRoomDef>;
+    rooms: Array<RealtimeRoomDef>;
   } = {
     rooms: [],
   };
 
-  constructor(rooms?: SocketRoomDef[]) {
-    this.clients = [];
-    if (rooms) {
-      this.addRooms(rooms);
-    }
-    addEventListener("socket-message", (e) => {
-      const event = e as SocketEvent;
-      this.sendToRoomEvent(
-        event.detail.room,
-        event.detail.event,
-        event.detail.data,
-      );
-    });
+  broker!: BrokerConnection;
+  async boot() {
+    this.broker = new BrokerConnection();
+    await this.broker.connect();
   }
 
-  addRoom(room: SocketRoomDef) {
+  stop() {
+    this.broker?.stop();
+  }
+
+  notify(room: string, event: string, data: Record<string, any>) {
+    this.broker.broadcast({
+      room,
+      event,
+      data,
+    });
+  }
+  addRoom(room: RealtimeRoomDef) {
     const newRoom = new SocketRoom(room.roomName, room.events);
     this.rooms[room.roomName] = newRoom;
     this.info.rooms.push(room);
   }
 
-  addRooms(rooms: SocketRoomDef[]) {
+  addRooms(rooms: RealtimeRoomDef[]) {
     for (const room of rooms) {
       this.addRoom(room);
     }
   }
 
-  addClient(socket: WebSocket): string {
-    const id = Math.random().toString(36).substring(7);
-    this.clients.push({ id, socket, rooms: [] });
-    return id;
+  handleConnection(_client: RealtimeClient): void {
   }
-
-  broadcast(message: string | Record<string, any>): void {
-    if (typeof message === "object") {
-      message = JSON.stringify(message);
-    }
-    this.clients.forEach((client) => {
-      client.socket.send(JSON.stringify({ message }));
-    });
-  }
-
-  handleUpgrade(req: Request): Response {
-    const upgrade = req.headers.get("upgrade") || "";
-    if (upgrade.toLowerCase() != "websocket") {
-      return new Response("request isn't trying to upgrade to websocket.");
-    }
-    const { socket, response } = Deno.upgradeWebSocket(req);
-    const id = this.addClient(socket);
-    socket.onopen = () => {
-      socket.send(JSON.stringify({ message: "Connected to server" }));
-      this.broadcast(`Client ${id} connected`);
-    };
-    socket.onmessage = (e) => {
-      this.handleMessage(e.data, id);
-    };
-    socket.onerror = (e) => {
-      if (e instanceof ErrorEvent) {
-        console.error(`Socket error: ${e.message}`, "Error", "SocketServer");
+  handleClose(client: RealtimeClient): void {
+    const rooms = this.clients.find((c) => c.id === client.id)?.rooms;
+    if (rooms) {
+      for (const room of rooms) {
+        this.leave(room, client.id);
       }
-    };
-    socket.onclose = () => {
-      const rooms = this.clients.find((client) => client.id === id)?.rooms;
-      if (rooms) {
-        for (const room of rooms) {
-          this.leave(room, id);
-        }
-      }
-      this.clients = this.clients.filter((client) => client.id !== id);
-    };
-    return response;
+    }
   }
 
   join(room: string, clientId: string, events?: string[]): void {
@@ -188,14 +218,16 @@ export class RealtimeServer {
     });
   }
 
-  handleMessage(message: string, id: string) {
-    const parsed = JSON.parse(message);
-    switch (parsed.type) {
+  handleMessage(
+    client: RealtimeClient,
+    data: RealtimeClientMessage,
+  ): void {
+    switch (data.type) {
       case "join":
-        this.join(parsed.room, id, [parsed.event]);
+        this.join(data.room, client.id, [data.event]);
         break;
       case "leave":
-        this.leave(parsed.room, id, [parsed.event]);
+        this.leave(data.room, client.id, [data.event]);
         break;
       default:
         break;

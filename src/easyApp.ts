@@ -3,6 +3,7 @@ import { EasyRequest } from "#/easyRequest.ts";
 import { EasyResponse } from "#/easyResponse.ts";
 
 import {
+  type DatabaseConfig,
   EasyOrm,
   type EntityDefinition,
   type Orm,
@@ -20,12 +21,9 @@ import type {
 } from "#/middleware/middleware.ts";
 
 import type { EasyPack, EasyPackInfo } from "./package/easyPack.ts";
-import { basePackage } from "./package/basePack/basePack.ts";
-import {
-  dispatchSocketEvent,
-  RealtimeServer,
-  type SocketRoomDef,
-} from "#/realtime/realtimeServer.ts";
+import { basePackage } from "#/package/basePack/basePack.ts";
+import { RealtimeServer } from "#/realtime/realtimeServer.ts";
+
 import type {
   Action,
   DocsActionGroup,
@@ -35,11 +33,15 @@ import type {
 } from "#/actions/actionTypes.ts";
 import type { BootAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
-import { asyncPause } from "#/utils.ts";
-import { colorMe } from "@vef/color-me";
+import { asyncPause, getCoreCount } from "#/utils.ts";
 import { PgError } from "@vef/easy-orm";
+import { ColorMe, type EasyCli } from "@vef/easy-cli";
+import { MessageBroker } from "#/realtime/messageBroker.ts";
+import { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
+import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
+import { DBType } from "@vef/easy-orm";
 
-interface EasyAppOptions {
+export interface EasyAppOptions<D extends DBType> {
   /**
    * The root path of the app. Defaults to the current directory.
    * This is used to serve static files and to store the database file for
@@ -56,6 +58,29 @@ interface EasyAppOptions {
    * ```
    */
   appRootPath?: string;
+
+  /**
+   * The file name of the main module for the app.
+   *
+   * For example `main.ts` or `app.ts`
+   */
+  mainModule?: string;
+  /**
+   * The name of the app. This is used in the logs and other places where the app name is needed.
+   */
+
+  appName?: string;
+  /**
+   * The path prefix for the app. This is useful when the app is running behind a reverse proxy.
+   *
+   * **Example:**
+   * ```ts
+   * const app = new EasyApp({
+   * pathPrefix: "/myapp",
+   * });
+   * ```
+   */
+  pathPrefix?: string;
 
   /**
    * Set to true if the app is a single page app (SPA)
@@ -81,43 +106,40 @@ interface EasyAppOptions {
    *
    * **`hostname`** - The hostname to run the server on. Default: `
    */
-  serverOptions?: Deno.ListenOptions;
+  serverOptions?: Deno.ServeOptions;
+
   /**
-   * An instance of EasyOrm to use for the app. If not provided, a new instance
-   * of EasyOrm will be created with the default options for the database type {json}.
+   * Options for the ORM
    *
-   * **Example:**
-   * ```ts
-   * const app = new EasyApp({
-   *    orm: new EasyOrm({
-   *      databaseType: "postgres",
-   *      databaseConfig: {
-   *        host: "localhost",
-   *        port: 5432,
-   *        user: "user",
-   *        password: "password",
-   *        database: "mydb",
-   *      },
-   *      entities: [],
-   *   }),
-   *  });
-   * ```
+   * **`databaseType`** - The type of database to use. Default: `denoKv`
+   *
+   * **`databaseConfig`** - The configuration object for the database
    */
-  orm?: Orm;
+  ormOptions?: {
+    databaseType: keyof DatabaseConfig;
+    databaseConfig: DatabaseConfig[keyof DatabaseConfig];
+  };
 }
 
 /**
  * The EasyApp class is the starting point for creating an Easy App.
  */
-export class EasyApp {
+export class EasyApp<D extends DBType = "denoKv"> {
   private hasError: boolean = false;
   private server?: Deno.HttpServer;
-  private config: Required<Omit<EasyAppOptions, "orm">>;
+  config: Required<EasyAppOptions<DBType>>;
   private staticFileHandler: StaticFileHandler;
   private middleware: Array<
     MiddlewareWithResponse | MiddlewareWithoutResponse
   > = [];
 
+  mode: "development" | "production" = "development";
+  workers: Array<{
+    path: string;
+    name: string;
+  }> = [];
+
+  workersMap: Record<string, Worker> = {};
   realtime: RealtimeServer = new RealtimeServer();
   packages: Array<EasyPackInfo> = [];
   orm: Orm;
@@ -129,6 +151,7 @@ export class EasyApp {
    */
   bootActions: Array<BootAction> = [];
 
+  cli!: EasyCli;
   /**
    * The starting point for the creating an Easy App
    *
@@ -154,19 +177,20 @@ export class EasyApp {
    * - **`serverOptions`** (optional) - Options for the Deno server
    * - **`orm`** (optional) - An instance of EasyOrm to use for the app
    */
-  constructor(options?: EasyAppOptions) {
-    console.clear();
-    easyLog.message("Building EasyApp...", "Init");
+
+  constructor(options?: EasyAppOptions<D>) {
     const appRootPath = options?.appRootPath || ".";
-    this.orm = options?.orm || new EasyOrm({
-      databaseType: "json",
+    const ormOptions = options?.ormOptions || {
+      databaseType: "denoKv",
       databaseConfig: {
-        dataPath: `${appRootPath}/.data`,
+        path: `${appRootPath}/.data/kv.db`,
       },
-      entities: [],
-    });
+    };
     this.config = {
+      appName: options?.appName || "EasyApp",
       appRootPath,
+      mainModule: options?.mainModule || "main.ts",
+      pathPrefix: options?.pathPrefix || "",
       staticFilesOptions: {
         staticFilesRoot: options?.staticFilesOptions?.staticFilesRoot ||
           "public",
@@ -174,8 +198,12 @@ export class EasyApp {
       },
       singlePageApp: options?.singlePageApp || false,
       serverOptions: options?.serverOptions || { port: 8000 },
+      ormOptions,
     };
-
+    this.orm = new EasyOrm({
+      ...this.config.ormOptions,
+      entities: [],
+    });
     this.staticFileHandler = new StaticFileHandler(
       this.config.staticFilesOptions,
     );
@@ -191,6 +219,17 @@ export class EasyApp {
     return fullDocs;
   }
 
+  set mainModule(module: string) {
+    let mainFile = "main.ts";
+    let mainDir = module;
+    if (module.endsWith(".ts")) {
+      mainFile = module.split("/").pop() || "main.ts";
+      mainDir = module.split("/").slice(0, -1).join("/");
+    }
+    this.config.appRootPath = mainDir.replace("file://", "");
+    this.config.mainModule = mainFile;
+  }
+
   /**
    * Send a realtime notification to a room
    */
@@ -199,7 +238,7 @@ export class EasyApp {
     event: string,
     data: Record<string, any>,
   ): void {
-    dispatchSocketEvent(room, event, data);
+    this.realtime.notify(room, event, data);
   }
 
   /**
@@ -252,7 +291,7 @@ export class EasyApp {
   /**
    * Add a list of rooms to the realtime server
    */
-  addSocketRooms(rooms: SocketRoomDef[]) {
+  addRealtimeRooms(rooms: RealtimeRoomDef[]) {
     this.realtime.addRooms(rooms);
   }
 
@@ -312,6 +351,30 @@ export class EasyApp {
     return this.orm.entityInfo;
   }
 
+  addWorker(name: string, path: string) {
+    this.workers.push({ name, path });
+    easyLog.info(`Worker ${name} at ${path} added`, "Worker");
+    // Deno.exit(0);
+    // const worker = new Worker(path, { type: "module", name: name });
+    // if (!worker) {
+    //   raiseEasyException(`Worker ${name} not found`, 404);
+    // }
+    // if (this.workers[name]) {
+    //   raiseEasyException(`Worker ${name} already exists`, 500);
+    // }
+    // this.workers[name] = worker;
+  }
+
+  queryWorker(name: string, data: Record<string, any>) {
+    const worker = this.workersMap[name];
+    if (!worker) {
+      raiseEasyException(`Worker ${name} not found`, 404);
+    }
+    worker.postMessage(data);
+  }
+  queueTask(taskName: string, params?: Record<string, any>) {
+    this.queryWorker("task", { taskName, params });
+  }
   /**
    * Add an EasyPack to the app
    */
@@ -336,6 +399,10 @@ export class EasyApp {
         this.realtime.addRoom(room);
       }
       this.packages.push(easyPack.easyPackInfo);
+
+      for (const bootAction of easyPack.bootActions) {
+        this.addBootAction(bootAction);
+      }
     } catch (e) {
       if (e instanceof EasyException) {
         const subject = `EasyPack Error: ${easyPack.easyPackInfo.EasyPackName}`;
@@ -376,6 +443,78 @@ export class EasyApp {
     return typeString;
   }
 
+  private runMessageBroker() {
+    const broker = new MessageBroker();
+    broker.run();
+  }
+
+  startProcess(options?: {
+    args?: string[];
+    flags?: string[];
+  }): number {
+    const cwd = Deno.cwd();
+
+    const args = options?.args || [];
+    const flags = options?.flags || [];
+
+    if (this.orm.dbType === "denoKv") {
+      flags.push("--unstable-kv");
+    }
+    if (args.includes("--prod")) {
+      const platform = Deno.build.os;
+      let bin = "./app";
+      switch (platform) {
+        case "windows":
+          bin = "./app.exe";
+          break;
+        case "darwin":
+          bin = "./appOsx";
+          break;
+        case "linux":
+          bin = "./app";
+          break;
+        default:
+          raiseEasyException(`Platform ${platform} not supported`, 500);
+      }
+      const cmd = new Deno.Command(bin, {
+        args,
+        cwd,
+      });
+      const process = cmd.spawn();
+      return process.pid;
+    }
+    const denoBin = Deno.execPath();
+    const mainModule = "main.ts";
+    const cmdArgs = [
+      "run",
+      "-A",
+      "--unstable-net",
+      ...flags,
+      `${mainModule}`,
+      ...args,
+    ];
+
+    const cmd = new Deno.Command(denoBin, {
+      args: cmdArgs,
+      cwd,
+    });
+
+    const process = cmd.spawn();
+    return process.pid;
+  }
+
+  async begin(args: string[]) {
+    this.startProcess({ args: ["broker", ...args] });
+    const cores = await getCoreCount();
+    const pids: number[] = [];
+    for (let i = 0; i < cores; i++) {
+      pids.push(
+        this.startProcess({ args: ["app", "-n", i.toString(), ...args] }),
+      );
+    }
+
+    easyLog.info(`Started ${cores} app processes ${pids.join(", ")}`, "Boot");
+  }
   /**
    * This is the main entry point for the app. It boots the app and starts the server.
    *
@@ -397,6 +536,25 @@ export class EasyApp {
       easyLog.warning("App has errors. Exiting...", "Boot", true);
       this.exit(1);
     }
+    const args = Deno.args;
+    const argsRecord: Record<string, any> = {};
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === "-n") {
+        argsRecord.name = args[i + 1];
+        i++;
+        continue;
+      }
+      if (args[i] === "--prod") {
+        argsRecord.prod = true;
+        continue;
+      }
+      argsRecord[args[i]] = true;
+    }
+
+    if (argsRecord.broker) {
+      this.runMessageBroker();
+      return;
+    }
     try {
       await this.boot();
     } catch (e) {
@@ -407,25 +565,44 @@ export class EasyApp {
       this.exit(0);
     }
 
-    this.serve(config);
+    if (argsRecord.app) {
+      this.runApp({
+        name: argsRecord.name,
+        clientProxyPort: config?.clientProxyPort,
+      });
+      return;
+    }
+    if (argsRecord.serve) {
+      await this.begin(args);
+      return;
+    }
+    buildCli.action(this);
+    this.cli.run();
+    this.cli.changeView("main");
+    return;
   }
 
-  addBootAction(actionName: string, action: () => Promise<void>): void;
-  addBootAction(
-    actionName: string,
-    action: (app: EasyApp) => Promise<void>,
-  ): void {
-    this.bootActions.push({
-      actionName,
-      action: async () => {
-        await action(this);
-      },
+  runApp(config?: {
+    name?: string;
+    clientProxyPort?: number;
+  }) {
+    this.serve({
+      clientProxyPort: config?.clientProxyPort,
+      name: config?.name,
     });
+  }
+
+  /**
+   * Add a boot action to the app
+   */
+  addBootAction(bootAction: BootAction): void {
+    this.bootActions.push(bootAction);
   }
   exit(code?: number): void {
     this.server?.shutdown();
     Deno.exit(code);
   }
+
   private async boot(): Promise<void> {
     if (this.hasError) {
       easyLog.message("App has errors. Exiting...", "Boot");
@@ -436,6 +613,7 @@ export class EasyApp {
 
     asyncPause(100);
     easyLog.info("Booting EasyApp...", "Boot");
+
     this.requestTypes = this.buildRequestTypes();
     try {
       await this.orm.init();
@@ -447,60 +625,83 @@ export class EasyApp {
       e.message = `Error initializing ORM: ${e.message}`;
       throw e;
     }
+    // this.bootWorkers();
+    this.realtime.boot();
     try {
       for (const action of this.bootActions) {
-        await action.action();
+        easyLog.info(
+          `Running boot action ${
+            ColorMe.fromOptions(action.actionName, { color: "brightCyan" })
+          }`,
+          "Boot",
+        );
+        await action.action(this);
       }
     } catch (e) {
       e.message = `Error running boot action ${e.actionName}: ${e.message}`;
       throw e;
     }
   }
+  stop() {
+    this.server?.shutdown();
+    this.realtime.stop();
+    this.orm.stop();
+  }
   private serve(config?: {
     clientProxyPort?: number;
+    name?: string;
   }): void {
     const options = this.config.serverOptions;
 
     const serveOptions: Deno.ServeOptions = {
       hostname: options.hostname,
       port: options.port,
+      reusePort: options.reusePort || true,
 
       onListen: (addr) => {
         const { hostname, port, transport } = addr;
         let protocol = "";
-        let host = "";
+        let host = hostname;
         if (transport === "tcp") {
           protocol = "http";
         }
         if (hostname === "0.0.0.0") {
           host = "localhost";
         }
+        const message = ColorMe.chain().content("EasyApp")
+          .color("brightCyan")
+          .content(" is running on ")
+          .color("brightWhite")
+          .content(` ${protocol}://${host}:${port}`)
+          .color("brightYellow")
+          .end();
         easyLog.info(
-          `${colorMe.brightCyan("EasyApp")} is running on ${
-            colorMe.brightYellow(` ${protocol}://${host}:${port}`)
-          }`,
-          "Server",
+          message,
+          `Server (${this.config.appName}${
+            config?.name ? ` - ${config.name}` : ""
+          })`,
         );
       },
     };
     this.server = Deno.serve(
       serveOptions,
       async (request: Request): Promise<Response> => {
-        const easyRequest = new EasyRequest(request);
+        const easyRequest = new EasyRequest(request, this.config.pathPrefix);
 
         const easyResponse = new EasyResponse();
-        if (easyRequest.method === "OPTIONS") {
-          return easyResponse.respond();
-        }
-        if (easyRequest.upgradeSocket) {
-          return this.realtime.handleUpgrade(easyRequest.request);
-        }
+
         try {
+          for (const middleware of this.middleware) {
+            await middleware(this, easyRequest, easyResponse);
+          }
+          if (easyRequest.method === "OPTIONS") {
+            return easyResponse.respond();
+          }
+          if (easyRequest.upgradeSocket) {
+            return this.realtime.handleUpgrade(easyRequest);
+          }
           switch (easyRequest.path) {
             case "/api":
-              for (const middleware of this.middleware) {
-                await middleware(this, easyRequest, easyResponse);
-              }
               easyResponse.content = await this.apiHandler(
                 easyRequest,
                 easyResponse,
@@ -517,22 +718,29 @@ export class EasyApp {
           if (e instanceof EasyException) {
             const subject = `${e.status} - ${e.name}`;
             easyLog.error(e.message, subject, true);
-            return easyResponse.error(e.message, e.status);
+            return easyResponse.error(e.message, e.status, subject);
           }
           if (e instanceof PgError) {
             e.fullMessage;
             e.name;
             e.detail;
 
+            // const subject = toTitleCase(e.name);
             const subject = e.name;
-            const message = e.fullMessage;
-            easyLog.error(message, e.name);
-            return easyResponse.error("Internal Server Error", 500);
+            const message = `${subject}: ${e.message}`;
+            easyLog.error(message, "Database Error (Postgres)", true);
+            return easyResponse.error(message, 500, subject);
+          }
+          if (e instanceof OrmException) {
+            // const subject = toTitleCase(e.type);
+            const message = `${e.type}: ${e.message}`;
+            easyLog.error(message, "ORM Error", true);
+            return easyResponse.error(message, 500, e.type);
           }
 
           const subject = e.name;
           easyLog.error(e.message, subject);
-          return easyResponse.error("Internal Server Error", 500);
+          return easyResponse.error(e.message, 500, subject);
         }
       },
     );
@@ -543,18 +751,21 @@ export class EasyApp {
       if (!port) {
         raiseEasyException("Port not found for client proxy", 500);
       }
-      const url = easyRequest.request.url.replace(
+      const url = easyRequest.cleanedUrl.replace(
         port,
         proxy.toString(),
       );
+
       const response = await fetch(url);
       return response;
     }
     let path = easyRequest.path;
+
     if (this.config.singlePageApp && !easyRequest.isFile) {
       path = "/index.html";
     }
-    return await this.staticFileHandler.serveFile(path);
+    const file = await this.staticFileHandler.serveFile(path);
+    return file;
   }
   private async apiHandler(
     request: EasyRequest,

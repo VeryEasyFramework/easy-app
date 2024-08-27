@@ -14,7 +14,7 @@ import {
   type ExtractEntityFields,
   type Orm,
 } from "@vef/easy-orm";
-import type { SocketRoomDef } from "#/realtime/realtimeServer.ts";
+import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
   ActionParams,
@@ -22,6 +22,7 @@ import type {
   CreateActionParams,
   EasyAction,
 } from "#/actions/actionTypes.ts";
+import type { BootAction } from "#/types.ts";
 
 export interface EasyPackInfo {
   EasyPackName: string;
@@ -30,6 +31,7 @@ export interface EasyPackInfo {
   entities: Array<string>;
   actions: Array<Record<string, string[]>>;
   middleware: Array<string>;
+  bootActions: Array<{ actionName: string; description: string }>;
 }
 
 // enforce no decimal numbers
@@ -83,6 +85,7 @@ export class EasyPack {
   middleware: Array<MiddlewareWithResponse | MiddlewareWithoutResponse> = [];
   actionGroups: Record<string, Array<EasyAction>> = {};
   entities: Array<EntityDefinition> = [];
+  bootActions: Array<BootAction> = [];
   description: string;
 
   /**
@@ -93,7 +96,7 @@ export class EasyPack {
   /**
    * The realtime rooms that this EasyPack uses
    */
-  realtimeRooms: SocketRoomDef[] = [];
+  realtimeRooms: RealtimeRoomDef[] = [];
 
   version: string = "0.0.1";
 
@@ -121,6 +124,10 @@ export class EasyPack {
         [groupName, actions],
       ) => ({
         [groupName]: actions.map((action) => action.actionName),
+      })),
+      bootActions: this.bootActions.map((action) => ({
+        actionName: action.actionName,
+        description: action.description || "",
       })),
       middleware: this.middleware.map((middleware) => middleware.name),
     };
@@ -320,6 +327,23 @@ export class EasyPack {
   }
 
   /**
+   *  Add a boot action to the EasyPack. Boot actions are run once when the app starts up.
+   *
+   * **Example**
+   * ```ts
+   * easyPack.addBootAction({
+   * name: "myBootAction",
+   * description: "My boot action",
+   * action: (app:EasyApp) => {
+   *   // your boot action code here
+   *    }
+   * });
+   * ```
+   */
+  addBootAction(bootAction: BootAction): void {
+    this.bootActions.push(bootAction);
+  }
+  /**
    * Add a realtime room to the EasyPack. Realtime rooms are used to group together clients that are connected to the
    * realtime server. You can send messages to all clients in a room by sending a message to the room.
    *
@@ -332,7 +356,7 @@ export class EasyPack {
    * });
    * ```
    */
-  addRealtimeRoom(room: SocketRoomDef) {
+  addRealtimeRoom(room: RealtimeRoomDef) {
     this.realtimeRooms.push(room);
   }
 

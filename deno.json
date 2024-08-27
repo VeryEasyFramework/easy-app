@@ -18,12 +18,12 @@
   },
   "imports": {
     "#/": "./src/",
-    "@vef/color-me": "jsr:@vef/color-me@^1.0.3",
     "@vef/easy-cli": "jsr:@vef/easy-cli@^0.1.16",
-    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.24"
+    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.24",
+    "@vef/string-utils": "jsr:@vef/string-utils@^0.1.5"
   },
   "tasks": {
-    "dev": "deno run --allow-all --watch dev/main.ts",
+    "dev": "cd dev && deno run -A --unstable-kv main.ts",
     "check": "deno publish --dry-run"
   }
 }

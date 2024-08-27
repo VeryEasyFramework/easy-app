@@ -1,0 +1,36 @@
+import { createAction } from "#/actions/createAction.ts";
+import { EasyApp } from "#/easyApp.ts";
+import { defineEntity } from "@vef/easy-orm";
+const app = new EasyApp({
+  serverOptions: {
+    port: 8000,
+    reusePort: true,
+  },
+});
+
+app.orm.addEntity(defineEntity("user", {
+  fields: [
+    {
+      key: "name",
+      fieldType: "DataField",
+    },
+  ],
+  label: "User",
+}));
+app.addAction(
+  "test",
+  createAction("test", {
+    description: "Test action",
+    action(app) {
+      app.notify("test", "test", {
+        message: "Hello World",
+      });
+      return {
+        message: "done",
+      };
+    },
+  }),
+);
+if (import.meta.main) {
+  await app.run();
+}

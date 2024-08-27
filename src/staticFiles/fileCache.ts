@@ -1,3 +1,5 @@
+import { EasyException, raiseEasyException } from "#/easyException.ts";
+import { easyLog } from "#/log/logging.ts";
 import { joinPath } from "../utils.ts";
 import { inferMimeType, type MimeValue } from "./mimeTypes.ts";
 
@@ -12,22 +14,35 @@ export class FileCache {
   constructor(skipCache?: boolean) {
     this.skipCache = skipCache || false;
   }
-  private async getFile(root: string, path: string): Promise<CachedFile> {
+  private async getFile(
+    root: string,
+    path: string,
+  ): Promise<CachedFile> {
     const mimeType = inferMimeType(path) || "text/plain";
-    return {
-      content: await Deno.readFile(joinPath(root, path)),
-      mimeType: mimeType,
-    };
+    try {
+      return {
+        content: await Deno.readFile(joinPath(root, path)),
+        mimeType: mimeType,
+      };
+    } catch (_e) {
+      if (_e instanceof Deno.errors.NotFound) {
+        throw new EasyException(`File not found: ${path}`, 404, "FileNotFound");
+      }
+      throw _e;
+    }
   }
-  async loadFile(root: string, path: string): Promise<CachedFile | never> {
+  async loadFile(root: string, path: string): Promise<CachedFile> {
     if (this.skipCache) {
       return await this.getFile(root, path);
     }
-    let file = this.cache.get(path);
+    let file: CachedFile | undefined = this.cache.get(path);
     if (!file) {
       file = await this.getFile(root, path);
-      this.cache.set(path, file);
+      if (file) {
+        this.cache.set(path, file);
+      }
     }
+
     return file;
   }
 }
