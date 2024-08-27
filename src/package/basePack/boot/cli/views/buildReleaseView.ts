@@ -1,8 +1,7 @@
 import { TaskView } from "@vef/easy-cli";
 import { cli } from "#/package/basePack/boot/cli/cli.ts";
-import { CommandSession } from "@vef/easy-ops";
+
 import { EasyOps } from "@vef/easy-ops";
-import { joinPath } from "#/utils.ts";
 
 const easyOp = new EasyOps({
   sessionType: "local",

@@ -1,6 +1,6 @@
 {
   "name": "@vef/easy-app",
-  "version": "0.2.18",
+  "version": "0.3.0",
   "exports": "./mod.ts",
   "exclude": [
     "references"
@@ -18,12 +18,14 @@
   },
   "imports": {
     "#/": "./src/",
-    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.1.16",
-    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.1.24",
+    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.2.0",
+    "@vef/easy-ops": "jsr:@vef/easy-ops@^0.1.1",
+    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.2.0",
     "@vef/string-utils": "jsr:@vef/string-utils@^0.1.5"
   },
   "tasks": {
     "dev": "cd dev && deno run -A --unstable-kv main.ts",
-    "check": "deno publish --dry-run"
+    "check": "deno publish --dry-run",
+    "update": "deno add @vef/easy-orm @vef/easy-cli @vef/string-utils @vef/easy-ops"
   }
 }
