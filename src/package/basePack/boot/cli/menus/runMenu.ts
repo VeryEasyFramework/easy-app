@@ -84,15 +84,14 @@ export function setupRunMenu(app: EasyApp) {
       action: () => {
         cli.stop();
 
-        listener.listen();
-        signal.addEventListener("abort", (event) => {
-          app.stop();
-          Deno.exit();
+        app.begin({
+          args: ["--prod"],
+          signal,
         });
-        app.stop();
-
-        app.startProcess({
-          args: ["serve", "--prod"],
+        listener.listen();
+        signal.addEventListener("abort", async (event) => {
+          await asyncPause(1000);
+          Deno.exit();
         });
       },
     });
