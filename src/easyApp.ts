@@ -4,6 +4,8 @@ import { EasyResponse } from "#/easyResponse.ts";
 
 import {
   type DatabaseConfig,
+  type DBType,
+  type EasyFieldType,
   EasyOrm,
   type EntityDefinition,
   type Orm,
@@ -37,9 +39,8 @@ import { asyncPause, getCoreCount, savePID } from "#/utils.ts";
 import { PgError } from "@vef/easy-orm";
 import { ColorMe, type EasyCli, MenuView } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
-import { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
+import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
-import { DBType } from "@vef/easy-orm";
 
 export interface EasyAppOptions<D extends DBType> {
   /**
@@ -118,6 +119,7 @@ export interface EasyAppOptions<D extends DBType> {
   ormOptions?: {
     databaseType: keyof DatabaseConfig;
     databaseConfig: DatabaseConfig[keyof DatabaseConfig];
+    idFieldType?: EasyFieldType;
   };
 }
 
@@ -455,7 +457,6 @@ export class EasyApp<D extends DBType = "denoKv"> {
     flags?: string[];
     signal?: AbortSignal;
   }): number {
-    const pidPath = ".pids";
     const cwd = Deno.cwd();
 
     const args = options?.args || [];

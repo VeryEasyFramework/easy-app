@@ -6,6 +6,24 @@ const app = new EasyApp({
     port: 8000,
     reusePort: true,
   },
+  ormOptions: {
+    databaseType: "postgres",
+    databaseConfig: {
+      camelCase: true,
+      host: "localhost",
+      port: 5432,
+      size: 1,
+      clientOptions: {
+        database: "postgres",
+        user: "postgres",
+        camelCase: true,
+        password: "postgres",
+        host: "localhost",
+        port: 5432,
+      },
+    },
+    idFieldType: "BigIntField",
+  },
 });
 
 app.orm.addEntity(defineEntity("user", {
