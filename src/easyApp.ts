@@ -462,7 +462,9 @@ export class EasyApp<D extends DBType = "denoKv"> {
     const args = options?.args || [];
     const flags = options?.flags || [];
 
-    if (this.orm.dbType === "denoKv") {
+    if (
+      this.orm.dbType === "denoKv" && !flags.includes("--unstable-kv")
+    ) {
       flags.push("--unstable-kv");
     }
     if (args.includes("--prod")) {
