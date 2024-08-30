@@ -7,10 +7,7 @@ export const userSessionEntity = defineEntity("userSession", {
       key: "user",
       label: "User",
       fieldType: "ConnectionField",
-      connection: {
-        entity: "user",
-        fetchFields: [{ key: "fullName" }],
-      },
+      connectionEntity: "user",
     },
     {
       key: "sessionId",
@@ -21,7 +18,7 @@ export const userSessionEntity = defineEntity("userSession", {
   ],
   label: "User Session",
   hooks: {
-    beforeInsert() {
+    async beforeInsert() {
       this.sessionId = generateRandomString(32);
     },
   },

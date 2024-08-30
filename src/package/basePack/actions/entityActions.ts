@@ -187,19 +187,14 @@ export const entityActions = [
     response: "EntityInfo",
   }),
 
-  createAction("runAction", {
+  createAction("runEntityAction", {
     description: "Run an action that is defined on the entity",
     async action(app, { entity, id, actionName, data }) {
       const entityRecord = await app.orm.getEntity(entity, id);
       if (!entityRecord) {
         raiseEasyException(`${entity} doesn't exist`, 404);
       }
-      if (actionName! in entityRecord) {
-        raiseEasyException(
-          `${actionName} is not a valid action on ${entity} entities`,
-          400,
-        );
-      }
+
       const action = entityRecord[actionName!];
       if (typeof action !== "function") {
         raiseEasyException(

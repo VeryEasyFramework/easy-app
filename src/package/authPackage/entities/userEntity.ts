@@ -1,6 +1,8 @@
 import { defineEntity } from "@vef/easy-orm";
 
 export const userEntity = defineEntity("user", {
+  label: "User",
+  titleField: "fullName",
   fields: [
     {
       key: "firstName",
@@ -32,10 +34,27 @@ export const userEntity = defineEntity("user", {
       readOnly: true,
     },
   ],
-  label: "User",
   hooks: {
     async beforeSave() {
       this.fullName = `${this.firstName} ${this.lastName}`;
     },
   },
+  actions: [
+    {
+      key: "setPassword",
+      label: "Set Password",
+      description: "Set the user's password",
+      async action(password: string) {
+        return "password set";
+      },
+    },
+    {
+      key: "test",
+      label: "test action",
+      description: "test action",
+      async action() {
+        return "test action result";
+      },
+    },
+  ],
 });

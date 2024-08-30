@@ -1,3 +1,5 @@
+export { authPack } from "#/package/authPackage/authPack.ts";
+
 export { easyLog } from "#/log/logging.ts";
 
 export { EasyException, raiseEasyException } from "#/easyException.ts";
