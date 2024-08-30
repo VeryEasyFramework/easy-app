@@ -9,7 +9,6 @@ export const userEntity = defineEntity("user", {
       label: "First Name",
       fieldType: "DataField",
       required: true,
-      inList: true,
     },
     {
       key: "lastName",
