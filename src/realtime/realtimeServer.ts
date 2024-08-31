@@ -129,6 +129,8 @@ export class RealtimeServer extends WebsocketBase {
   }
 
   notify(room: string, event: string, data: Record<string, any>) {
+    this.sendToRoomEvent(room, event, data);
+
     this.broker.broadcast({
       room,
       event,
@@ -208,10 +210,19 @@ export class RealtimeServer extends WebsocketBase {
     if (!this.rooms[room]) {
       return;
     }
-    for (const event in this.rooms[room].events) {
-      this.rooms[room].events[event] = this.rooms[room].events[event].filter((
-        client,
-      ) => client !== clientId);
+
+    if (events) {
+      for (const event of events) {
+        this.rooms[room].events[event] = this.rooms[room].events[event].filter((
+          client,
+        ) => client !== clientId);
+      }
+    } else {
+      for (const event in this.rooms[room].events) {
+        this.rooms[room].events[event] = this.rooms[room].events[event].filter((
+          client,
+        ) => client !== clientId);
+      }
     }
     this.sendToRoomEvent(room, "leave", {
       message: `Client ${clientId} left room ${room}`,
