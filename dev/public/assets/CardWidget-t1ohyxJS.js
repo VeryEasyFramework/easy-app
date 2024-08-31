@@ -1,0 +1,1 @@
+import{_ as r,o as s,l as t,g as o,j as a}from"./Container-DH2J1Vin.js";const c={},n={class:"card"};function d(e,_){return s(),t("div",n,[o(e.$slots,"default",{},()=>[a(" Card ")])])}const f=r(c,[["render",d]]);export{f as C};
