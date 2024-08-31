@@ -1,66 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <title>My App</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 20% auto;
-      background: #242424;
-      color: #fff;
-    }
-
-    h1 {
-      font-size: 50px;
-      margin: 0;
-    }
-
-    p {
-      font-size: 20px;
-      margin: 20px 0;
-    }
-  </style>
+    <meta charset="UTF-8"/>
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Easy App</title>
+  <script type="module" crossorigin src="/assets/main-CpZoqYpB.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/logo-C62CV3B5.js">
+  <link rel="stylesheet" crossorigin href="/assets/logo-CthPLfTH.css">
+  <link rel="stylesheet" crossorigin href="/assets/main-6EOWmy4F.css">
 </head>
 
-<body>
-
-  <h1>This is my app</h1>
-  <p>It's a work in progress, but it's gonna be awesomeness!</p>
-  <button onclick="getLink()">Get Data</button>
-  <label for="link">Link</label>
-  <input type="text" id="link" placeholder="Enter Link to check">
-  <pre style="text-align: start;" id="data"></pre>
-
-  <script>
-
-    async function getLink() {
-      console.log('clicked')
-      const value = document.getElementById('link').value
-      if (value == '' || value == null) {
-        alert('Please enter a link')
-        return
-      }
-      const data = {
-        link: value
-      }
-      apiCall('utils', 'checkLink', data)
-
-    }
-    async function apiCall(group, action, data) {
-
-
-
-      const endpoint = `/api`
-      const response = await fetch(`${endpoint}?group=${group}&action=${action}`, {
-        body: JSON.stringify(data),
-        method: 'POST',
-      })
-      const responseData = await response.json()
-      document.getElementById('data').innerHTML = JSON.stringify(responseData, null, 2)
-    }
-  </script>
+<body data-theme="light">
+<div name="app-root" id="app"></div>
+<div id="popovers"></div>
 </body>
 
 </html>

@@ -1,0 +1,1 @@
+import{C as e}from"./CardWidget-BFzG0_qg.js";import{a as t,o as a,c as o,w as r,j as c}from"./logo-C62CV3B5.js";const p=t({__name:"EntityRecordView",setup(n){return(s,i)=>(a(),o(e,null,{default:r(()=>[c(" entity record view ")]),_:1}))}});export{p as default};
