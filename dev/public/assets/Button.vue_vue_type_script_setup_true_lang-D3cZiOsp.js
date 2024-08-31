@@ -1,1 +1,0 @@
-import{a as e,o as t,l as s,g as a,j as n,Q as r}from"./logo-C62CV3B5.js";const l=["type"],m=e({__name:"Button",props:{type:{},disabled:{type:Boolean},color:{}},setup(p){return(o,c)=>(t(),s("button",{class:r(["button",{[o.color??"primary"]:o.color}]),type:o.type||"button"},[a(o.$slots,"default",{},()=>[n(" Button ")])],10,l))}});export{m as _};

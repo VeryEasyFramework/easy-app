@@ -1,1 +1,0 @@
-import{_ as r,o as t,l as a,g as s,j as c}from"./logo-C62CV3B5.js";const o={},d={class:"card grid grid-gap widget-card"};function n(e,_){return t(),a("div",d,[s(e.$slots,"default",{},()=>[c(" Card ")])])}const l=r(o,[["render",n]]);export{l as C};
