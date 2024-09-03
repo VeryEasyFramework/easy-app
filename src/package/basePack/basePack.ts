@@ -22,4 +22,5 @@ basePackage.addRealtimeRoom({
 
 basePackage.setVersion(0, 1, 0);
 basePackage.addBootAction(bootEntityRooms);
+
 export { basePackage };

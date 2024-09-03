@@ -5,7 +5,7 @@ export { easyLog } from "#/log/logging.ts";
 export { EasyException, raiseEasyException } from "#/easyException.ts";
 export { EasyPack } from "#/package/easyPack.ts";
 export { EasyApp } from "#/easyApp.ts";
-export type { BootAction } from "#/types.ts";
+export type { BootAction, InitAction } from "#/types.ts";
 export { createAction } from "#/actions/createAction.ts";
 
 export type { EasyResponse } from "#/easyResponse.ts";

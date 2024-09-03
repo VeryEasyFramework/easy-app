@@ -22,7 +22,7 @@ import type {
   CreateActionParams,
   EasyAction,
 } from "#/actions/actionTypes.ts";
-import type { BootAction } from "#/types.ts";
+import type { BootAction, InitAction } from "#/types.ts";
 
 export interface EasyPackInfo {
   EasyPackName: string;
@@ -86,6 +86,7 @@ export class EasyPack {
   actionGroups: Record<string, Array<EasyAction>> = {};
   entities: Array<EntityDefinition> = [];
   bootActions: Array<BootAction> = [];
+  initActions: Array<InitAction> = [];
   description: string;
 
   /**
@@ -343,6 +344,26 @@ export class EasyPack {
   addBootAction(bootAction: BootAction): void {
     this.bootActions.push(bootAction);
   }
+
+  /**
+   * Add an init action to the EasyPack. Init actions are run once when the app starts up.
+   *
+   * **Example**
+   * ```ts
+   * easyPack.addInitAction({
+   * name: "myInitAction",
+   * description: "My init action",
+   * action: (app:EasyApp) => {
+   *   // your init action code here
+   *    }
+   * });
+   * ```
+   */
+
+  addInitAction(initAction: InitAction): void {
+    this.initActions.push(initAction);
+  }
+
   /**
    * Add a realtime room to the EasyPack. Realtime rooms are used to group together clients that are connected to the
    * realtime server. You can send messages to all clients in a room by sending a message to the room.

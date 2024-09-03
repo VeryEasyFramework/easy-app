@@ -102,7 +102,9 @@ class BrokerConnection {
   }
   broadcast(message: Record<string, any>) {
     if (!this.connected) {
-      easyLog.error("Broker not connected", "Broker", true);
+      easyLog.error("Broker not connected", "Broker", {
+        hideTrace: true,
+      });
       return;
     }
     this.broker!.send(JSON.stringify(message));

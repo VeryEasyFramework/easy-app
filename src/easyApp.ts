@@ -33,7 +33,7 @@ import type {
   EasyAction,
   InferredAction,
 } from "#/actions/actionTypes.ts";
-import type { BootAction } from "#/types.ts";
+import type { BootAction, InitAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
 import { asyncPause, getCoreCount, savePID } from "#/utils.ts";
 import { PgError } from "@vef/easy-orm";
@@ -41,6 +41,7 @@ import { ColorMe, type EasyCli, MenuView } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
+import { initAppConfig } from "#/appConfig/appConfig.ts";
 
 export interface EasyAppOptions<D extends DBType> {
   /**
@@ -123,14 +124,15 @@ export interface EasyAppOptions<D extends DBType> {
   };
 }
 
+const config = await initAppConfig();
 /**
  * The EasyApp class is the starting point for creating an Easy App.
  */
-export class EasyApp<D extends DBType = "denoKv"> {
+export class EasyApp {
   private hasError: boolean = false;
   private server?: Deno.HttpServer;
-  config: Required<EasyAppOptions<DBType>>;
-  private staticFileHandler: StaticFileHandler;
+  config!: Required<EasyAppOptions<DBType>>;
+  private staticFileHandler!: StaticFileHandler;
   private middleware: Array<
     MiddlewareWithResponse | MiddlewareWithoutResponse
   > = [];
@@ -144,6 +146,7 @@ export class EasyApp<D extends DBType = "denoKv"> {
   workersMap: Record<string, Worker> = {};
   realtime: RealtimeServer = new RealtimeServer();
   packages: Array<EasyPackInfo> = [];
+  private easyPacks: Array<EasyPack> = [];
   orm: Orm;
   actions: Record<string, Record<string, EasyAction>>;
   requestTypes: string = "";
@@ -153,6 +156,7 @@ export class EasyApp<D extends DBType = "denoKv"> {
    */
   bootActions: Array<BootAction> = [];
 
+  initActions: Array<InitAction> = [];
   cliMenu!: MenuView;
 
   cli!: EasyCli;
@@ -182,37 +186,28 @@ export class EasyApp<D extends DBType = "denoKv"> {
    * - **`orm`** (optional) - An instance of EasyOrm to use for the app
    */
 
-  constructor(options?: EasyAppOptions<D>) {
-    const appRootPath = options?.appRootPath || ".";
-    const ormOptions = options?.ormOptions || {
-      databaseType: "denoKv",
-      databaseConfig: {
-        path: `${appRootPath}/.data/kv.db`,
-      },
-    };
-    this.config = {
-      appName: options?.appName || "EasyApp",
-      appRootPath,
-      mainModule: options?.mainModule || "main.ts",
-      pathPrefix: options?.pathPrefix || "",
-      staticFilesOptions: {
-        staticFilesRoot: options?.staticFilesOptions?.staticFilesRoot ||
-          "public",
-        cache: options?.staticFilesOptions?.cache || false,
-      },
-      singlePageApp: options?.singlePageApp || false,
-      serverOptions: options?.serverOptions || { port: 8000 },
-      ormOptions,
-    };
+  constructor() {
+    this.config = config;
+    this.actions = {};
     this.orm = new EasyOrm({
-      ...this.config.ormOptions,
+      databaseType: this.config.ormOptions.databaseType,
+      databaseConfig: this.config.ormOptions.databaseConfig,
+      idFieldType: this.config.ormOptions.idFieldType,
       entities: [],
     });
+
     this.staticFileHandler = new StaticFileHandler(
       this.config.staticFilesOptions,
     );
-    this.actions = {};
+
     this.addEasyPack(basePackage);
+  }
+
+  async init() {
+    // this.actions = {};
+    for (const action of this.initActions) {
+      await action.action(this);
+    }
   }
   private get apiDocs(): DocsActionGroup[] {
     const fullDocs: DocsActionGroup[] = [];
@@ -275,7 +270,9 @@ export class EasyApp<D extends DBType = "denoKv"> {
       easyLog.error(
         `Action ${action.actionName} already exists in group ${group}`,
         "Add Action Error",
-        true,
+        {
+          hideTrace: true,
+        },
       );
       this.hasError = true;
       return;
@@ -407,11 +404,16 @@ export class EasyApp<D extends DBType = "denoKv"> {
       for (const bootAction of easyPack.bootActions) {
         this.addBootAction(bootAction);
       }
+      for (const initAction of easyPack.initActions) {
+        this.addInitAction(initAction);
+      }
     } catch (e) {
       if (e instanceof EasyException) {
         const subject = `EasyPack Error: ${easyPack.easyPackInfo.EasyPackName}`;
 
-        easyLog.error(e.message, subject, true);
+        easyLog.error(e.message, subject, {
+          hideTrace: true,
+        });
         this.hasError = true;
         return;
       }
@@ -552,8 +554,11 @@ export class EasyApp<D extends DBType = "denoKv"> {
   async run(config?: {
     clientProxyPort?: number;
   }): Promise<void> {
+    await this.init();
     if (this.hasError) {
-      easyLog.warning("App has errors. Exiting...", "Boot", true);
+      easyLog.warning("App has errors. Exiting...", "Boot", {
+        hideTrace: true,
+      });
       this.exit(1);
     }
     const args = Deno.args;
@@ -619,8 +624,16 @@ export class EasyApp<D extends DBType = "denoKv"> {
   addBootAction(bootAction: BootAction): void {
     this.bootActions.push(bootAction);
   }
+
+  /**
+   * Add an init action to the app
+   */
+  addInitAction(initAction: InitAction): void {
+    this.initActions.push(initAction);
+  }
   exit(code?: number): void {
     this.server?.shutdown();
+    prompt("Press enter to exit...");
     Deno.exit(code);
   }
 
@@ -640,7 +653,9 @@ export class EasyApp<D extends DBType = "denoKv"> {
       await this.orm.init();
     } catch (e) {
       if (e instanceof OrmException) {
-        easyLog.error(e.message, e.type, true);
+        easyLog.error(e.message, e.type, {
+          hideTrace: true,
+        });
         this.exit(1);
       }
       e.message = `Error initializing ORM: ${e.message}`;
@@ -738,7 +753,9 @@ export class EasyApp<D extends DBType = "denoKv"> {
         } catch (e) {
           if (e instanceof EasyException) {
             const subject = `${e.status} - ${e.name}`;
-            easyLog.error(e.message, subject, true);
+            easyLog.error(e.message, subject, {
+              hideTrace: true,
+            });
             return easyResponse.error(e.message, e.status, subject);
           }
           if (e instanceof PgError) {
@@ -749,18 +766,25 @@ export class EasyApp<D extends DBType = "denoKv"> {
             // const subject = toTitleCase(e.name);
             const subject = e.name;
             const message = `${subject}: ${e.message}`;
-            easyLog.error(message, "Database Error (Postgres)", true);
+            easyLog.error(message, "Database Error (Postgres)", {
+              hideTrace: true,
+            });
             return easyResponse.error(message, 500, subject);
           }
           if (e instanceof OrmException) {
             // const subject = toTitleCase(e.type);
             const message = `${e.type}: ${e.message}`;
-            easyLog.error(message, "ORM Error", true);
+            easyLog.error(message, "ORM Error", {
+              hideTrace: true,
+            });
             return easyResponse.error(message, 500, e.type);
           }
-
+          const er = e as Error;
           const subject = e.name;
-          easyLog.error(e.message, subject);
+          easyLog.info(er.stack, subject);
+          easyLog.error(e.message, subject, {
+            stack: er.stack,
+          });
           return easyResponse.error(e.message, 500, subject);
         }
       },
