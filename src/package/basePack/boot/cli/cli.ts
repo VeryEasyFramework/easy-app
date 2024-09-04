@@ -28,6 +28,7 @@ export const cli = new EasyCli({
     backgroundColor: "bgBlack",
     primaryColor: "brightCyan",
   },
+  mainMenu,
 });
 
 cli.addView(mainMenu, "main");
