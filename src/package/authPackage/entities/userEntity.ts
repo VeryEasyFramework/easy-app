@@ -42,8 +42,16 @@ export const userEntity = defineEntity("user", {
       label: "Password",
       fieldType: "DataField",
       readOnly: true,
+      hidden: true,
     },
   ],
+  fieldGroups: {
+    personalInformation: {
+      title: "Personal Information",
+      description: "Information about the user",
+      fields: ["email", "lastName"],
+    },
+  },
   hooks: {
     async beforeSave() {
       this.firstName = toTitleCase(this.firstName.trim());
