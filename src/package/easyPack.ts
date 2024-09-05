@@ -3,17 +3,7 @@ import type {
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
 import { createAction } from "#/actions/createAction.ts";
-import {
-  defineEntity,
-  type EasyField,
-  type EasyFieldType,
-  type EntityActionRecord,
-  type EntityConfig,
-  type EntityDefinition,
-  type EntityHooks,
-  type ExtractEntityFields,
-  type Orm,
-} from "@vef/easy-orm";
+import type { EntityDefinition } from "@vef/easy-orm";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
@@ -22,7 +12,7 @@ import type {
   CreateActionParams,
   EasyAction,
 } from "#/actions/actionTypes.ts";
-import type { BootAction } from "#/types.ts";
+import type { BootAction, InitAction } from "#/types.ts";
 
 export interface EasyPackInfo {
   EasyPackName: string;
@@ -86,6 +76,7 @@ export class EasyPack {
   actionGroups: Record<string, Array<EasyAction>> = {};
   entities: Array<EntityDefinition> = [];
   bootActions: Array<BootAction> = [];
+  initActions: Array<InitAction> = [];
   description: string;
 
   /**
@@ -343,6 +334,26 @@ export class EasyPack {
   addBootAction(bootAction: BootAction): void {
     this.bootActions.push(bootAction);
   }
+
+  /**
+   * Add an init action to the EasyPack. Init actions are run once when the app starts up.
+   *
+   * **Example**
+   * ```ts
+   * easyPack.addInitAction({
+   * name: "myInitAction",
+   * description: "My init action",
+   * action: (app:EasyApp) => {
+   *   // your init action code here
+   *    }
+   * });
+   * ```
+   */
+
+  addInitAction(initAction: InitAction): void {
+    this.initActions.push(initAction);
+  }
+
   /**
    * Add a realtime room to the EasyPack. Realtime rooms are used to group together clients that are connected to the
    * realtime server. You can send messages to all clients in a room by sending a message to the room.
@@ -358,49 +369,6 @@ export class EasyPack {
    */
   addRealtimeRoom(room: RealtimeRoomDef) {
     this.realtimeRooms.push(room);
-  }
-
-  /**
-   * Define an entity directly in the EasyPack. Entities are used to define the structure of the data that is stored in the database.
-   * Entities are defined using the EasyORM library.
-   *
-   * **Example**
-   * ```ts
-   *  myEasyPack.defineEntity("user",{
-   *   label: "User",
-   *   fields: [
-   *    {
-   *      key: "username",
-   *      fieldType: "DataField",
-   *      label: "Username",
-   *     },
-   *   ],
-   *  });
-   * ```
-   */
-  defineEntity<
-    Id extends string,
-    P extends PropertyKey,
-    T extends EasyFieldType,
-    F extends EasyField<P, T>[],
-    H extends Partial<EntityHooks>,
-    AP extends PropertyKey | undefined,
-    A extends EntityActionRecord<AP>,
-  >(entityId: Id, options: {
-    label: string;
-    fields: F;
-    tableName?: string;
-    config?: EntityConfig;
-    hooks?:
-      & H
-      & ThisType<
-        EntityHooks & ExtractEntityFields<F> & A & { orm: Orm }
-      >;
-    actions?:
-      & A
-      & ThisType<A & EntityHooks & ExtractEntityFields<F> & { orm: Orm }>;
-  }) {
-    this.entities.push(defineEntity(entityId, options));
   }
 
   /**

@@ -1,0 +1,26 @@
+{
+  "appName": "Easy App",
+  "singlePageApp": true,
+  "staticFilesOptions": {
+    "staticFilesRoot": "./public",
+    "cache": true
+  },
+  "serverOptions": {
+    "hostname": "localhost",
+    "port": 8000
+  },
+  "ormOptions": {
+    "databaseType": "postgres",
+    "databaseConfig": {
+      "camelCase": true,
+      "size": 1,
+      "clientOptions": {
+        "user": "postgres",
+        "password": "postgres",
+        "database": "postgres",
+        "host": "localhost",
+        "port": 5432
+      }
+    }
+  }
+}

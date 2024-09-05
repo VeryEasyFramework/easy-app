@@ -4,6 +4,7 @@ import {
   formatUtils,
   printUtils,
 } from "@vef/easy-cli";
+import { symbol } from "../../../easy-cli/src/utils/print.ts";
 const tab = "  ";
 export type LogType = "Error" | "Info" | "Warning" | "Debug" | "Message";
 
@@ -16,27 +17,42 @@ const typeColors: Record<LogType, BasicFgColor> = {
 } as const;
 
 const box = printUtils.symbol.box;
+
+interface LogOptions {
+  hideTrace?: boolean;
+  traceOffset?: number;
+  stack?: string;
+}
 export const easyLog = {
-  message: (content: any | any[], subject?: string): void =>
-    log(content, "Message", subject),
-  error: (content: any | any[], subject?: string, hideTrace?: boolean): void =>
-    log(content, "Error", subject, hideTrace),
+  message: (
+    content: any | any[],
+    subject?: string,
+    options?: LogOptions,
+  ): void => log({ content, type: "Message", subject, ...options }),
+  error: (
+    content: any | any[],
+    subject?: string,
+    options?: LogOptions,
+  ): void => log({ content, type: "Error", subject, ...options }),
   info: (content: any | any[], subject?: string): void =>
-    log(content, "Info", subject),
+    log({ content, type: "Info", subject }),
   warning: (
     content: any | any[],
     subject?: string,
-    hideTrace?: boolean,
-  ): void => log(content, "Warning", subject, hideTrace),
+    options?: LogOptions,
+  ): void => log({ content, type: "Warning", subject, ...options }),
   debug: (content: any | any[], subject?: string): void =>
-    log(content, "Debug", subject),
+    log({ content, type: "Debug", subject }),
 } as const;
-function log(
-  content: any | any[],
-  type?: LogType,
-  subject?: string,
-  hideTrace?: boolean,
-) {
+function log(options: {
+  content: any | any[];
+  type?: LogType;
+  subject?: string;
+  hideTrace?: boolean;
+  traceOffset?: number;
+  stack?: string;
+}) {
+  let { content, type, subject, hideTrace, traceOffset, stack } = options;
   if (!type && !subject) {
     type = "Debug";
   }
@@ -47,45 +63,56 @@ function log(
   const shouldHideTrace = hideTrace && type != "Debug";
   if (showTrace && !shouldHideTrace) {
     //get the calling function
-    const stack = new Error().stack;
+    stack = stack || new Error().stack;
     let lines: string[] = [];
 
-    stack?.split("\n").slice(3, -1).forEach((line, index) => {
+    stack?.split("\n").slice(1, -1).forEach((line, index) => {
       line = line.trim().replace("at ", "");
-      const args = line.split(" (");
-      let func = args[0];
-      if (func.includes(".")) {
-        const fullFunc = func.split(".");
-        func = ColorMe.chain().content(fullFunc[fullFunc.length - 2])
-          .color("brightGreen")
-          .content(".")
-          .color("white")
-          .content(fullFunc[fullFunc.length - 1])
-          .color("brightYellow")
-          .content("()")
-          .color("brightWhite")
-          .end();
+      let out = line;
 
-        // func = `${fgGreen}${fullFunc[fullFunc.length - 2]}.${fgYellow}${
-        //   fullFunc[fullFunc.length - 1]
-        // }${fgWhite}()${reset}`;
+      if (!line.startsWith("file://")) {
+        const args = line.split(" (");
+        let func = args[0];
+        if (func.includes(".")) {
+          const fullFunc = func.split(".");
+          func = ColorMe.chain().content(fullFunc[fullFunc.length - 2])
+            .color("brightGreen")
+            .content(".")
+            .color("white")
+            .content(fullFunc[fullFunc.length - 1])
+            .color("brightYellow")
+            .content("()")
+            .color("brightWhite")
+            .end();
+
+          // func = `${fgGreen}${fullFunc[fullFunc.length - 2]}.${fgYellow}${
+          //   fullFunc[fullFunc.length - 1]
+          // }${fgWhite}()${reset}`;
+        }
+        func = func.replace("async ", "");
+        const file = args[1]?.replace(")", "");
+        let tabs = "";
+        for (let i = 0; i < index; i++) {
+          tabs += tab;
+        }
+        out = `${func} ${ColorMe.fromOptions(file, { color: "brightCyan" })}`;
+        if (line.startsWith("ext:deno")) {
+          return;
+        }
       }
-      func = func.replace("async ", "");
-      const file = args[1]?.replace(")", "");
-      let tabs = "";
-      for (let i = 0; i < index; i++) {
-        tabs += tab;
+      if (line.startsWith("file://")) {
+        out = ColorMe.standard()
+          .content("Start ").color("brightWhite").bold()
+          .content(symbol.arrowRight + " ").color("brightMagenta")
+          .bold()
+          .content(line).color("brightCyan")
+          .end();
       }
-      const out = `${func} ${file}`;
-      lines.push(out);
+
+      lines.push(`${out}\n`);
     });
+
     lines = lines.reverse();
-    lines = lines.map((line, index) => {
-      for (let i = 0; i < index; i++) {
-        line = tab + line;
-      }
-      return `${line}`;
-    });
     if (type === "Error") {
       message.push(lines.join("\n"));
     } else {

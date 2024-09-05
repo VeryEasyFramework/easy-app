@@ -5,3 +5,5 @@ export interface BootAction {
   description?: string;
   action: (app: EasyApp) => Promise<void> | void;
 }
+
+export interface InitAction extends BootAction {}
