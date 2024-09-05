@@ -3,17 +3,7 @@ import type {
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
 import { createAction } from "#/actions/createAction.ts";
-import {
-  defineEntity,
-  type EasyField,
-  type EasyFieldType,
-  type EntityActionRecord,
-  type EntityConfig,
-  type EntityDefinition,
-  type EntityHooks,
-  type ExtractEntityFields,
-  type Orm,
-} from "@vef/easy-orm";
+import type { EntityDefinition } from "@vef/easy-orm";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
@@ -379,49 +369,6 @@ export class EasyPack {
    */
   addRealtimeRoom(room: RealtimeRoomDef) {
     this.realtimeRooms.push(room);
-  }
-
-  /**
-   * Define an entity directly in the EasyPack. Entities are used to define the structure of the data that is stored in the database.
-   * Entities are defined using the EasyORM library.
-   *
-   * **Example**
-   * ```ts
-   *  myEasyPack.defineEntity("user",{
-   *   label: "User",
-   *   fields: [
-   *    {
-   *      key: "username",
-   *      fieldType: "DataField",
-   *      label: "Username",
-   *     },
-   *   ],
-   *  });
-   * ```
-   */
-  defineEntity<
-    Id extends string,
-    P extends PropertyKey,
-    T extends EasyFieldType,
-    F extends EasyField<P, T>[],
-    H extends Partial<EntityHooks>,
-    AP extends PropertyKey | undefined,
-    A extends EntityActionRecord<AP>,
-  >(entityId: Id, options: {
-    label: string;
-    fields: F;
-    tableName?: string;
-    config?: EntityConfig;
-    hooks?:
-      & H
-      & ThisType<
-        EntityHooks & ExtractEntityFields<F> & A & { orm: Orm }
-      >;
-    actions?:
-      & A
-      & ThisType<A & EntityHooks & ExtractEntityFields<F> & { orm: Orm }>;
-  }) {
-    this.entities.push(defineEntity(entityId, options));
   }
 
   /**
