@@ -18,9 +18,9 @@
   },
   "imports": {
     "#/": "./src/",
-    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.2.1",
-    "@vef/easy-ops": "jsr:@vef/easy-ops@^0.1.1",
-    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.2.1",
+    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.2.2",
+    "@vef/easy-ops": "jsr:@vef/easy-ops@^0.1.2",
+    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.2.3",
     "@vef/string-utils": "jsr:@vef/string-utils@^0.1.5"
   },
   "tasks": {
