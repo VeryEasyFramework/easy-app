@@ -4,7 +4,7 @@ import {
   formatUtils,
   printUtils,
 } from "@vef/easy-cli";
-import { symbol } from "../../../easy-cli/src/utils/print.ts";
+const { symbol } = printUtils;
 const tab = "  ";
 export type LogType = "Error" | "Info" | "Warning" | "Debug" | "Message";
 
