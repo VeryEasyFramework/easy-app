@@ -168,13 +168,13 @@ export class RealtimeServer extends WebsocketBase {
     }
     if (!events) {
       for (const event in this.rooms[room].events) {
-        if (!this.rooms[room].events[event].includes(clientId)) {
+        if (!this.rooms[room].events[event]?.includes(clientId)) {
           this.rooms[room].events[event].push(clientId);
         }
       }
     } else {
       for (const event of events) {
-        if (!this.rooms[room].events[event].includes(clientId)) {
+        if (!this.rooms[room].events[event]?.includes(clientId)) {
           this.rooms[room].events[event].push(clientId);
         }
       }
