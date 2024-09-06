@@ -8,7 +8,7 @@ const authPack: EasyPack = new EasyPack("auth", {
 });
 
 authPack.addEntity(userEntity);
-// authPack.addEntity(userSessionEntity);
+authPack.addEntity(userSessionEntity);
 
 // authPackage.addMiddleware(authMiddleware);
 

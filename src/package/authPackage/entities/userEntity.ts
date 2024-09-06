@@ -1,7 +1,10 @@
 import { EasyEntity } from "@vef/easy-orm";
 import { raiseOrmException } from "../../../../../easy-orm/src/ormException.ts";
 
-export const userEntity = new EasyEntity("user");
+export const userEntity = new EasyEntity("user", {
+  label: "User",
+  description: "A user of the system",
+});
 
 userEntity.addFields([
   {
