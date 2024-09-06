@@ -8,7 +8,6 @@ import {
   type EasyFieldType,
   EasyOrm,
   type EntityDefinition,
-  type Orm,
   OrmException,
 } from "@vef/easy-orm";
 
@@ -147,7 +146,7 @@ export class EasyApp {
   realtime: RealtimeServer = new RealtimeServer();
   packages: Array<EasyPackInfo> = [];
   private easyPacks: Array<EasyPack> = [];
-  orm: Orm;
+  orm: EasyOrm;
   actions: Record<string, Record<string, EasyAction>>;
   requestTypes: string = "";
 
@@ -349,7 +348,7 @@ export class EasyApp {
    * Get a list of all the registered entities and their properties
    */
   get entityInfo(): EntityDefinition[] {
-    return this.orm.entityInfo;
+    return Object.values(this.orm.entities);
   }
 
   addWorker(name: string, path: string) {
@@ -586,7 +585,9 @@ export class EasyApp {
     } catch (e) {
       const message = e instanceof Error ? e.message : "Unknown error";
       const errorClass = e instanceof Error ? e.constructor.name : "Unknown";
-      easyLog.error(`Error booting app: ${message} (${errorClass})`);
+      easyLog.error(`Error booting app: ${message} (${errorClass})`, "Boot", {
+        stack: e instanceof Error ? e.stack : undefined,
+      });
 
       this.exit(0);
     }
@@ -701,7 +702,7 @@ export class EasyApp {
         if (transport === "tcp") {
           protocol = "http";
         }
-        if (hostname === "0.0.0.0") {
+        if (hostname === "0.0.0.0" || hostname === "::1") {
           host = "localhost";
         }
         const message = ColorMe.chain().content("EasyApp")
