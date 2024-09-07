@@ -1,4 +1,5 @@
 import { EasyEntity } from "@vef/easy-orm";
+import { toTitleCase } from "@vef/string-utils";
 
 export const userEntity = new EasyEntity("user", {
    label: "User",
@@ -50,6 +51,8 @@ userEntity.addFields([
 
 userEntity.setConfig({
    titleField: "fullName",
+   orderField: "fullName",
+   orderDirection: "asc",
 });
 
 userEntity.addFieldGroup({
@@ -59,9 +62,16 @@ userEntity.addFieldGroup({
 });
 
 userEntity.addHook("beforeSave", {
-   label: "Generate Full Name",
-   description: "Generate the full name from the first and last name fields",
+   label: "Format Name",
+   description:
+      "Format first and last name to title case and generate the full name from the first and last name fields",
    action(entity) {
+      if (entity.firstName) {
+         entity.firstName = toTitleCase(entity.firstName as string);
+      }
+      if (entity.lastName) {
+         entity.lastName = toTitleCase(entity.lastName as string);
+      }
       entity.fullName = `${entity.firstName} ${entity.lastName}`;
    },
 });
