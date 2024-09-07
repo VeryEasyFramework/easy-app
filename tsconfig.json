@@ -4,12 +4,16 @@
       "#/*": [
         "src/*"
       ],
+      "@vef/string-utils": [
+        "../../string-utils/mod.ts"
+      ],
       "@vef/*": [
         "../*/mod.ts"
       ]
     }
   },
   "include": [
-    "../**/*.ts"
+    "../**/*.ts",
+    "../../string-utils/mod.ts"
   ]
 }
