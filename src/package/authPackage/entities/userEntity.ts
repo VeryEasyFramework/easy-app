@@ -47,12 +47,6 @@ userEntity.addFields([
       readOnly: true,
       hidden: true,
    },
-   {
-      key: "role",
-      label: "Role",
-      fieldType: "DataField",
-      inList: true,
-   },
 ]);
 
 userEntity.setConfig({
