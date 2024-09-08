@@ -3,7 +3,7 @@ import type {
   MiddlewareWithResponse,
 } from "#/middleware/middleware.ts";
 import { createAction } from "#/actions/createAction.ts";
-import type { EntityDefinition } from "@vef/easy-orm";
+import type { EasyEntity } from "@vef/easy-orm";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
@@ -74,7 +74,7 @@ function validateSemverString(version: string): boolean {
 export class EasyPack {
   middleware: Array<MiddlewareWithResponse | MiddlewareWithoutResponse> = [];
   actionGroups: Record<string, Array<EasyAction>> = {};
-  entities: Array<EntityDefinition> = [];
+  entities: Array<EasyEntity> = [];
   bootActions: Array<BootAction> = [];
   initActions: Array<InitAction> = [];
   description: string;
@@ -393,7 +393,7 @@ export class EasyPack {
    * easyPack.addEntity(userEntity);
    */
 
-  addEntity(entity: EntityDefinition) {
+  addEntity(entity: EasyEntity) {
     this.entities.push(entity);
   }
 }

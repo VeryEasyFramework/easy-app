@@ -73,9 +73,7 @@ export const entityActions = [
       if (!result) {
         raiseEasyException("Entity not found", 404);
       }
-      if ("orm" in result) {
-        delete result.orm;
-      }
+
       return result.data;
     },
     params: {
@@ -171,8 +169,8 @@ export const entityActions = [
   }),
   createAction("getEntityInfo", {
     description: "Get the entity info",
-    action: async (app, { entity }) => {
-      const entityDef = app.orm.entityInfo.find((e) => e.entityId === entity);
+    action: (app, { entity }) => {
+      const entityDef = app.orm.entities[entity];
       if (!entityDef) {
         raiseEasyException("Entity not found", 404);
       }
@@ -189,24 +187,16 @@ export const entityActions = [
 
   createAction("runEntityAction", {
     description: "Run an action that is defined on the entity",
-    async action(app, { entity, id, actionName, data }) {
+    async action(app, { entity, id, action, data }) {
       const entityRecord = await app.orm.getEntity(entity, id);
       if (!entityRecord) {
         raiseEasyException(`${entity} doesn't exist`, 404);
       }
 
-      const action = entityRecord[actionName!];
-      if (typeof action !== "function") {
-        raiseEasyException(
-          `${actionName} is not a valid action on ${entity} entities`,
-          400,
-        );
-      }
       try {
-        return await action(data);
+        return await entityRecord.runAction(action, data);
       } catch (e) {
-        const message =
-          `Error running action ${actionName} on entity ${entity}`;
+        const message = `Error running action ${action} on entity ${entity}`;
         easyLog.error(message + e.message, e.name ? e.name : "Error");
 
         raiseEasyException(message, 400);
@@ -221,7 +211,7 @@ export const entityActions = [
         required: true,
         type: "DataField",
       },
-      actionName: {
+      action: {
         required: true,
         type: "DataField",
       },
