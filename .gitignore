@@ -1,6 +1,6 @@
 .vscode
 .idea
-
+.vscode/settings.json
 deno.lock
 .data
 data
