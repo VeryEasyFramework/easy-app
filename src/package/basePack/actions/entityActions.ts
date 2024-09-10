@@ -7,6 +7,7 @@ export const entityActions = [
   createAction("getList", {
     description: "Get a list of entities",
     action: async (app, data) => {
+      easyLog.info(JSON.stringify(data));
       const options = {} as ListOptions;
       if (data.filter) {
         options.filter = data.filter;
@@ -19,6 +20,9 @@ export const entityActions = [
       }
       if (data.orderBy) {
         options.orderBy = data.orderBy;
+      }
+      if (data.orFilter) {
+        options.orFilter = data.orFilter;
       }
       if (data.order) {
         if (data.order !== "asc" && data.order !== "desc") {
@@ -40,6 +44,10 @@ export const entityActions = [
         type: "DataField",
       },
       filter: {
+        required: false,
+        type: "JSONField",
+      },
+      orFilter: {
         required: false,
         type: "JSONField",
       },
