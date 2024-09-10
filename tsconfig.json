@@ -13,7 +13,7 @@
     }
   },
   "include": [
-    "../**/*.ts",
+    "../**/mod.ts",
     "../../string-utils/mod.ts"
   ]
 }

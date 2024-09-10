@@ -6,6 +6,8 @@ import type {
 } from "#/realtime/realtimeTypes.ts";
 import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
+import type { SafeType } from "@vef/easy-orm";
+import { EasyCache } from "#/cache/cache.ts";
 
 class SocketRoom {
    roomName: string;
@@ -34,6 +36,7 @@ class BrokerConnection {
       this._stop = true;
       this.broker?.close();
    }
+   onMessage: (data: RealtimeClientMessage) => void = () => {};
    get connected(): boolean {
       return this.broker?.readyState === WebSocket.OPEN;
    }
@@ -76,9 +79,12 @@ class BrokerConnection {
             resolve();
          }, 2000);
          this.broker!.onopen = () => {
-            // easyLog.info("Broker connection established");
             this.broker!.onmessage = (event) => {
-               // easyLog.info(event.data, "Broker message");
+               const data = JSON.parse(event.data);
+               const message = data.message;
+
+               const eventData: RealtimeClientMessage = JSON.parse(message);
+               this.onMessage(eventData);
             };
             this.broker!.onclose = () => {
                // easyLog.error("Broker connection closed", "Broker", true);
@@ -121,8 +127,15 @@ export class RealtimeServer extends WebsocketBase {
    };
 
    broker!: BrokerConnection;
+   onCache: (
+      operation: keyof EasyCache,
+      content: Record<string, any>,
+   ) => void = () => {};
    async boot() {
       this.broker = new BrokerConnection();
+      this.broker.onMessage = (data) => {
+         this.sendToRoomEvent(data.room, data.event, data.data);
+      };
       await this.broker.connect();
    }
 
@@ -186,6 +199,10 @@ export class RealtimeServer extends WebsocketBase {
    }
 
    sendToRoomEvent(room: string, event: string, data: Record<string, any>) {
+      if (room === "cache") {
+         const operation = event as keyof EasyCache;
+         this.onCache(operation, data);
+      }
       if (!this.rooms[room]) {
          return;
       }
@@ -230,6 +247,14 @@ export class RealtimeServer extends WebsocketBase {
       }
       this.sendToRoomEvent(room, "leave", {
          message: `Client ${clientId} left room ${room}`,
+      });
+   }
+
+   cache(operation: string, content: Record<string, SafeType>) {
+      this.broker.broadcast({
+         room: "cache",
+         event: operation,
+         data: content,
       });
    }
 

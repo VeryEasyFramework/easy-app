@@ -9,6 +9,7 @@ import {
    EasyOrm,
    type EntityDefinition,
    OrmException,
+   SafeType,
 } from "@vef/easy-orm";
 
 import {
@@ -41,6 +42,7 @@ import { MessageBroker } from "#/realtime/messageBroker.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
 import { initAppConfig } from "#/appConfig/appConfig.ts";
+import { EasyCache } from "#/cache/cache.ts";
 
 export interface EasyAppOptions<D extends DBType> {
    /**
@@ -141,7 +143,7 @@ export class EasyApp {
       path: string;
       name: string;
    }> = [];
-
+   cache: EasyCache;
    workersMap: Record<string, Worker> = {};
    realtime: RealtimeServer = new RealtimeServer();
    packages: Array<EasyPackInfo> = [];
@@ -198,8 +200,63 @@ export class EasyApp {
       this.staticFileHandler = new StaticFileHandler(
          this.config.staticFilesOptions,
       );
-
+      this.cache = new EasyCache();
+      this.realtime.onCache = (operation, data) => {
+         switch (operation) {
+            case "set":
+               this.cache.set(data.table, data.id, data.value);
+               break;
+            case "delete":
+               this.cache.delete(data.table, data.id);
+               break;
+            case "clear":
+               this.cache.clear();
+               break;
+            case "setList":
+               this.cache.setList(data.table, data.values);
+               break;
+            case "appendList":
+               this.cache.appendList(data.table, data.values);
+               break;
+            case "deleteList":
+               this.cache.deleteList(data.table);
+               break;
+            default:
+               raiseEasyException(`Invalid cache operation: ${operation}`, 500);
+         }
+      };
       this.addEasyPack(basePackage);
+   }
+
+   cacheGet(table: string, id: string) {
+      return this.cache.get(table, id);
+   }
+   cacheGetList(table: string) {
+      return this.cache.getList(table);
+   }
+   cacheSet(table: string, id: string, value: SafeType) {
+      this.realtime.cache("set", { table, id, value });
+      this.cache.set(table, id, value);
+   }
+   cacheDelete(table: string, id: string) {
+      this.realtime.cache("delete", { table, id });
+      this.cache.delete(table, id);
+   }
+   cacheClear() {
+      this.realtime.cache("clear", {});
+      this.cache.clear();
+   }
+   cacheSetList(table: string, values: { id: string; value: SafeType }[]) {
+      this.realtime.cache("setList", { table, values });
+      this.cache.setList(table, values);
+   }
+   cacheAppendList(table: string, values: { id: string; value: SafeType }[]) {
+      this.realtime.cache("appendList", { table, values });
+      this.cache.appendList(table, values);
+   }
+   cacheDeleteList(table: string) {
+      this.realtime.cache("deleteList", { table });
+      this.cache.deleteList(table);
    }
 
    async init() {
