@@ -7,7 +7,6 @@ export const entityActions = [
   createAction("getList", {
     description: "Get a list of entities",
     action: async (app, data) => {
-      easyLog.info(JSON.stringify(data));
       const options = {} as ListOptions;
       if (data.filter) {
         options.filter = data.filter;
