@@ -3,11 +3,16 @@ export class EasyException extends Error {
     message: string,
     public status: number,
     public name = "EasyException",
+    public redirect?: string,
   ) {
     super(message);
   }
 }
 
-export function raiseEasyException(message: string, status: number): never {
-  throw new EasyException(message, status);
+export function raiseEasyException(
+  message: string,
+  status: number,
+  redirect?: string,
+): never {
+  throw new EasyException(message, status, undefined, redirect);
 }

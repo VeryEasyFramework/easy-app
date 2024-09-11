@@ -22,6 +22,9 @@ export class EasyRequest {
     this.checkForFileExtension();
   }
   cleanedUrl: string = "";
+  host: string = "";
+
+  originalUrl: string = "";
   prefix?: string;
   request: Request;
   cookies: Map<string, string> = new Map();
@@ -95,6 +98,9 @@ export class EasyRequest {
     this.method = this.request.method as RequestMethod;
     this.path = url.pathname;
     this.port = parseInt(url.port);
+    this.host = url.hostname;
+    this.originalUrl = url.origin;
+
     const params = url.searchParams;
     for (const [key, value] of params) {
       switch (key) {
