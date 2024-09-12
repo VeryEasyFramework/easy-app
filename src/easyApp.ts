@@ -309,8 +309,7 @@ export class EasyApp {
     if (!this.actions[group]) {
       return false;
     }
-    const actionInfo = this.actions[group][action];
-    return actionInfo.public || false;
+    return this.actions[group][action].public ?? false;
   }
 
   /**
@@ -912,7 +911,7 @@ export class EasyApp {
 
     await request.loadBody();
 
-    const content = await action.action(this, request.body, response);
+    const content = await action.action(this, request.body, request, response);
     if (typeof content === "string") {
       return {
         message: content,

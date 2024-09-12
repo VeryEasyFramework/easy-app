@@ -1,6 +1,7 @@
 import type { EasyResponse } from "#/easyResponse.ts";
 import type { EasyApp } from "#/easyApp.ts";
 import type { EasyFieldType, EasyFieldTypeMap } from "@vef/easy-orm";
+import { EasyRequest } from "#/easyRequest.ts";
 
 export type Action<
   P extends {
@@ -18,6 +19,7 @@ export type Action<
   action: (
     app: EasyApp,
     data: D,
+    request?: EasyRequest,
     response?: EasyResponse,
   ) => Promise<any> | any;
   params?: P;
@@ -31,6 +33,7 @@ export interface EasyAction {
   action: (
     app: EasyApp,
     data: any,
+    request?: EasyRequest,
     response?: EasyResponse,
   ) => Promise<any> | any;
   params?: Record<string, any>;
@@ -51,6 +54,7 @@ export interface CreateActionOptions<
   action: (
     app: EasyApp,
     data: D,
+    request?: EasyRequest,
     response?: EasyResponse,
   ) => Promise<any> | any;
   params?: P;

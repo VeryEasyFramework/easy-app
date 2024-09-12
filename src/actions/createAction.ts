@@ -7,6 +7,7 @@ import type {
   CreateActionOptions,
   CreateActionParams,
 } from "#/actions/actionTypes.ts";
+import { EasyRequest } from "#/easyRequest.ts";
 
 export function createAction<
   P extends CreateActionParams<P>,
@@ -27,6 +28,7 @@ export function createAction<
   const newAction = async (
     app: EasyApp,
     data?: D,
+    request?: EasyRequest,
     response?: EasyResponse,
   ) => {
     if (!data && requiredParams.length > 0) {
@@ -51,12 +53,13 @@ export function createAction<
         );
       }
     }
-    return await options.action(app, paramsObj, response);
+    return await options.action(app, paramsObj, request, response);
   };
   return {
     actionName,
     description: options.description,
     action: newAction,
+    public: options.public,
     params: options.params,
     response: options.response,
   };

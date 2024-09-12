@@ -10,7 +10,9 @@ export class EasyResponse {
 
   constructor() {
   }
-
+  setAllowOrigin(origin: string) {
+    this.headers["Access-Control-Allow-Origin"] = origin;
+  }
   setCookie(key: string, value: string) {
     this.cookies[key] = value;
   }
@@ -37,6 +39,7 @@ export class EasyResponse {
 
   error(message: string, code: number, reason?: string): Response {
     this.content = { error: message, code: code, reason: reason };
+    this.setResponseCookie();
     return new Response(
       JSON.stringify(this.content),
       {
