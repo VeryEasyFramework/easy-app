@@ -3,19 +3,14 @@ import { EasyRequest } from "#/easyRequest.ts";
 import { EasyResponse } from "#/easyResponse.ts";
 
 import {
-  type DatabaseConfig,
   type DBType,
-  type EasyFieldType,
   EasyOrm,
   type EntityDefinition,
   OrmException,
-  SafeType,
+  type SafeType,
 } from "@vef/easy-orm";
 
-import {
-  StaticFileHandler,
-  type StaticFilesOptions,
-} from "#/staticFiles/staticFileHandler.ts";
+import { StaticFileHandler } from "#/staticFiles/staticFileHandler.ts";
 
 import type {
   MiddlewareWithoutResponse,
@@ -35,96 +30,15 @@ import type {
 } from "#/actions/actionTypes.ts";
 import type { BootAction, InitAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
-import { asyncPause, getCoreCount, savePID } from "#/utils.ts";
+import { asyncPause, getCoreCount } from "#/utils.ts";
 import { PgError } from "@vef/easy-orm";
-import { ColorMe, type EasyCli, MenuView } from "@vef/easy-cli";
+import { ColorMe, type EasyCli, type MenuView } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
 import { initAppConfig } from "#/appConfig/appConfig.ts";
 import { EasyCache } from "#/cache/cache.ts";
-import { O } from "../dev/public/assets/RootLayout.vue_vue_type_style_index_0_lang-C7NduuQ-.js";
-
-export interface EasyAppOptions<D extends DBType> {
-  /**
-   * The root path of the app. Defaults to the current directory.
-   * This is used to serve static files and to store the database file for
-   * the ORM when using the default database type {json}.
-   *
-   * > **Note:** This path should be an absolute path.
-   *
-   * > **Note:** Use the forward slash `/` as the path separator even on Windows.
-   *  The app will handle the path correctly.
-   * ```ts
-   * const app = new EasyApp({
-   *  appRootPath: "/path/to/app/root",
-   * });
-   * ```
-   */
-  appRootPath?: string;
-
-  /**
-   * The file name of the main module for the app.
-   *
-   * For example `main.ts` or `app.ts`
-   */
-  mainModule?: string;
-  /**
-   * The name of the app. This is used in the logs and other places where the app name is needed.
-   */
-
-  appName?: string;
-  /**
-   * The path prefix for the app. This is useful when the app is running behind a reverse proxy.
-   *
-   * **Example:**
-   * ```ts
-   * const app = new EasyApp({
-   * pathPrefix: "/myapp",
-   * });
-   * ```
-   */
-  pathPrefix?: string;
-
-  /**
-   * Set to true if the app is a single page app (SPA)
-   * that has a single entry point.
-   *
-   * This will serve the index.html file for all requests that are not files.
-   */
-  singlePageApp?: boolean;
-
-  /**
-   * Options for the static files handler
-   *
-   * **`cache`** - Whether to cache files or not. Default: `true`
-   *
-   * **`staticFilesRoot`** - The root directory of the static files.
-   */
-  staticFilesOptions?: StaticFilesOptions;
-
-  /**
-   * Options for the Deno server
-   *
-   * **`port`** - The port to run the server on. Default: `8000`
-   *
-   * **`hostname`** - The hostname to run the server on. Default: `
-   */
-  serverOptions?: Deno.ServeOptions;
-
-  /**
-   * Options for the ORM
-   *
-   * **`databaseType`** - The type of database to use. Default: `denoKv`
-   *
-   * **`databaseConfig`** - The configuration object for the database
-   */
-  ormOptions?: {
-    databaseType: keyof DatabaseConfig;
-    databaseConfig: DatabaseConfig[keyof DatabaseConfig];
-    idFieldType?: EasyFieldType;
-  };
-}
+import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
 
 const config = await initAppConfig();
 /**
@@ -133,7 +47,7 @@ const config = await initAppConfig();
 export class EasyApp {
   private hasError: boolean = false;
   private server?: Deno.HttpServer;
-  config!: Required<EasyAppOptions<DBType>>;
+  config!: Required<EasyAppConfig<DBType>>;
   private staticFileHandler!: StaticFileHandler;
   private middleware: Array<
     MiddlewareWithResponse | MiddlewareWithoutResponse
