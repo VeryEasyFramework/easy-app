@@ -2,20 +2,20 @@ import type { EasyApp } from "#/easyApp.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type { EasyResponse } from "#/easyResponse.ts";
 import type {
-  Action,
+  ActionBase,
   ActionParams,
-  CreateActionOptions,
   CreateActionParams,
+  EasyAction,
 } from "#/actions/actionTypes.ts";
-import { EasyRequest } from "#/easyRequest.ts";
+import type { EasyRequest } from "#/easyRequest.ts";
 
 export function createAction<
   P extends CreateActionParams<P>,
   D extends ActionParams<P>,
 >(
   actionName: string,
-  options: CreateActionOptions<P, D>,
-): Action<P, D> {
+  options: ActionBase<P, D>,
+): EasyAction {
   const paramsObj = {} as D;
   const requiredParams = [] as Array<keyof P>;
   const paramKeys = [] as Array<keyof P>;
@@ -27,9 +27,9 @@ export function createAction<
   }
   const newAction = async (
     app: EasyApp,
-    data?: D,
-    request?: EasyRequest,
-    response?: EasyResponse,
+    data: D,
+    request: EasyRequest,
+    response: EasyResponse,
   ) => {
     if (!data && requiredParams.length > 0) {
       raiseEasyException(
@@ -56,11 +56,8 @@ export function createAction<
     return await options.action(app, paramsObj, request, response);
   };
   return {
+    ...options,
     actionName,
-    description: options.description,
     action: newAction,
-    public: options.public,
-    params: options.params,
-    response: options.response,
   };
 }

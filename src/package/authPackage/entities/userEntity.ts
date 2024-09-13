@@ -1,5 +1,6 @@
 import { EasyEntity } from "@vef/easy-orm";
 import { toTitleCase } from "@vef/string-utils";
+import { generateSalt, hashPassword } from "#/package/authPackage/security.ts";
 
 export const userEntity = new EasyEntity("user", {
   label: "User",
@@ -43,16 +44,20 @@ userEntity.addFields([
   {
     key: "password",
     label: "Password",
-    fieldType: "DataField",
+    fieldType: "PasswordField",
+    description: "The hashed password of the user",
     readOnly: true,
     hidden: true,
   },
   {
-    key: "age",
-    label: "Age",
-    fieldType: "IntField",
-    description: "The user's age",
-    inList: true,
+    key: "salt",
+    label: "Salt",
+    fieldType: "DataField",
+
+    description: "The salt used to hash the user's password",
+
+    readOnly: true,
+    hidden: true,
   },
 ]);
 
@@ -89,4 +94,38 @@ userEntity.addAction("resetPassword", {
   action(entity) {
     return `Password reset for ${entity.fullName}`;
   },
+});
+userEntity.addAction("setPassword", {
+  label: "Set Password",
+  description: "Set the user's password",
+  async action(entity, params) {
+    const password = params?.password as string;
+    const salt = generateSalt();
+    const hashed = await hashPassword(password, salt);
+    entity.password = `${salt}:${hashed}`;
+    await entity.save();
+  },
+  params: [{
+    key: "password",
+    fieldType: "PasswordField",
+    required: true,
+  }],
+});
+
+userEntity.addAction("validatePassword", {
+  label: "Validate Password",
+  description: "Validate the user's password",
+  private: true,
+  async action(entity, params) {
+    const password = params?.password as string;
+    const existingPassword = entity.password as string;
+    const [salt, hashed] = existingPassword.split(":");
+    const testHash = await hashPassword(password, salt);
+    return hashed === testHash;
+  },
+  params: [{
+    key: "password",
+    fieldType: "PasswordField",
+    required: true,
+  }],
 });

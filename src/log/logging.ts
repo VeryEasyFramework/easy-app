@@ -65,9 +65,11 @@ function log(options: {
   const message: string[] = [];
 
   const title = subject || type || "Log";
-  logger.log({ content, type: type!, subject: title });
   if (["error", "warning"].includes(type!)) {
     logger.log({ content, type: type!, subject: title });
+  }
+  if (env === "production") {
+    return;
   }
   const showTrace = type === "error" || type === "warning";
   const shouldHideTrace = hideTrace && type != "debug";

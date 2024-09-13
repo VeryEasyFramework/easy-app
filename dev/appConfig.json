@@ -1,7 +1,7 @@
 {
   "appName": "Easy App",
   "singlePageApp": true,
-  "environment": "production",
+  "environment": "development",
   "staticFilesOptions": {
     "staticFilesRoot": "./public",
     "cache": true

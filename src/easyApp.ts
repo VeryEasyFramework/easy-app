@@ -12,21 +12,19 @@ import {
 
 import { StaticFileHandler } from "#/staticFiles/staticFileHandler.ts";
 
-import type {
-  MiddlewareWithoutResponse,
-  MiddlewareWithResponse,
-} from "#/middleware/middleware.ts";
+import type { MiddleWare } from "#/middleware/middleware.ts";
 
 import type { EasyPack, EasyPackInfo } from "#/package/easyPack.ts";
-import { basePackage } from "#/package/basePack/basePack.ts";
+import { basePack } from "#/package/basePack/basePack.ts";
 import { RealtimeServer } from "#/realtime/realtimeServer.ts";
 
 import type {
-  Action,
+  ActionBase,
+  ActionParams,
+  CreateActionParams,
   DocsActionGroup,
   DocsActionParam,
   EasyAction,
-  InferredAction,
 } from "#/actions/actionTypes.ts";
 import type { BootAction, InitAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
@@ -39,6 +37,7 @@ import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
 import { initAppConfig } from "#/appConfig/appConfig.ts";
 import { EasyCache } from "#/cache/cache.ts";
 import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
+import { handleApi } from "#/api/apiHandler.ts";
 
 const config = await initAppConfig();
 /**
@@ -50,7 +49,7 @@ export class EasyApp {
   config!: Required<EasyAppConfig<DBType>>;
   private staticFileHandler!: StaticFileHandler;
   private middleware: Array<
-    MiddlewareWithResponse | MiddlewareWithoutResponse
+    MiddleWare
   > = [];
 
   mode: "development" | "production" = "development";
@@ -140,7 +139,7 @@ export class EasyApp {
           raiseEasyException(`Invalid cache operation: ${operation}`, 500);
       }
     };
-    this.addEasyPack(basePackage);
+    this.addEasyPack(basePack);
   }
 
   cacheGet(table: string, id: string) {
@@ -180,7 +179,7 @@ export class EasyApp {
       await action.action(this);
     }
   }
-  private get apiDocs(): DocsActionGroup[] {
+  get apiDocs(): DocsActionGroup[] {
     const fullDocs: DocsActionGroup[] = [];
     for (const groupKey in this.actions) {
       const groupDocs = this.getActionGroupDocs(groupKey);
@@ -223,15 +222,15 @@ export class EasyApp {
     if (!this.actions[group]) {
       return false;
     }
-    return this.actions[group][action].public ?? false;
+    return this.actions[group][action]?.public ?? false;
   }
 
   /**
    * Add an action to the app
    */
-  addAction<A extends Action<any, any>>(
+  addAction(
     group: string,
-    action: InferredAction<A>,
+    action: EasyAction,
   ) {
     if (!this.actions[group]) {
       this.actions[group] = {};
@@ -253,7 +252,7 @@ export class EasyApp {
   /**
    * Add a group of actions to the app
    */
-  addActionGroup(group: string, actions: Array<Action<any, any>>) {
+  addActionGroup(group: string, actions: Array<EasyAction>) {
     for (const action of actions) {
       this.addAction(group, action);
     }
@@ -267,20 +266,10 @@ export class EasyApp {
   }
 
   /**
-   * Add a middleware to the app that does not return a response
-   */
-  addMiddleware(middleware: MiddlewareWithoutResponse): void;
-
-  /**
-   * Add a middleware to the app that returns a response
-   */
-  addMiddleware(middleware: MiddlewareWithResponse): void;
-
-  /**
    * Add a middleware to the app
    */
   addMiddleware(
-    middleware: MiddlewareWithResponse | MiddlewareWithoutResponse,
+    middleware: MiddleWare,
   ): void {
     this.middleware.push(middleware);
   }
@@ -300,7 +289,7 @@ export class EasyApp {
       for (const param in action.params) {
         params.push({
           paramName: param,
-          required: action.params[param].required,
+          required: action.params[param].required || false,
           type: action.params[param].type,
         });
       }
@@ -309,6 +298,7 @@ export class EasyApp {
         description: action.description,
         params,
         public: action.public,
+        system: action.system,
         response: action.response,
       });
     }
@@ -722,7 +712,8 @@ export class EasyApp {
           }
           switch (easyRequest.path) {
             case "/api":
-              easyResponse.content = await this.apiHandler(
+              easyResponse.content = await handleApi(
+                this,
                 easyRequest,
                 easyResponse,
               );
