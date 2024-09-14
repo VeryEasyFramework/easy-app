@@ -2,7 +2,7 @@ import { createAction } from "#/actions/createAction.ts";
 
 export const registerUserAction = createAction("registerUser", {
   description: "Register a new user",
-  system: false,
+  system: true,
   async action(app, { firstName, lastName, email, password }) {
     const user = await app.orm.createEntity("user", {
       firstName,

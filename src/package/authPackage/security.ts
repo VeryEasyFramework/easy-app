@@ -1,4 +1,3 @@
-import { toHex } from "@vef/easy-lib";
 export async function hashPassword(
   password: string,
   salt?: string,
@@ -13,4 +12,9 @@ export function generateSalt(length: number = 16): string {
   const buffer = new Uint8Array(length);
   crypto.getRandomValues(buffer);
   return toHex(buffer);
+}
+
+function toHex(bytes: Uint8Array): string {
+  const byteArray = Array.from(bytes);
+  return byteArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }

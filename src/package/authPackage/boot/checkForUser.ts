@@ -12,6 +12,7 @@ export const checkForNoUsers: BootAction = {
           firstName: "Admin",
           lastName: "User",
           email: "admin@user.email",
+          systemAdmin: true,
         });
         await user.runAction("setPassword", { password: "password" });
       }

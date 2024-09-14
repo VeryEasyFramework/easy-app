@@ -2,6 +2,7 @@ import { raiseEasyException } from "#/easyException.ts";
 import { createMiddleware } from "#/middleware/middleware.ts";
 import type { EasyRequest } from "#/easyRequest.ts";
 import type { EasyApp } from "#/easyApp.ts";
+import { OrmException } from "../../../../../easy-orm/mod.ts";
 
 export const authMiddleware = createMiddleware(async (
   app,
@@ -44,12 +45,16 @@ function isAllowed(app: EasyApp, request: EasyRequest): boolean {
 async function loadSessionData(app: EasyApp, sessionId: string) {
   let sessionData = app.cacheGet("userSession", sessionId);
   if (!sessionData) {
-    const entity = await app.orm.getEntity("userSession", sessionId);
-    if (!entity) {
-      return null;
+    try {
+      const entity = await app.orm.getEntity("userSession", sessionId);
+      sessionData = entity.sessionData;
+      app.cacheSet("userSession", sessionId, sessionData);
+    } catch (e) {
+      if (e instanceof OrmException && e.type === "EntityNotFound") {
+        return null;
+      }
+      throw e;
     }
-    sessionData = entity.sessionData;
-    app.cacheSet("userSession", sessionId, sessionData);
   }
   return sessionData;
 }
