@@ -1,14 +1,11 @@
-import type {
-  MiddlewareWithoutResponse,
-  MiddlewareWithResponse,
-} from "#/middleware/middleware.ts";
+import type { MiddleWare } from "#/middleware/middleware.ts";
 import { createAction } from "#/actions/createAction.ts";
 import type { EasyEntity } from "@vef/easy-orm";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
+  ActionBase,
   ActionParams,
-  CreateActionOptions,
   CreateActionParams,
   EasyAction,
 } from "#/actions/actionTypes.ts";
@@ -72,7 +69,7 @@ function validateSemverString(version: string): boolean {
  * - ***`easyPackInfo`*** - Get the EasyPack info
  */
 export class EasyPack {
-  middleware: Array<MiddlewareWithResponse | MiddlewareWithoutResponse> = [];
+  middleware: Array<MiddleWare> = [];
   actionGroups: Record<string, Array<EasyAction>> = {};
   entities: Array<EasyEntity> = [];
   bootActions: Array<BootAction> = [];
@@ -186,9 +183,7 @@ export class EasyPack {
    *
    * *Example*
    * ```ts
-   * easyPack.addAction({
-   *     groupName: "auth",
-   *     actionName: "login",
+   * easyPack.addAction( "auth","login",{
    *     description: "Login to the app",
    *     action: (app, { username, password }) => {
    *          // your action code here
@@ -200,28 +195,26 @@ export class EasyPack {
    *  });
    * ```
    */
-  addAction<
+  createAction<
     P extends CreateActionParams<P>,
     D extends ActionParams<P>,
   >(
-    options: CreateActionOptions<P, D> & {
-      groupName: string;
-      actionName: string;
-    },
+    groupName: string,
+    actionName: string,
+    options: ActionBase<P, D>,
   ): void {
-    const action = createAction(options.actionName, options);
+    const action = createAction(actionName, options);
 
-    if (!this.actionGroups[options.groupName]) {
-      this.actionGroups[options.groupName] = [];
+    if (!this.actionGroups[groupName]) {
+      this.actionGroups[groupName] = [];
     }
 
-    this.actionGroups[options.groupName].push(action);
+    this.actionGroups[groupName].push(action);
   }
 
   /**
-   * Add an action to a group. This is an alternative to `addAction` that allows you to add an action to a group
-   * that you may have created elsewhere. Typically this would be the case if you have many actions and want to organize
-   * their declarations in other files and import them here.
+   * Add an action to a group. Typically this would be the case if you have many actions and want to organize
+   * their declarations in other files with `createAction` and import them here.
    *
    * ***Example***
    *
@@ -240,7 +233,7 @@ export class EasyPack {
    * ```
    * > **Note:** If the group does not exist, it will be created.
    */
-  addActionToGroup(group: string, action: EasyAction) {
+  addAction(group: string, action: EasyAction) {
     if (!this.actionGroups[group]) {
       this.actionGroups[group] = [];
     }
@@ -277,7 +270,7 @@ export class EasyPack {
    */
   addActionGroup(group: string, actions: Array<EasyAction>) {
     for (const action of actions) {
-      this.addActionToGroup(group, action);
+      this.addAction(group, action);
     }
   }
 
@@ -307,12 +300,9 @@ export class EasyPack {
    * });
    * ```
    */
-  addMiddleware(middleware: MiddlewareWithoutResponse): void;
-  addMiddleware(middleware: MiddlewareWithResponse): void;
 
-  // Implementation of addMiddleware
   addMiddleware(
-    middleware: MiddlewareWithResponse | MiddlewareWithoutResponse,
+    middleware: MiddleWare,
   ): void {
     this.middleware.push(middleware);
   }

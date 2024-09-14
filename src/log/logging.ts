@@ -4,16 +4,18 @@ import {
   formatUtils,
   printUtils,
 } from "@vef/easy-cli";
+import { getEnv } from "#/appConfig/configEnv.ts";
+import { EasyLogger } from "#/log/easyLog.ts";
 const { symbol } = printUtils;
 const tab = "  ";
-export type LogType = "Error" | "Info" | "Warning" | "Debug" | "Message";
+export type LogType = "error" | "info" | "warning" | "debug" | "message";
 
 const typeColors: Record<LogType, BasicFgColor> = {
-  Error: "red",
-  Info: "green",
-  Warning: "yellow",
-  Debug: "blue",
-  Message: "white",
+  error: "red",
+  info: "green",
+  warning: "yellow",
+  debug: "blue",
+  message: "white",
 } as const;
 
 const box = printUtils.symbol.box;
@@ -28,39 +30,49 @@ export const easyLog = {
     content: any | any[],
     subject?: string,
     options?: LogOptions,
-  ): void => log({ content, type: "Message", subject, ...options }),
+  ): void => log({ content, type: "message", subject, ...options }),
   error: (
     content: any | any[],
     subject?: string,
     options?: LogOptions,
-  ): void => log({ content, type: "Error", subject, ...options }),
+  ): void => log({ content, type: "error", subject, ...options }),
   info: (content: any | any[], subject?: string): void =>
-    log({ content, type: "Info", subject }),
+    log({ content, type: "info", subject }),
   warning: (
     content: any | any[],
     subject?: string,
     options?: LogOptions,
-  ): void => log({ content, type: "Warning", subject, ...options }),
+  ): void => log({ content, type: "warning", subject, ...options }),
   debug: (content: any | any[], subject?: string): void =>
-    log({ content, type: "Debug", subject }),
+    log({ content, type: "debug", subject }),
 } as const;
+
+const env = getEnv("VEF_ENVIRONMENT");
+
+const logger = new EasyLogger();
+
 function log(options: {
   content: any | any[];
   type?: LogType;
   subject?: string;
   hideTrace?: boolean;
-  traceOffset?: number;
   stack?: string;
 }) {
-  let { content, type, subject, hideTrace, traceOffset, stack } = options;
+  let { content, type, subject, hideTrace, stack } = options;
   if (!type && !subject) {
-    type = "Debug";
+    type = "debug";
   }
   const message: string[] = [];
 
   const title = subject || type || "Log";
-  const showTrace = type === "Error" || type === "Warning";
-  const shouldHideTrace = hideTrace && type != "Debug";
+  if (["error", "warning"].includes(type!)) {
+    logger.log({ content, type: type!, subject: title });
+  }
+  if (env === "production") {
+    return;
+  }
+  const showTrace = type === "error" || type === "warning";
+  const shouldHideTrace = hideTrace && type != "debug";
   if (showTrace && !shouldHideTrace) {
     //get the calling function
     stack = stack || new Error().stack;
@@ -113,7 +125,7 @@ function log(options: {
     });
 
     lines = lines.reverse();
-    if (type === "Error") {
+    if (type === "error") {
       message.push(lines.join("\n"));
     } else {
       message.push(lines[lines.length - 1].trim());
@@ -134,7 +146,7 @@ function log(options: {
   // message.push();
 
   const titleRow = formatUtils.center(title, box.horizontal, {
-    color: typeColors[type || "Message"],
+    color: typeColors[type || "message"],
   });
 
   printUtils.println(titleRow);
@@ -143,7 +155,7 @@ function log(options: {
     printUtils.println(line);
   }
   const row = formatUtils.fill(box.horizontal, {
-    color: typeColors[type || "Message"],
+    color: typeColors[type || "message"],
   });
   printUtils.printLines(1);
   printUtils.println(row);

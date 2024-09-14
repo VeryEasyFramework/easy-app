@@ -1,61 +1,29 @@
 import type { EasyResponse } from "#/easyResponse.ts";
 import type { EasyApp } from "#/easyApp.ts";
 import type { EasyFieldType, EasyFieldTypeMap } from "@vef/easy-orm";
-
-export type Action<
-  P extends {
-    [K in keyof P]: {
-      required: boolean;
-      type: keyof EasyFieldTypeMap;
-    };
-  },
-  D extends {
-    [E in keyof P]: EasyFieldTypeMap[P[E]["type"]];
-  },
-> = {
-  actionName: string;
-  description: string;
-  action: (
-    app: EasyApp,
-    data: D,
-    response?: EasyResponse,
-  ) => Promise<any> | any;
-  params?: P;
-  response?: string;
-  public?: boolean;
-};
-
-export interface EasyAction {
-  actionName: string;
-  description: string;
-  action: (
-    app: EasyApp,
-    data: any,
-    response?: EasyResponse,
-  ) => Promise<any> | any;
-  params?: Record<string, any>;
-  response?: string;
-  public?: boolean;
-}
-
-export type InferredAction<A> = A extends Action<infer P, infer D>
-  ? Action<P, D>
-  : never;
-
-export interface CreateActionOptions<
-  P extends Record<string, any>,
-  D extends Record<string, any>,
+import type { EasyRequest } from "#/easyRequest.ts";
+export interface ActionBase<
+  P extends CreateActionParams<P>,
+  D extends ActionParams<P>,
 > {
   description: string;
-  public?: boolean;
   action: (
     app: EasyApp,
     data: D,
-    response?: EasyResponse,
+    request: EasyRequest,
+    response: EasyResponse,
   ) => Promise<any> | any;
+
+  public?: boolean;
+  system?: boolean;
   params?: P;
   response?: string;
 }
+
+export interface EasyAction extends ActionBase<any, any> {
+  actionName: string;
+}
+
 export type CreateActionParams<P> = {
   [K in keyof P]: {
     required: boolean;
@@ -77,6 +45,7 @@ export interface DocsAction {
   description: string;
   params?: Array<DocsActionParam>;
   response?: string;
+  system?: boolean;
   public?: boolean;
 }
 

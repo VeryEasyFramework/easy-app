@@ -3,6 +3,7 @@ import { cli } from "#/package/basePack/boot/cli/cli.ts";
 import { EasyApp } from "#/easyApp.ts";
 import { camelToTitleCase } from "@vef/string-utils";
 import { EasyResponse } from "#/easyResponse.ts";
+import { EasyRequest } from "#/easyRequest.ts";
 
 export const groupsMenu = new MenuView({
   title: "App Actions",
@@ -54,6 +55,7 @@ export function setupGroupsMenu(app: EasyApp) {
           const response = await actionData.action(
             app,
             {},
+            new EasyRequest(new Request("http://localhost")),
             new EasyResponse(),
           );
           if (typeof response === "string") {

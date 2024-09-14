@@ -5,3 +5,4 @@ deno.lock
 .data
 data
 release
+logs

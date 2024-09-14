@@ -1,3 +1,5 @@
+import { SessionData } from "#/package/authPackage/entities/userSession.ts";
+
 type RequestMethod =
   | "GET"
   | "POST"
@@ -13,6 +15,7 @@ export class EasyRequest {
   upgradeSocket!: boolean;
 
   constructor(request: Request, prefix?: string) {
+    this.sessionData = null;
     this.request = request;
     this.prefix = prefix;
     this.parseParams();
@@ -22,6 +25,9 @@ export class EasyRequest {
     this.checkForFileExtension();
   }
   cleanedUrl: string = "";
+  host: string = "";
+
+  originalUrl: string = "";
   prefix?: string;
   request: Request;
   cookies: Map<string, string> = new Map();
@@ -35,6 +41,7 @@ export class EasyRequest {
   port?: number;
   isFile = false;
   fileExtension = "";
+  sessionData: SessionData | null;
 
   private checkForFileExtension() {
     const pathParts = this.path.split("/");
@@ -95,6 +102,9 @@ export class EasyRequest {
     this.method = this.request.method as RequestMethod;
     this.path = url.pathname;
     this.port = parseInt(url.port);
+    this.host = url.hostname;
+    this.originalUrl = url.origin;
+
     const params = url.searchParams;
     for (const [key, value] of params) {
       switch (key) {
