@@ -6,6 +6,7 @@ import { registerUserAction } from "#/package/authPackage/actions/registerUserAc
 import { authCheckAction } from "#/package/authPackage/actions/authCheckAction.ts";
 import { loginAction } from "#/package/authPackage/actions/loginAction.ts";
 import { logoutAction } from "#/package/authPackage/actions/logoutAction.ts";
+import { checkForNoUsers } from "#/package/authPackage/boot/checkForUser.ts";
 
 const authPack: EasyPack = new EasyPack("auth", {
   description: "Package for authentication",
@@ -20,5 +21,7 @@ authPack.addActionGroup("auth", [
   logoutAction,
 ]);
 authPack.addMiddleware(authMiddleware);
+
+authPack.addBootAction(checkForNoUsers);
 
 export { authPack };

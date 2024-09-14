@@ -1,3 +1,5 @@
+import { SessionData } from "#/package/authPackage/entities/userSession.ts";
+
 type RequestMethod =
   | "GET"
   | "POST"
@@ -13,6 +15,7 @@ export class EasyRequest {
   upgradeSocket!: boolean;
 
   constructor(request: Request, prefix?: string) {
+    this.sessionData = null;
     this.request = request;
     this.prefix = prefix;
     this.parseParams();
@@ -38,6 +41,7 @@ export class EasyRequest {
   port?: number;
   isFile = false;
   fileExtension = "";
+  sessionData: SessionData | null;
 
   private checkForFileExtension() {
     const pathParts = this.path.split("/");

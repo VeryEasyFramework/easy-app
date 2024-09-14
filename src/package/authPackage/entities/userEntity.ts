@@ -50,14 +50,13 @@ userEntity.addFields([
     hidden: true,
   },
   {
-    key: "salt",
-    label: "Salt",
-    fieldType: "DataField",
-
-    description: "The salt used to hash the user's password",
-
+    key: "systemAdmin",
+    label: "System Administrator",
+    fieldType: "BooleanField",
     readOnly: true,
-    hidden: true,
+    inList: true,
+    description:
+      "Is the user a system administrator? (admin users have access to all parts of the system)",
   },
 ]);
 
@@ -88,13 +87,6 @@ userEntity.addHook("beforeSave", {
   },
 });
 
-userEntity.addAction("resetPassword", {
-  label: "Reset Password",
-  description: "Reset the user's password",
-  action(entity) {
-    return `Password reset for ${entity.fullName}`;
-  },
-});
 userEntity.addAction("setPassword", {
   label: "Set Password",
   description: "Set the user's password",
