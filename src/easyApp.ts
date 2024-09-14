@@ -19,9 +19,6 @@ import { basePack } from "#/package/basePack/basePack.ts";
 import { RealtimeServer } from "#/realtime/realtimeServer.ts";
 
 import type {
-  ActionBase,
-  ActionParams,
-  CreateActionParams,
   DocsActionGroup,
   DocsActionParam,
   EasyAction,
@@ -142,38 +139,44 @@ export class EasyApp {
     this.addEasyPack(basePack);
   }
 
-  cacheGet(table: string, id: string) {
+  cacheGet(table: string, id: string): SafeType | undefined {
     return this.cache.get(table, id);
   }
-  cacheGetList(table: string) {
-    return this.cache.getList(table);
+  cacheGetList(table: string): Array<{ id: string; value: SafeType }> {
+    const list = this.cache.getList(table);
+    return list.filter((item) => item !== undefined) as Array<
+      { id: string; value: SafeType }
+    >;
   }
-  cacheSet(table: string, id: string, value: SafeType) {
+  cacheSet(table: string, id: string, value: SafeType): void {
     this.realtime.cache("set", { table, id, value });
     this.cache.set(table, id, value);
   }
-  cacheDelete(table: string, id: string) {
+  cacheDelete(table: string, id: string): void {
     this.realtime.cache("delete", { table, id });
     this.cache.delete(table, id);
   }
-  cacheClear() {
+  cacheClear(): void {
     this.realtime.cache("clear", {});
     this.cache.clear();
   }
-  cacheSetList(table: string, values: { id: string; value: SafeType }[]) {
+  cacheSetList(table: string, values: { id: string; value: SafeType }[]): void {
     this.realtime.cache("setList", { table, values });
     this.cache.setList(table, values);
   }
-  cacheAppendList(table: string, values: { id: string; value: SafeType }[]) {
+  cacheAppendList(
+    table: string,
+    values: { id: string; value: SafeType }[],
+  ): void {
     this.realtime.cache("appendList", { table, values });
     this.cache.appendList(table, values);
   }
-  cacheDeleteList(table: string) {
+  cacheDeleteList(table: string): void {
     this.realtime.cache("deleteList", { table });
     this.cache.deleteList(table);
   }
 
-  async init() {
+  async init(): Promise<void> {
     // this.actions = {};
     for (const action of this.initActions) {
       await action.action(this);

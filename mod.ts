@@ -10,8 +10,5 @@ export { createAction } from "#/actions/createAction.ts";
 
 export type { EasyResponse } from "#/easyResponse.ts";
 export type { EasyRequest } from "#/easyRequest.ts";
-export type {
-  MiddlewareWithoutResponse,
-  MiddlewareWithResponse,
-} from "#/middleware/middleware.ts";
-export type { EasyAppOptions } from "#/easyApp.ts";
+export type { MiddleWare } from "#/middleware/middleware.ts";
+export type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
