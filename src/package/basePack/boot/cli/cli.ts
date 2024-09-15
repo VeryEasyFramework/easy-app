@@ -23,6 +23,7 @@ import {
   migrateDbView,
   setupMigrateDbView,
 } from "#/package/basePack/boot/cli/views/migrateDbView.ts";
+import { getDevUiView } from "#/package/basePack/boot/cli/views/getDevUiView.ts";
 export const cli = new EasyCli({
   theme: {
     backgroundColor: "bgBlack",
@@ -35,6 +36,7 @@ cli.addView(mainMenu, "main");
 cli.addView(groupsMenu, "groups");
 cli.addView(runMenu, "run");
 cli.addView(releaseView, "release");
+cli.addView(getDevUiView, "getDevUi");
 cli.addView(migrateDbView, "migrateDb");
 cli.addView(dbMenu, "database");
 export const buildCli: BootAction = {

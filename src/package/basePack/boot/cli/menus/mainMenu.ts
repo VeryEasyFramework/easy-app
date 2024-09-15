@@ -56,5 +56,12 @@ export function setupMainMenu(app: EasyApp) {
         releaseView.start();
       },
     });
+    mainMenu.addAction({
+      name: "Get Dev UI",
+      description: "Download the Dev UI for the app",
+      action: () => {
+        cli.changeView("getDevUi");
+      },
+    });
   }
 }

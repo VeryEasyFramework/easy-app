@@ -45,6 +45,7 @@ export class EasyApp {
   private server?: Deno.HttpServer;
   config!: Required<EasyAppConfig<DBType>>;
   private staticFileHandler!: StaticFileHandler;
+  private devStaticFileHandler!: StaticFileHandler;
   private middleware: Array<
     MiddleWare
   > = [];
@@ -110,6 +111,13 @@ export class EasyApp {
 
     this.staticFileHandler = new StaticFileHandler(
       this.config.staticFilesOptions,
+    );
+    this.devStaticFileHandler = new StaticFileHandler(
+      {
+        staticFilesRoot:
+          `${this.config.staticFilesOptions.staticFilesRoot}/../dev`,
+        cache: this.config.staticFilesOptions.cache,
+      },
     );
     this.cache = new EasyCache();
     this.realtime.onCache = (operation, data) => {
@@ -788,6 +796,11 @@ export class EasyApp {
       return response;
     }
     let path = easyRequest.path;
+    if (path.startsWith("/dev")) {
+      path = path.replace("/dev", "");
+      const file = await this.devStaticFileHandler.serveFile(path);
+      return file;
+    }
 
     if (this.config.singlePageApp && !easyRequest.isFile) {
       path = "/index.html";
