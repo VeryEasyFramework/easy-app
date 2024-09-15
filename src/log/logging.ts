@@ -47,8 +47,6 @@ export const easyLog = {
     log({ content, type: "debug", subject }),
 } as const;
 
-const env = getEnv("VEF_ENVIRONMENT");
-
 const logger = new EasyLogger();
 
 function log(options: {
@@ -58,6 +56,7 @@ function log(options: {
   hideTrace?: boolean;
   stack?: string;
 }) {
+  const env = getEnv("VEF_ENVIRONMENT");
   let { content, type, subject, hideTrace, stack } = options;
   if (!type && !subject) {
     type = "debug";
