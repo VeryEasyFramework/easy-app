@@ -546,7 +546,9 @@ export class EasyApp {
       this.runMessageBroker();
       return;
     }
-    buildCli.action(this);
+    if (!argsRecord.serve) {
+      buildCli.action(this);
+    }
     try {
       await this.boot();
     } catch (e) {
