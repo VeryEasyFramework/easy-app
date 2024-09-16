@@ -30,7 +30,7 @@ import { PgError } from "@vef/easy-orm";
 import { ColorMe, type EasyCli, type MenuView } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
-import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
+import { buildCli } from "./package/basePack/init/cli/cli.ts";
 import { initAppConfig } from "#/appConfig/appConfig.ts";
 import { EasyCache } from "#/cache/cache.ts";
 import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
@@ -554,9 +554,7 @@ export class EasyApp {
       this.runMessageBroker();
       return;
     }
-    if (!argsRecord.serve) {
-      buildCli.action(this);
-    }
+
     try {
       await this.boot();
     } catch (e) {

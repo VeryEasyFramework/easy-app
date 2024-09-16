@@ -1,5 +1,5 @@
 import { EasyApp } from "#/easyApp.ts";
-import { authPack } from "#/package/authPackage/authPack.ts";
+import { authPack } from "../src/package/authPack/authPack.ts";
 
 const app = new EasyApp();
 

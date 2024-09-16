@@ -1,13 +1,12 @@
 import { ColorMe, TaskView } from "@vef/easy-cli";
-import { EasyApp } from "#/easyApp.ts";
+import type { EasyApp } from "#/easyApp.ts";
+export function setupMigrateDbView(app: EasyApp): void {
+  const migrateDbView = new TaskView({
+    title: "Migrate Database",
+    description: "Migrate the database",
+    clock: true,
+  });
 
-export const migrateDbView = new TaskView({
-  title: "Migrate Database",
-  description: "Migrate the database",
-  clock: true,
-});
-
-export function setupMigrateDbView(app: EasyApp) {
   migrateDbView.addTask("Migrate", {
     async action({
       fail,
@@ -23,7 +22,8 @@ export function setupMigrateDbView(app: EasyApp) {
           },
         });
         output(
-          ColorMe.standard().content("Database migrated").color("green").end(),
+          ColorMe.standard().content("Database migrated").color("green")
+            .end(),
         );
 
         output(results);
@@ -38,4 +38,6 @@ export function setupMigrateDbView(app: EasyApp) {
   migrateDbView.onDone(() => {
     migrateDbView.cli.changeView("main");
   });
+
+  app.cli.addView(migrateDbView, "migrateDb");
 }

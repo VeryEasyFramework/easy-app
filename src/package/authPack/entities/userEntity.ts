@@ -1,6 +1,6 @@
 import { EasyEntity } from "@vef/easy-orm";
 import { toTitleCase } from "@vef/string-utils";
-import { generateSalt, hashPassword } from "#/package/authPackage/security.ts";
+import { generateSalt, hashPassword } from "../security.ts";
 
 export const userEntity = new EasyEntity("user", {
   label: "User",
