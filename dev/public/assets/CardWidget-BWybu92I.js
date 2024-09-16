@@ -1,0 +1,1 @@
+import{_ as s,o as t,l as o,g as a,j as n}from"./RootLayout.vue_vue_type_style_index_0_lang-Daht9VYz.js";const c={},d={class:"card"};function l(r,e){return t(),o("div",d,[a(r.$slots,"default",{},()=>[e[0]||(e[0]=n(" Card "))])])}const f=s(c,[["render",l]]);export{f as C};

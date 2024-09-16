@@ -35,6 +35,7 @@ export class StaticFileHandler {
   constructor(options: StaticFilesOptions) {
     this.cache = new FileCache(!options.cache);
     this.staticFilesRoot = options.staticFilesRoot;
+
   }
 
   async serveFile(path: string): Promise<Response> {

@@ -3,6 +3,7 @@ import { appActions } from "#/package/basePack/actions/appActions.ts";
 import { bootEntityRooms } from "#/package/basePack/boot/realtimeRooms.ts";
 import { entityActions } from "#/package/basePack/actions/entityActions/index.ts";
 import { requestOptionsMiddleware } from "#/package/basePack/middleware/requestOptionsMiddleware.ts";
+import { buildCli } from "#/package/basePack/init/cli/cli.ts";
 
 const basePack = new EasyPack("base", {
   description:
@@ -21,5 +22,6 @@ basePack.addMiddleware(requestOptionsMiddleware);
 
 basePack.setVersion(0, 1, 0);
 basePack.addBootAction(bootEntityRooms);
+basePack.addInitAction(buildCli);
 
 export { basePack };

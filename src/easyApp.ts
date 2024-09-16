@@ -30,11 +30,11 @@ import { PgError } from "@vef/easy-orm";
 import { ColorMe, type EasyCli, type MenuView } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
-import { buildCli } from "#/package/basePack/boot/cli/cli.ts";
 import { initAppConfig } from "#/appConfig/appConfig.ts";
 import { EasyCache } from "#/cache/cache.ts";
 import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
 import { handleApi } from "#/api/apiHandler.ts";
+import { authPack } from "#/package/authPack/authPack.ts";
 
 const config = await initAppConfig();
 /**
@@ -45,6 +45,7 @@ export class EasyApp {
   private server?: Deno.HttpServer;
   config!: Required<EasyAppConfig<DBType>>;
   private staticFileHandler!: StaticFileHandler;
+  private devStaticFileHandler!: StaticFileHandler;
   private middleware: Array<
     MiddleWare
   > = [];
@@ -111,6 +112,13 @@ export class EasyApp {
     this.staticFileHandler = new StaticFileHandler(
       this.config.staticFilesOptions,
     );
+    this.devStaticFileHandler = new StaticFileHandler(
+      {
+        staticFilesRoot:
+          `${this.config.staticFilesOptions.staticFilesRoot}/../dev`,
+        cache: this.config.staticFilesOptions.cache,
+      },
+    );
     this.cache = new EasyCache();
     this.realtime.onCache = (operation, data) => {
       switch (operation) {
@@ -137,6 +145,7 @@ export class EasyApp {
       }
     };
     this.addEasyPack(basePack);
+    // this.addEasyPack(authPack);
   }
 
   cacheGet(table: string, id: string): SafeType | undefined {
@@ -546,9 +555,7 @@ export class EasyApp {
       this.runMessageBroker();
       return;
     }
-    if (!argsRecord.serve) {
-      buildCli.action(this);
-    }
+
     try {
       await this.boot();
     } catch (e) {
@@ -788,12 +795,32 @@ export class EasyApp {
       return response;
     }
     let path = easyRequest.path;
-
-    if (this.config.singlePageApp && !easyRequest.isFile) {
-      path = "/index.html";
+    if (path.startsWith("/dev")) {
+      path = path.replace("/dev", "");
+      try {
+        const file = await this.devStaticFileHandler.serveFile(path);
+        return file;
+      } catch (e) {
+        if (e instanceof EasyException) {
+          if (e.status === 404 && this.config.singlePageApp) {
+            return await this.devStaticFileHandler.serveFile("/index.html");
+          }
+        }
+        throw e;
+      }
     }
-    const file = await this.staticFileHandler.serveFile(path);
-    return file;
+
+    try {
+      const file = await this.staticFileHandler.serveFile(path);
+      return file;
+    } catch (e) {
+      if (e instanceof EasyException) {
+        if (e.status === 404 && this.config.singlePageApp) {
+          return await this.staticFileHandler.serveFile("/index.html");
+        }
+      }
+      throw e;
+    }
   }
   private async apiHandler(
     request: EasyRequest,

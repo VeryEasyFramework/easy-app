@@ -1,4 +1,4 @@
-export { authPack } from "#/package/authPackage/authPack.ts";
+export { authPack } from "./src/package/authPack/authPack.ts";
 
 export { easyLog } from "#/log/logging.ts";
 
