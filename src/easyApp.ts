@@ -30,7 +30,6 @@ import { PgError } from "@vef/easy-orm";
 import { ColorMe, type EasyCli, type MenuView } from "@vef/easy-cli";
 import { MessageBroker } from "#/realtime/messageBroker.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
-import { buildCli } from "./package/basePack/init/cli/cli.ts";
 import { initAppConfig } from "#/appConfig/appConfig.ts";
 import { EasyCache } from "#/cache/cache.ts";
 import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
@@ -146,7 +145,7 @@ export class EasyApp {
       }
     };
     this.addEasyPack(basePack);
-    this.addEasyPack(authPack);
+    // this.addEasyPack(authPack);
   }
 
   cacheGet(table: string, id: string): SafeType | undefined {
@@ -798,15 +797,30 @@ export class EasyApp {
     let path = easyRequest.path;
     if (path.startsWith("/dev")) {
       path = path.replace("/dev", "");
-      const file = await this.devStaticFileHandler.serveFile(path);
-      return file;
+      try {
+        const file = await this.devStaticFileHandler.serveFile(path);
+        return file;
+      } catch (e) {
+        if (e instanceof EasyException) {
+          if (e.status === 404 && this.config.singlePageApp) {
+            return await this.devStaticFileHandler.serveFile("/index.html");
+          }
+        }
+        throw e;
+      }
     }
 
-    if (this.config.singlePageApp && !easyRequest.isFile) {
-      path = "/index.html";
+    try {
+      const file = await this.staticFileHandler.serveFile(path);
+      return file;
+    } catch (e) {
+      if (e instanceof EasyException) {
+        if (e.status === 404 && this.config.singlePageApp) {
+          return await this.staticFileHandler.serveFile("/index.html");
+        }
+      }
+      throw e;
     }
-    const file = await this.staticFileHandler.serveFile(path);
-    return file;
   }
   private async apiHandler(
     request: EasyRequest,
