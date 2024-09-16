@@ -35,6 +35,7 @@ import { initAppConfig } from "#/appConfig/appConfig.ts";
 import { EasyCache } from "#/cache/cache.ts";
 import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
 import { handleApi } from "#/api/apiHandler.ts";
+import { authPack } from "#/package/authPack/authPack.ts";
 
 const config = await initAppConfig();
 /**
@@ -145,6 +146,7 @@ export class EasyApp {
       }
     };
     this.addEasyPack(basePack);
+    this.addEasyPack(authPack);
   }
 
   cacheGet(table: string, id: string): SafeType | undefined {

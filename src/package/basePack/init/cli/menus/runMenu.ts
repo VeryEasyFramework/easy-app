@@ -16,6 +16,8 @@ export function setupRunMenu(app: EasyApp): void {
       app.cli.changeView("main");
     },
   });
+
+  app.cli.addView(runMenu, "run");
   const dev = checkForFile("main.ts");
   const abortController = new AbortController();
   const signal = abortController.signal;

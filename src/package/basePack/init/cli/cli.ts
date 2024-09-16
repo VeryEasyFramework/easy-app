@@ -27,8 +27,8 @@ export const buildCli: InitAction = {
     setupReleaseView(app);
     setupGetDevUi(app);
     setupMigrateDbView(app);
-    setupMainMenu(app);
     setupRunMenu(app);
+    setupMainMenu(app);
     setupGroupsMenu(app);
     setupDbMenu(app);
   },
