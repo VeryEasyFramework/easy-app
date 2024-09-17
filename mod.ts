@@ -1,4 +1,6 @@
-export { authPack } from "./src/package/authPack/authPack.ts";
+export { createMiddleware } from "#/middleware/middleware.ts";
+
+export { authPack } from "#/package/authPack/authPack.ts";
 
 export { easyLog } from "#/log/logging.ts";
 
