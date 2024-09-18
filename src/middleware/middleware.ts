@@ -10,6 +10,6 @@ export type MiddleWare = (
 
 export function createMiddleware(
   middleware: MiddleWare,
-) {
+): MiddleWare {
   return middleware;
 }
