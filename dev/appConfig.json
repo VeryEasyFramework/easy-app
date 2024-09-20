@@ -1,6 +1,6 @@
 {
   "appName": "Easy App",
-  "singlePageApp": false,
+  "singlePageApp": true,
 
   "environment": "development",
   "staticFilesOptions": {

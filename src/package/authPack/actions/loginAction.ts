@@ -51,6 +51,6 @@ async function createUserSession(
     sessionData,
   });
   app.cacheSet("userSession", session.id, session.sessionData as any);
-  response.setCookie("sessionId", session.id);
+  response.setCookie("userSession", session.id);
   return session.sessionData;
 }
