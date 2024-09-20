@@ -121,3 +121,14 @@ userEntity.addAction("validatePassword", {
     required: true,
   }],
 });
+
+userEntity.addChild({
+  childName: "roles",
+  label: "Roles",
+  fields: [{
+    fieldType: "ConnectionField",
+    key: "role",
+    connectionEntity: "userRole",
+    label: "Role",
+  }],
+});
