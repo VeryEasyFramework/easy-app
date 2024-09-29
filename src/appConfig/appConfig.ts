@@ -18,7 +18,6 @@ const configDefault: EasyAppConfig<"postgres"> = {
   ormOptions: {
     databaseType: "postgres",
     databaseConfig: {
-      camelCase: true,
       size: 1,
       clientOptions: {
         user: "postgres",
