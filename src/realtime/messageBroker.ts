@@ -1,6 +1,7 @@
 import { WebsocketBase } from "#/realtime/websocketBase.ts";
 import { EasyRequest } from "#/easyRequest.ts";
 import type { RealtimeClient } from "#/realtime/realtimeTypes.ts";
+import { easyLog } from "#/log/logging.ts";
 
 class RealtimeBroker extends WebsocketBase {
   handleConnection(_client: RealtimeClient): void {
@@ -14,14 +15,19 @@ class RealtimeBroker extends WebsocketBase {
 
 export class MessageBroker {
   realtime: RealtimeBroker;
-  constructor() {
+  port: number;
+  constructor(port?: number) {
+    this.port = port || 11254;
     this.realtime = new RealtimeBroker();
   }
 
   run() {
     Deno.serve({
-      port: 11254,
+      port: this.port,
       hostname: "127.0.0.1",
+      onListen: (addr) => {
+        easyLog.info(`Realtime server listening on port ${addr.port}`);
+      },
     }, async (request) => {
       const easyRequest = new EasyRequest(request);
       return this.realtime.handleUpgrade(easyRequest);

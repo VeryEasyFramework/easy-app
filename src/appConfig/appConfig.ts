@@ -11,6 +11,10 @@ const configDefault: EasyAppConfig<"postgres"> = {
     cache: true,
   },
   environment: "development",
+  realtimeOptions: {
+    enable: true,
+    port: 11254,
+  },
   serverOptions: {
     hostname: "127.0.0.1",
     port: 8000,

@@ -425,7 +425,7 @@ export class EasyApp {
   }
 
   private runMessageBroker() {
-    const broker = new MessageBroker();
+    const broker = new MessageBroker(this.config.realtimeOptions.port);
     broker.run();
   }
 
