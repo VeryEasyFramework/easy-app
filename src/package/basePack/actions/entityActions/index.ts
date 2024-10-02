@@ -5,13 +5,15 @@ import { deleteEntityAction } from "#/package/basePack/actions/entityActions/del
 import { getEntityInfoAction } from "#/package/basePack/actions/entityActions/entityInfoAction.ts";
 import { runEntityActionAction } from "#/package/basePack/actions/entityActions/runEntityActionAction.ts";
 import { getEntityListAction } from "#/package/basePack/actions/entityActions/getEntityListAction.ts";
+import { getRecordInfoAction } from "#/package/basePack/actions/entityActions/getRecordInfoAction.ts";
 
 export const entityActions = [
-  getEntityListAction,
-  createEntityAction,
-  updateEntityAction,
-  getEntityAction,
-  deleteEntityAction,
-  getEntityInfoAction,
-  runEntityActionAction,
+   getEntityListAction,
+   createEntityAction,
+   updateEntityAction,
+   getEntityAction,
+   deleteEntityAction,
+   getEntityInfoAction,
+   runEntityActionAction,
+   getRecordInfoAction,
 ];
