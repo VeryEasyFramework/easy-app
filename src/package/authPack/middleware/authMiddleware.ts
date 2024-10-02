@@ -2,8 +2,8 @@ import { raiseEasyException } from "#/easyException.ts";
 import { createMiddleware } from "#/middleware/middleware.ts";
 import type { EasyRequest } from "#/easyRequest.ts";
 import type { EasyApp } from "#/easyApp.ts";
-import { OrmException, type SafeType } from "@vef/easy-orm";
-import { SessionData } from "../entities/userSession.ts";
+import { OrmException } from "@vef/easy-orm";
+import { SessionData } from "#/package/authPack/entities/userSession.ts";
 
 export const authMiddleware = createMiddleware(async (
   app,
@@ -14,17 +14,22 @@ export const authMiddleware = createMiddleware(async (
     return;
   }
 
-  const sessionId = request.cookies.get("userSessionId");
+  const sessionId = request.cookies.get("userSession");
   if (!sessionId) {
     raiseEasyException("Unauthorized", 401);
   }
 
   const sessionData = await loadSessionData(app, sessionId);
   if (!sessionData) {
-    response.clearCookie("userSessionId");
+    response.clearCookie("userSession");
     raiseEasyException("Unauthorized", 401);
   }
   request.sessionData = sessionData;
+  request.user = {
+    id: sessionData.userId,
+    firstName: sessionData.firstName,
+    lastName: sessionData.lastName,
+  };
 });
 
 function isAllowed(app: EasyApp, request: EasyRequest): boolean {
