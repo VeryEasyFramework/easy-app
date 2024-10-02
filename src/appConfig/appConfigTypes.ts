@@ -82,4 +82,9 @@ export interface EasyAppConfig<D extends DBType> {
     databaseConfig: DatabaseConfig[keyof DatabaseConfig];
     idFieldType?: EasyFieldType;
   };
+
+  realtimeOptions?: {
+    enable: boolean;
+    port: number;
+  };
 }

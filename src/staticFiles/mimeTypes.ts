@@ -11,6 +11,10 @@ export interface MimeTypesMap {
   svg: "image/svg+xml";
   ico: "image/x-icon";
   txt: "text/plain";
+  woff2: "font/woff2";
+  woff: "font/woff";
+  ttf: "font/ttf";
+  otf: "font/otf";
 }
 
 export type MimeTypes = keyof MimeTypesMap;
@@ -46,6 +50,15 @@ export function inferMimeType(path: string): MimeValue | undefined {
       return "image/x-icon";
     case "txt":
       return "text/plain";
+    case "woff2":
+      return "font/woff2";
+    case "woff":
+      return "font/woff";
+    case "ttf":
+      return "font/ttf";
+    case "otf":
+      return "font/otf";
+
     default:
       if (ext) {
         raiseEasyException(`Unsupported file type: ${ext}`, 415);
