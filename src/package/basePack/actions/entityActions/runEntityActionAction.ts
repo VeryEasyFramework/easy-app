@@ -5,8 +5,8 @@ import { easyLog } from "#/log/logging.ts";
 
 export const runEntityActionAction = createAction("runEntityAction", {
   description: "Run an action that is defined on the entity",
-  async action(app, { entity, id, action, data }) {
-    const entityRecord = await app.orm.getEntity(entity, id);
+  async action(app, { entity, id, action, data }, request) {
+    const entityRecord = await app.orm.getEntity(entity, id, request.user);
     if (!entityRecord) {
       raiseEasyException(`${entity} doesn't exist`, 404);
     }
