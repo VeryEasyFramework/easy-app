@@ -117,7 +117,8 @@ userEntity.addAction("validatePassword", {
   private: true,
   async action(entity, params) {
     const password = params?.password as string;
-    const existingPassword = entity.password as string;
+    const existingPassword = entity.password as string | null || "";
+
     const [salt, hashed] = existingPassword.split(":");
     const testHash = await hashPassword(password, salt);
     return hashed === testHash;
