@@ -4,7 +4,7 @@ import { raiseEasyException } from "#/easyException.ts";
 
 export const getEntityListAction = createAction("getList", {
   description: "Get a list of entities",
-  action: async (app, data) => {
+  action: async (app, data, request) => {
     const options = {} as ListOptions;
     if (data.filter) {
       options.filter = data.filter;
@@ -33,7 +33,7 @@ export const getEntityListAction = createAction("getList", {
     if (data.columns) {
       options.columns = data.columns as unknown as string[];
     }
-    return await app.orm.getEntityList(data.entity, options);
+    return await app.orm.getEntityList(data.entity, options, request.user);
   },
   params: {
     entity: {

@@ -16,6 +16,7 @@
     "databaseConfig": {
       "camelCase": true,
       "size": 1,
+      "debug": false,
       "clientOptions": {
         "user": "postgres",
         "password": "postgres",

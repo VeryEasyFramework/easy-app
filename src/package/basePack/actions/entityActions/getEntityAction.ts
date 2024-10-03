@@ -3,8 +3,8 @@ import { raiseEasyException } from "#/easyException.ts";
 
 export const getEntityAction = createAction("getEntity", {
   description: "Get a single entity",
-  action: async (app, { entity, id }) => {
-    const result = await app.orm.getEntity(entity, id);
+  action: async (app, { entity, id }, request) => {
+    const result = await app.orm.getEntity(entity, id, request.user);
     if (!result) {
       raiseEasyException("Entity not found", 404);
     }
