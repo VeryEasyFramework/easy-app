@@ -1,0 +1,1 @@
+import{_ as s,o as t,i as o,h as a,e as n}from"./index-BIuYyD81.js";const c={},d={class:"card"};function _(r,e){return t(),o("div",d,[a(r.$slots,"default",{},()=>[e[0]||(e[0]=n(" Card "))])])}const l=s(c,[["render",_]]);export{l as C};

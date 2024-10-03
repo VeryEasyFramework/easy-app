@@ -2,7 +2,7 @@ import { raiseEasyException } from "#/easyException.ts";
 import { createMiddleware } from "#/middleware/middleware.ts";
 import type { EasyRequest } from "#/easyRequest.ts";
 import type { EasyApp } from "#/easyApp.ts";
-import { OrmException } from "@vef/easy-orm";
+import { OrmException, SafeType } from "@vef/easy-orm";
 import { SessionData } from "#/package/authPack/entities/userSession.ts";
 
 export const authMiddleware = createMiddleware(async (
@@ -13,7 +13,10 @@ export const authMiddleware = createMiddleware(async (
   if (isAllowed(app, request)) {
     return;
   }
-
+  const isAuthenticatedWithToken = await processAuthToken(app, request);
+  if (isAuthenticatedWithToken) {
+    return;
+  }
   const sessionId = request.cookies.get("userSession");
   if (!sessionId) {
     raiseEasyException("Unauthorized", 401);
@@ -31,6 +34,37 @@ export const authMiddleware = createMiddleware(async (
     lastName: sessionData.lastName,
   };
 });
+
+async function processAuthToken(
+  app: EasyApp,
+  request: EasyRequest,
+): Promise<boolean> {
+  if (!request.authToken) {
+    return false;
+  }
+  const token = request.authToken;
+  let userRecord = app.cacheGet("userToken", request.authToken) as Record<
+    string,
+    SafeType
+  >;
+  if (!userRecord) {
+    const user = await app.orm.findEntity("user", {
+      apiToken: token,
+    });
+
+    if (!user) {
+      return false;
+    }
+    userRecord = user.data;
+    app.cacheSet("userToken", token, userRecord);
+  }
+  request.user = {
+    id: userRecord.id as string,
+    firstName: userRecord.firstName as string,
+    lastName: userRecord.lastName as string,
+  };
+  return true;
+}
 
 function isAllowed(app: EasyApp, request: EasyRequest): boolean {
   if (request.path !== "/api") {
