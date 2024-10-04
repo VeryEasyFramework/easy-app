@@ -12,7 +12,9 @@ export type State =
   | "authenticating"
   | "authUsername"
   | "authPassword"
-  | "authenticated";
+  | "authenticated"
+  | "dataReady"
+  | "disconnect";
 
 export interface SMTPCapabilities {
   PIPELINING: boolean;

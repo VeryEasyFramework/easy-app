@@ -1,5 +1,6 @@
 import type { DatabaseConfig, DBType, EasyFieldType } from "@vef/easy-orm";
 import type { StaticFilesOptions } from "#/staticFiles/staticFileHandler.ts";
+import { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
 
 export interface EasyAppConfig<D extends DBType> {
   /**
@@ -87,4 +88,6 @@ export interface EasyAppConfig<D extends DBType> {
     enable: boolean;
     port: number;
   };
+
+  emailOptions?: SMTPOptions;
 }

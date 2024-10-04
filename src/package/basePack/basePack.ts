@@ -6,6 +6,7 @@ import { requestOptionsMiddleware } from "#/package/basePack/middleware/requestO
 import { buildCli } from "#/package/basePack/init/cli/cli.ts";
 import { editLogEntity } from "#/package/basePack/entities/editLogEntity.ts";
 import { ormGlobalHooks } from "#/package/basePack/boot/ormGlobalHooks.ts";
+import { settingsActions } from "#/package/basePack/actions/settingsActions/index.ts";
 
 const basePack = new EasyPack("base", {
   description:
@@ -14,6 +15,7 @@ const basePack = new EasyPack("base", {
 
 basePack.addActionGroup("app", appActions);
 basePack.addActionGroup("entity", entityActions);
+basePack.addActionGroup("settings", settingsActions);
 
 basePack.addRealtimeRoom({
   roomName: "app",

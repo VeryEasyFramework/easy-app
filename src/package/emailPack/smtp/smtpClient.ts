@@ -1,19 +1,10 @@
 import type {
   SMTPCapabilities,
   SMTPCommand,
-  SMTPHeader,
   SMTPOptions,
   State,
 } from "#/package/emailPack/smtp/smtpTypes.ts";
-
-class _SMTPEmail {
-  header: SMTPHeader;
-  body: string;
-  constructor(header: SMTPHeader, body: string) {
-    this.header = header;
-    this.body = body;
-  }
-}
+// https://mailtrap.io/blog/smtp-commands-and-responses/#SMTP-response-codes
 
 export class SMTPClient {
   smtpServer: string;
@@ -41,6 +32,8 @@ export class SMTPClient {
     authUsername: false,
     authPassword: false,
     authenticated: false,
+    dataReady: false,
+    disconnect: false,
   };
 
   onStateChange(state: State, message: string) {
@@ -108,6 +101,9 @@ export class SMTPClient {
       case 220:
         this.handle220(message);
         break;
+      case 221:
+        this.states.disconnect = true;
+        break;
       case 235:
         this.handle235(message);
         break;
@@ -116,6 +112,9 @@ export class SMTPClient {
         break;
       case 334:
         this.handle334(message);
+        break;
+      case 354:
+        this.states.dataReady = true;
         break;
       case 454:
         this.handle4Error(code, message);
@@ -218,6 +217,17 @@ export class SMTPClient {
     await this.sendCommand(password);
     await this.waitForState("authenticated");
   }
+
+  async disconnect() {
+    this.onStateChange("disconnect", "Disconnecting from SMTP Server...");
+    await this.sendCommand("QUIT");
+    this.onStateChange(
+      "disconnect",
+      "Waiting for server to close connection...",
+    );
+    await this.waitForState("disconnect");
+    this.onStateChange("disconnect", "Connection closed");
+  }
   async connect() {
     this.onStateChange("connecting", "Connecting to SMTP Server...");
     this.states.connecting = true;
@@ -274,6 +284,7 @@ export class SMTPClient {
         write,
       }),
     );
+
     this.states.tlsConnected = true;
     this.onStateChange(
       "tlsConnected",
@@ -304,7 +315,17 @@ export class SMTPClient {
     await connection.write(encoder.encode(commandString));
   }
 
-  send(email: _SMTPEmail) {
-    console.log("send email", email);
+  async send(from: string, to: string, subject: string, body: string) {
+    if (!this.states.authenticated) {
+      throw new Error("Not authenticated");
+    }
+    const header = `From: ${from}\r\nTo: ${to}\r\nSubject: ${subject}\r\n`;
+    await this.sendCommand("MAIL", `FROM:<${from}>`);
+    await this.sendCommand("RCPT", `TO:<${to}>`);
+    await this.sendCommand("DATA");
+    await this.waitForState("dataReady");
+    await this.sendCommand(header);
+    await this.sendCommand(body);
+    await this.sendCommand(".");
   }
 }

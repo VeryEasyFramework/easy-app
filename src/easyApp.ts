@@ -363,13 +363,10 @@ export class EasyApp {
         this.addMiddleware(middleware as any);
       }
       for (const entity of easyPack.entities) {
-        if (this.orm.hasEntity(entity.entityId)) {
-          raiseEasyException(
-            `Entity ${entity.entityId} already exists`,
-            500,
-          );
-        }
         this.orm.addEntity(entity);
+      }
+      for (const settingsEntity of easyPack.settingsEntities) {
+        this.orm.addSettingsEntity(settingsEntity);
       }
       for (const room of easyPack.realtimeRooms) {
         this.realtime.addRoom(room);
