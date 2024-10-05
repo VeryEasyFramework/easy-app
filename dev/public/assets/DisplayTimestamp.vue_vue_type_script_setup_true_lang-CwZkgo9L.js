@@ -1,1 +1,0 @@
-import{g as s}from"./index-DVjfnBu1.js";import{d as a,y as r,o as n,i as p,t as m}from"./index-BIuYyD81.js";const u=a({__name:"DisplayTimestamp",props:{value:{},format:{},showSeconds:{type:Boolean},field:{}},setup(t){const e=t,o=r(()=>s(e.value,{format:e.format||"pretty",showSeconds:e.showSeconds||!1}));return(c,l)=>(n(),p("div",null,m(o.value),1))}});export{u as _};

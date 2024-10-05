@@ -1,3 +1,4 @@
+import { easyLog } from "../mod.ts";
 import { SessionData } from "./package/authPack/entities/userSession.ts";
 
 type RequestMethod =
@@ -26,7 +27,7 @@ export class EasyRequest {
   }
   cleanedUrl: string = "";
   host: string = "";
-
+  origin: string = "";
   originalUrl: string = "";
   prefix?: string;
   request: Request;
@@ -110,7 +111,7 @@ export class EasyRequest {
     this.port = parseInt(url.port);
     this.host = url.hostname;
     this.originalUrl = url.origin;
-
+    this.origin = url.origin;
     const params = url.searchParams;
     for (const [key, value] of params) {
       switch (key) {

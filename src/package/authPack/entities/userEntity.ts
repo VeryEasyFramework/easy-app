@@ -56,6 +56,14 @@ userEntity.addFields([
     hidden: true,
   },
   {
+    key: "resetPasswordToken",
+    label: "Reset Password Token",
+    fieldType: "PasswordField",
+    description: "The token used to reset the user's password",
+    readOnly: true,
+    hidden: true,
+  },
+  {
     key: "systemAdmin",
     label: "System Administrator",
     fieldType: "BooleanField",
@@ -102,6 +110,7 @@ userEntity.addAction("setPassword", {
     const salt = generateSalt();
     const hashed = await hashPassword(password, salt);
     entity.password = `${salt}:${hashed}`;
+    entity.resetPasswordToken = null;
     await entity.save();
   },
   params: [{
@@ -117,7 +126,8 @@ userEntity.addAction("validatePassword", {
   private: true,
   async action(entity, params) {
     const password = params?.password as string;
-    const existingPassword = entity.password as string;
+    const existingPassword = entity.password as string | null || "";
+
     const [salt, hashed] = existingPassword.split(":");
     const testHash = await hashPassword(password, salt);
     return hashed === testHash;
@@ -127,6 +137,18 @@ userEntity.addAction("validatePassword", {
     fieldType: "PasswordField",
     required: true,
   }],
+});
+
+userEntity.addAction("generateResetToken", {
+  label: "Generate Reset Token",
+  private: true,
+  description: "Generate a reset token for the user",
+  async action(entity) {
+    const token = generateSalt();
+    entity.resetPasswordToken = token;
+    await entity.save();
+    return { token };
+  },
 });
 
 userEntity.addAction("generateApiToken", {

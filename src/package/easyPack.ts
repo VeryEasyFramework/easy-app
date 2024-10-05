@@ -1,6 +1,6 @@
 import type { MiddleWare } from "#/middleware/middleware.ts";
 import { createAction } from "#/actions/createAction.ts";
-import type { EasyEntity } from "@vef/easy-orm";
+import type { EasyEntity, SettingsEntity } from "@vef/easy-orm";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
@@ -16,6 +16,7 @@ export interface EasyPackInfo {
   description: string;
   version: string;
   entities: Array<string>;
+  settingsEntities: Array<string>;
   actions: Array<Record<string, string[]>>;
   middleware: Array<string>;
   bootActions: Array<{ actionName: string; description: string }>;
@@ -72,6 +73,8 @@ export class EasyPack {
   middleware: Array<MiddleWare> = [];
   actionGroups: Record<string, Array<EasyAction>> = {};
   entities: Array<EasyEntity> = [];
+
+  settingsEntities: Array<SettingsEntity> = [];
   bootActions: Array<BootAction> = [];
   initActions: Array<InitAction> = [];
   description: string;
@@ -108,6 +111,10 @@ export class EasyPack {
       description: this.description,
       version: this.version,
       entities: this.entities.map((entity) => entity.entityId),
+
+      settingsEntities: this.settingsEntities.map((settingsEntity) =>
+        settingsEntity.key
+      ),
       actions: Object.entries(this.actionGroups).map((
         [groupName, actions],
       ) => ({
@@ -385,5 +392,9 @@ export class EasyPack {
 
   addEntity(entity: EasyEntity) {
     this.entities.push(entity);
+  }
+
+  addSettingsEntity(settingsEntity: SettingsEntity) {
+    this.settingsEntities.push(settingsEntity);
   }
 }
