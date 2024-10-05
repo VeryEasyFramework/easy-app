@@ -421,6 +421,32 @@ export class EasyApp {
     return typeString;
   }
 
+  async runAction(group: string, action: string, options: {
+    data: Record<string, any>;
+    request: EasyRequest;
+    response: EasyResponse;
+  }) {
+    if (!this.actions[group]) {
+      raiseEasyException(`Group ${group} not found`, 404);
+    }
+    const actionFunc = this.actions[group][action];
+    if (!actionFunc) {
+      raiseEasyException(`Action ${group}:${action} not found`, 404);
+    }
+    const content = await actionFunc.action(
+      this,
+      options.data,
+      options.request,
+      options.response,
+    );
+    if (typeof content === "string") {
+      return {
+        message: content,
+      };
+    }
+    return content || {};
+  }
+
   private runMessageBroker() {
     const broker = new MessageBroker(this.config.realtimeOptions.port);
     broker.run();
@@ -818,39 +844,5 @@ export class EasyApp {
       }
       throw e;
     }
-  }
-  private async apiHandler(
-    request: EasyRequest,
-    response: EasyResponse,
-  ): Promise<Record<string, any>> {
-    if (!request.group) {
-      return this.apiDocs;
-    }
-    const requestGroup = request.group;
-    const requestAction = request.action;
-    if (!requestAction) {
-      return this.getActionGroupDocs(requestGroup);
-    }
-    if (!this.actions[requestGroup]) {
-      raiseEasyException(`No group found for ${requestGroup}`, 404);
-    }
-
-    if (!this.actions[requestGroup][requestAction]) {
-      raiseEasyException(
-        `No action found for ${requestGroup}:${requestAction}`,
-        404,
-      );
-    }
-    const action = this.actions[requestGroup][requestAction];
-
-    await request.loadBody();
-
-    const content = await action.action(this, request.body, request, response);
-    if (typeof content === "string") {
-      return {
-        message: content,
-      };
-    }
-    return content || {};
   }
 }

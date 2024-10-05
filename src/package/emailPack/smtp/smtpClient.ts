@@ -4,6 +4,7 @@ import type {
   SMTPOptions,
   State,
 } from "#/package/emailPack/smtp/smtpTypes.ts";
+import { raiseEasyException } from "#/easyException.ts";
 // https://mailtrap.io/blog/smtp-commands-and-responses/#SMTP-response-codes
 
 export class SMTPClient {
@@ -39,6 +40,9 @@ export class SMTPClient {
   onStateChange(state: State, message: string) {
     console.log(message);
   }
+  onError(code: number, message: string) {
+    console.error(`Error ${code}: ${message}`);
+  }
 
   async waitForState(state: State): Promise<boolean> {
     let timeout = 0;
@@ -47,6 +51,10 @@ export class SMTPClient {
       await new Promise((resolve) => setTimeout(resolve, this.waitDuration));
       timeout += this.waitDuration;
       if (timeout >= this.timeoutDuration) {
+        raiseEasyException(
+          `Timeout waiting for ${state} while sending email`,
+          500,
+        );
         return false;
       }
     }
@@ -97,6 +105,7 @@ export class SMTPClient {
   handleLine(row: string) {
     const code = parseInt(row.substring(0, 3), 10);
     const message = row.substring(4);
+    this.onStateChange("connecting", `code: ${code}, message: ${message}`);
     switch (code) {
       case 220:
         this.handle220(message);
@@ -124,18 +133,18 @@ export class SMTPClient {
         break;
 
       default:
-        console.log("Unhandled code", code, message);
+        if (code >= 500 && code < 600) {
+          this.handle5Error(code, message);
+        }
     }
   }
 
   handle5Error(code: number, message: string) {
-    console.log("Error", code, message);
-    throw new Error(message, {
-      cause: "SMTP Error 503",
-    });
+    this.onError(code, message);
+    raiseEasyException(message, code);
   }
   handle4Error(code: number, message: string) {
-    console.log("Error", code, message);
+    this.onError(code, message);
   }
   handle235(message: string) {
     this.states.authenticated = true;
@@ -161,9 +170,9 @@ export class SMTPClient {
   }
 
   handle250(message: string) {
-    if (this.states.sayingHello || this.states.authReady) {
-      this.parseHeloRow(message);
-    }
+    // if (this.states.sayingHello || this.states.authReady) {
+    this.parseHeloRow(message);
+    // }
   }
   parseHeloRow(row: string) {
     const words = row.split(" ");
@@ -242,7 +251,6 @@ export class SMTPClient {
     reader.read().then((result) => {
       result.value && write(result.value);
       if (result.done) {
-        console.log("Connection Closed");
       }
     });
 
@@ -256,12 +264,20 @@ export class SMTPClient {
       "Connected to SMTP Server, checking capabilities...",
     );
     await this.sayHello();
-
-    reader.read().then((result) => {
+    let timeout = 0;
+    while (!this.states.tlsCapable) {
+      if (timeout >= this.timeoutDuration) {
+        raiseEasyException(
+          "Timeout waiting for server to be TLS Capable",
+          500,
+        );
+      }
+      const result = await reader.read();
       result.value && write(result.value);
-    });
 
-    await this.waitForState("tlsCapable");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      timeout += 100;
+    }
 
     this.onStateChange(
       "tlsCapable",
@@ -314,7 +330,26 @@ export class SMTPClient {
 
     await connection.write(encoder.encode(commandString));
   }
-
+  async sendEmail(options: {
+    header: SMTPHeader;
+    body: string;
+  }) {
+    const header = new MailHeader(options.header);
+    await this.connect();
+    await this.sendCommand("MAIL", `FROM:<${header.from.email}>`);
+    await this.sendCommand("RCPT", `TO:<${header.to.email}>`);
+    await this.sendCommand("DATA");
+    const ready = await this.waitForState("dataReady");
+    if (!ready) {
+      raiseEasyException("There was an issue sending the email", 500);
+    }
+    const headerString = header.getHeader();
+    this.onStateChange("dataReady", headerString);
+    await this.sendCommand(headerString);
+    await this.sendCommand(options.body);
+    await this.sendCommand(".");
+    await this.disconnect();
+  }
   async send(from: string, to: string, subject: string, body: string) {
     if (!this.states.authenticated) {
       throw new Error("Not authenticated");
@@ -327,5 +362,77 @@ export class SMTPClient {
     await this.sendCommand(header);
     await this.sendCommand(body);
     await this.sendCommand(".");
+  }
+}
+
+interface SMTPHeader {
+  from: {
+    name?: string;
+    email: string;
+  };
+  to: {
+    name?: string;
+    email: string;
+  };
+  date?: Date;
+  subject: string;
+  contentType: "text" | "html";
+}
+class MailHeader implements SMTPHeader {
+  from: SMTPHeader["from"];
+  to: SMTPHeader["to"];
+  subject: string;
+  date: Date;
+  contentType: SMTPHeader["contentType"];
+
+  constructor(header: Partial<SMTPHeader>) {
+    this.from = {
+      name: header.from?.name || "",
+      email: header.from?.email || "",
+    };
+    this.to = {
+      name: header.to?.name || "",
+      email: header.to?.email || "",
+    };
+    this.subject = header.subject || "";
+    this.contentType = header.contentType || "text";
+    this.date = header.date || new Date();
+  }
+
+  getHeaderPart(attribute: keyof SMTPHeader) {
+    switch (attribute) {
+      case "from": {
+        let from = "From: ";
+        if (this.from.name) {
+          from += `${this.from.name} `;
+        }
+        from += `<${this.from.email}>`;
+        return from;
+      }
+      case "to": {
+        let to = "To: ";
+        if (this.to.name) {
+          to += `${this.to.name} `;
+        }
+        to += `<${this.to.email}>`;
+        return to;
+      }
+      case "subject":
+        return `Subject: ${this.subject}`;
+      case "contentType":
+        return `Content-Type: text/${this.contentType}; charset=utf-8`;
+      case "date":
+        return `Date: ${this.date.toUTCString()}`;
+    }
+  }
+  getHeader() {
+    const header = [
+      this.getHeaderPart("from"),
+      this.getHeaderPart("to"),
+      this.getHeaderPart("subject"),
+      this.getHeaderPart("contentType"),
+      this.getHeaderPart("date"),
+    ].join("\r\n");
+    return `${header}\r\n\r\n`;
   }
 }

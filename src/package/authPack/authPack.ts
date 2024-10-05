@@ -8,7 +8,8 @@ import { loginAction } from "./actions/loginAction.ts";
 import { logoutAction } from "./actions/logoutAction.ts";
 import { checkForNoUsers } from "./boot/checkForUser.ts";
 import { userRoleEntity } from "#/package/authPack/entities/userRole.ts";
-
+import { resetPasswordAction } from "#/package/authPack/actions/resetPasswordAction.ts";
+import { setNewPasswordAction } from "#/package/authPack/actions/setNewPasswordAction.ts";
 const authPack: EasyPack = new EasyPack("auth", {
   description: "Package for authentication",
 });
@@ -21,6 +22,8 @@ authPack.addActionGroup("auth", [
   authCheckAction,
   loginAction,
   logoutAction,
+  resetPasswordAction,
+  setNewPasswordAction,
 ]);
 authPack.addMiddleware(authMiddleware);
 
