@@ -425,7 +425,7 @@ export class EasyApp {
     data: Record<string, any>;
     request: EasyRequest;
     response: EasyResponse;
-  }) {
+  }): Promise<Record<string, any> | void> {
     if (!this.actions[group]) {
       raiseEasyException(`Group ${group} not found`, 404);
     }
