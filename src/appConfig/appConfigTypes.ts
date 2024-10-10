@@ -69,7 +69,11 @@ export interface EasyAppConfig<D extends DBType> {
    *
    * **`hostname`** - The hostname to run the server on. Default: `
    */
-  serverOptions?: Deno.ServeOptions;
+  serverOptions?: Deno.ServeTcpOptions & {
+    hostname?: string;
+    port?: number;
+    reusePort?: boolean;
+  };
 
   /**
    * Options for the ORM

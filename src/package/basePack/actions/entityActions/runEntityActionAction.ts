@@ -13,7 +13,7 @@ export const runEntityActionAction = createAction("runEntityAction", {
 
     try {
       return await entityRecord.runAction(action, data);
-    } catch (e) {
+    } catch (e: unknown) {
       let message = `Error running action ${action} on entity ${entity}: `;
       if (e instanceof OrmException) {
         switch (e.type) {
@@ -26,8 +26,9 @@ export const runEntityActionAction = createAction("runEntityAction", {
             raiseEasyException(message, 400);
         }
       }
-
-      easyLog.error(message + e.message, e.name ? e.name : "Error");
+      if (e instanceof Error) {
+        easyLog.error(message + e.message, e.name ? e.name : "Error");
+      }
 
       raiseEasyException(message, 400);
     }

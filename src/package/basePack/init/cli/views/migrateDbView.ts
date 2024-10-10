@@ -29,8 +29,12 @@ export function setupMigrateDbView(app: EasyApp): void {
         output(results);
 
         success();
-      } catch (e) {
-        output(`Error migrating database: ${e.message}`);
+      } catch (e: unknown) {
+        let message = "Error migrating database: ";
+        if (e instanceof Error) {
+          message += e.message;
+        }
+        output(`Error migrating database: ${message}`);
         fail();
       }
     },

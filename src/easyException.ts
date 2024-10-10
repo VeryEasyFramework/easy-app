@@ -2,7 +2,7 @@ export class EasyException extends Error {
   constructor(
     message: string,
     public status: number,
-    public name = "EasyException",
+    override name = "EasyException",
     public redirect?: string,
   ) {
     super(message);

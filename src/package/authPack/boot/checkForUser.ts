@@ -17,7 +17,6 @@ export const checkForNoUsers: BootAction = {
         await user.runAction("setPassword", { password: "password" });
       }
     } catch (_e) {
-      easyLog.warning(_e.message);
       easyLog.warning("Failed to create admin user");
     }
   },

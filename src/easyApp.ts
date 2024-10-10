@@ -389,7 +389,9 @@ export class EasyApp {
         this.hasError = true;
         return;
       }
-      e.message = `Error adding EasyPack: ${e.message}`;
+      if (e instanceof Error) {
+        e.message = `Error adding EasyPack: ${e.message}`;
+      }
       throw e;
     }
   }
@@ -662,7 +664,9 @@ export class EasyApp {
         });
         this.exit(1);
       }
-      e.message = `Error initializing ORM: ${e.message}`;
+      if (e instanceof Error) {
+        e.message = `Error initializing ORM: ${e.message}`;
+      }
       throw e;
     }
     // this.bootWorkers();
@@ -679,8 +683,13 @@ export class EasyApp {
         );
         await action.action(this);
       }
-    } catch (e) {
-      e.message = `Error running boot action ${e.actionName}: ${e.message}`;
+    } catch (e: unknown) {
+      if (e instanceof EasyException) {
+        e.message = `Error running boot action ${e.name}: ${e.message}`;
+      }
+      if (e instanceof Error) {
+        e.message = `Error running boot action: ${e.message}`;
+      }
       throw e;
     }
   }
@@ -695,7 +704,7 @@ export class EasyApp {
   }): void {
     const options = this.config.serverOptions;
 
-    const serveOptions: Deno.ServeOptions = {
+    const serveOptions: Deno.ServeTcpOptions = {
       hostname: options.hostname,
       port: options.port,
       reusePort: options.reusePort || true,
@@ -793,12 +802,12 @@ export class EasyApp {
             return easyResponse.error(message, 500, e.type);
           }
           const er = e as Error;
-          const subject = e.name;
+          const subject = er.name;
           easyLog.info(er.stack, subject);
-          easyLog.error(e.message, subject, {
+          easyLog.error(er.message, subject, {
             stack: er.stack,
           });
-          return easyResponse.error(e.message, 500, subject);
+          return easyResponse.error(er.message, 500, subject);
         }
       },
     );
