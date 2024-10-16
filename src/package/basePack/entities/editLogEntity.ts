@@ -1,4 +1,4 @@
-import { EasyEntity } from "@vef/easy-orm";
+import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
 
 export const editLogEntity = new EasyEntity("editLog");
 

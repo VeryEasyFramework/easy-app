@@ -1,4 +1,4 @@
-import { SettingsEntity } from "@vef/easy-orm";
+import { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
 
 export const emailSettings = new SettingsEntity("emailSettings");
 

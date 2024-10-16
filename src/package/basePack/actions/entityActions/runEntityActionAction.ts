@@ -1,7 +1,7 @@
 import { createAction } from "#/actions/createAction.ts";
 import { raiseEasyException } from "#/easyException.ts";
-import { OrmException } from "@vef/easy-orm";
 import { easyLog } from "#/log/logging.ts";
+import { OrmException } from "#orm/ormException.ts";
 
 export const runEntityActionAction = createAction("runEntityAction", {
   description: "Run an action that is defined on the entity",

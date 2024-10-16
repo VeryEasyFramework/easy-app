@@ -1,7 +1,7 @@
 import { easyLog } from "#/log/logging.ts";
-import type { DBType } from "@vef/easy-orm";
 import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
 import { setConfigEnv } from "#/appConfig/configEnv.ts";
+import type { DBType } from "#orm/database/database.ts";
 
 const configDefault: EasyAppConfig<"postgres"> = {
   appName: "Easy App",

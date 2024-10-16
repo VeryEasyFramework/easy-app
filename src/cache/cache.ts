@@ -1,4 +1,4 @@
-import type { SafeType } from "@vef/easy-orm";
+import type { SafeType } from "@vef/types";
 
 export class EasyCache {
   cache: Storage;

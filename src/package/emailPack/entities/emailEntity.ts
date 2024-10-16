@@ -1,6 +1,6 @@
-import { EasyEntity } from "@vef/easy-orm";
 import { SMTPClient } from "#/package/emailPack/smtp/smtpClient.ts";
 import type { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
+import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
 
 export const emailEntity = new EasyEntity("email");
 
