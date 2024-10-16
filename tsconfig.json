@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "#/*": ["./src/*"],
+      "#orm/*": ["./src/orm/*"]
+    }
+  }
+}
