@@ -1,11 +1,16 @@
-import type { EasyField } from "@vef/types";
-import type { EntityDefinition, FieldGroup } from "@vef/types";
+import type {
+  ChildListDefinition,
+  EasyField,
+  EasyFieldType,
+  EntityDefinition,
+  FieldGroup,
+} from "@vef/types";
+import type {} from "@vef/types";
 import { camelToSnakeCase, toPascalCase } from "@vef/string-utils";
 import type { EasyOrm } from "#orm/orm.ts";
-import type { EasyFieldType } from "#orm/entity/field/fieldTypes.ts";
-import type { ChildListDefinition } from "#orm/entity/child/childEntity.ts";
 import { buildFieldGroups } from "#orm/entity/field/buildFieldGroups.ts";
 import type { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { raiseOrmException } from "#orm/ormException.ts";
 
 export function buildEasyEntity(
   orm: EasyOrm,
@@ -86,6 +91,12 @@ function getConnectionIdType(
       const fieldKey = entity.config.idMethod.field;
       return entity.fields.find((field) => field.key === fieldKey)!.fieldType;
     }
+
+    default:
+      raiseOrmException(
+        "InvalidFieldType",
+        `Invalid id method type ${entity.config.idMethod} for entity ${entity.key}`,
+      );
   }
 }
 

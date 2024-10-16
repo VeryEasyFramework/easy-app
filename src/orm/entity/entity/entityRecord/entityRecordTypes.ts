@@ -1,7 +1,7 @@
 import type { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
-import type { SafeReturnType, SafeType } from "#orm/entity/field/fieldTypes.ts";
+import type { SafeReturnType, SafeType } from "@vef/types";
 
-export type EntitityHookFunction = (
+export type EntityHookFunction = (
   entity: EntityRecord,
 ) => Promise<void> | void;
 

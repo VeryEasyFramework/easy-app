@@ -1,35 +1,31 @@
-import {
-  Database,
-  type DatabaseConfig,
-  type ListOptions,
-} from "#orm/database/database.ts";
+import { Database, type DatabaseConfig } from "#orm/database/database.ts";
 import { type BasicFgColor, ColorMe } from "@vef/easy-cli";
-
-import type { RowsResult } from "#orm/database/adapter/databaseAdapter.ts";
 
 import type {
   EasyFieldType,
   EasyFieldTypeMap,
+  EntityDefinition,
+  ListOptions,
+  RowsResult,
   SafeType,
-} from "#orm/entity/field/fieldTypes.ts";
+} from "@vef/types";
 
 import { raiseOrmException } from "#orm/ormException.ts";
 import { migrateEntity } from "#orm/database/migrate/migrateEntity.ts";
 
 import { installDatabase } from "#orm/database/install/installDatabase.ts";
 import type { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
-import type { EntityDefinition } from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
 import { buildEasyEntity } from "#orm/entity/entity/entityDefinition/buildEasyEntity.ts";
 import { validateEntityDefinition } from "#orm/entity/entity/entityDefinition/validateEasyEntity.ts";
 import { FetchRegistry } from "#orm/entity/registry.ts";
 import { buildRecordClass } from "#orm/entity/entity/entityRecord/buildRecordClass.ts";
 import type { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
-import { User } from "#orm/utils/misc.ts";
+import type { User } from "#orm/utils/misc.ts";
 
 import { migrateSettingsEntity } from "#orm/database/migrate/migrateSettingsEntity.ts";
-import { SettingsRecord } from "#orm/entity/settings/settingsRecord.ts";
+import type { SettingsRecord } from "#orm/entity/settings/settingsRecord.ts";
 import { buildSettingsEntity } from "#orm/entity/settings/buildSettingsEntity.ts";
-import { SettingsEntityDefinition } from "#orm/entity/settings/settingsDefTypes.ts";
+import type { SettingsEntityDefinition } from "#orm/entity/settings/settingsDefTypes.ts";
 import { buildSettingsRecordClass } from "#orm/entity/settings/buildSettingsRecordClass.ts";
 import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
 

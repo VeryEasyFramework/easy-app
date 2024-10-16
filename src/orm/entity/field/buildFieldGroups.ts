@@ -1,8 +1,7 @@
 import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
-import type { FieldGroup } from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
-
+import type { FieldGroup } from "@vef/types";
 export function buildFieldGroups(
   entity: EasyEntity | SettingsEntity,
 ): FieldGroup[] {

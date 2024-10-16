@@ -1,5 +1,5 @@
-import { SettingsRecord } from "#orm/entity/settings/settingsRecord.ts";
-import { SafeReturnType, SafeType } from "#orm/entity/field/fieldTypes.ts";
+import type { SettingsRecord } from "#orm/entity/settings/settingsRecord.ts";
+import type { SafeReturnType, SafeType } from "@vef/types";
 
 export type SettingsHookFunction = (
   settingsRecord: SettingsRecord,

@@ -1,4 +1,4 @@
-import type { ChildListDefinition } from "#orm/entity/child/childEntity.ts";
+import type { ChildListDefinition } from "@vef/types";
 import type { EasyOrm } from "#orm/orm.ts";
 import { generateId } from "#orm/utils/misc.ts";
 

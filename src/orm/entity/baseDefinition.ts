@@ -1,20 +1,20 @@
-import type { EasyField } from "#orm/entity/field/easyField.ts";
 import type {
+  ChildListDefinition,
   EasyEntityHooks,
+  EasyField,
   EntityAction,
   EntityActionDefinition,
   EntityHook,
   EntityHookDefinition,
   FieldGroupDefinition,
-} from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
-import type { ChildListDefinition } from "#orm/entity/child/childEntity.ts";
+} from "@vef/types";
 import {
   camelToSnakeCase,
   camelToTitleCase,
   toCamelCase,
 } from "@vef/string-utils";
 import { raiseOrmException } from "#orm/ormException.ts";
-import {
+import type {
   SettingsAction,
   SettingsActionDefinition,
   SettingsEntityHookDefinition,

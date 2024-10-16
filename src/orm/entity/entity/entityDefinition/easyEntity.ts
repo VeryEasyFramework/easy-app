@@ -1,7 +1,5 @@
 import { BaseDefinition } from "#orm/entity/baseDefinition.ts";
-import type {
-  EasyEntityConfig,
-} from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
+import type { EasyEntityConfig } from "@vef/types";
 
 export class EasyEntity extends BaseDefinition<EasyEntityConfig, "entity"> {
   readonly entityId: string;

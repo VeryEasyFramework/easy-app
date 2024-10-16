@@ -1,6 +1,6 @@
 import type { User } from "#orm/utils/misc.ts";
 import type { EasyOrm } from "#orm/orm.ts";
-import type { EasyFieldType, SafeType } from "#orm/entity/field/fieldTypes.ts";
+import type { EasyFieldType, SafeType } from "@vef/types";
 import type { SettingsHookFunction } from "#orm/entity/settings/settingsRecordTypes.ts";
 import type {
   SettingsAction,

@@ -3,9 +3,9 @@ import type {
   EntityDefinition,
   EntityHook,
   EntityHookDefinition,
-} from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
+} from "@vef/types";
 import { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
-import type { EntitityHookFunction } from "#orm/entity/entity/entityRecord/entityRecordTypes.ts";
+import type { EntityHookFunction } from "#orm/entity/entity/entityRecord/entityRecordTypes.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { validateField } from "#orm/entity/field/validateField.ts";
 import { ChildList } from "#orm/entity/child/childRecord.ts";
@@ -15,16 +15,15 @@ export function buildRecordClass(orm: EasyOrm, entity: EntityDefinition) {
   const actions = extractActions(entity);
   const entityRecordClass = class extends EntityRecord {
     override entityDefinition = entity;
-    override _beforeInsert: Array<EntitityHookFunction> = hooks.beforeInsert;
+    override _beforeInsert: Array<EntityHookFunction> = hooks.beforeInsert;
 
-    override _afterInsert: Array<EntitityHookFunction> = hooks.afterInsert;
+    override _afterInsert: Array<EntityHookFunction> = hooks.afterInsert;
 
-    override _beforeSave: Array<EntitityHookFunction> = hooks.beforeSave;
-    override _afterSave: Array<EntitityHookFunction> = hooks.afterSave;
+    override _beforeSave: Array<EntityHookFunction> = hooks.beforeSave;
+    override _afterSave: Array<EntityHookFunction> = hooks.afterSave;
 
-    override _validate: Array<EntitityHookFunction> = hooks.validate;
-    override _beforeValidate: Array<EntitityHookFunction> =
-      hooks.beforeValidate;
+    override _validate: Array<EntityHookFunction> = hooks.validate;
+    override _beforeValidate: Array<EntityHookFunction> = hooks.beforeValidate;
 
     override actions: Record<string, EntityAction> = actions;
     override orm = orm;
@@ -73,7 +72,7 @@ function extractHooks(entity: EntityDefinition) {
       return hookAction.action;
     });
   };
-  const hooks: Record<EntityHook, EntitityHookFunction[]> = {
+  const hooks: Record<EntityHook, EntityHookFunction[]> = {
     beforeInsert: [],
     afterInsert: [],
     beforeSave: [],

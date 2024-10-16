@@ -1,7 +1,9 @@
 import type { Database, DatabaseConfig } from "#orm/database/database.ts";
-import type { EntityDefinition } from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
-import type { EasyField } from "#orm/entity/field/easyField.ts";
-import type { ChildListDefinition } from "#orm/entity/child/childEntity.ts";
+import type {
+  ChildListDefinition,
+  EasyField,
+  EntityDefinition,
+} from "@vef/types";
 
 const idField: EasyField = {
   key: "id",

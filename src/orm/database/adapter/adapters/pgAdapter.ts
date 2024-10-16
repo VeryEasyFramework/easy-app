@@ -1,4 +1,4 @@
-import type { AdvancedFilter, ListOptions } from "#orm/database/database.ts";
+import type { AdvancedFilter, ListOptions } from "@vef/types";
 import {
   type AdapterColumn,
   DatabaseAdapter,

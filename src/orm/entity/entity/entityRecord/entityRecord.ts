@@ -1,14 +1,12 @@
-import type {
-  EntityAction,
-  EntityDefinition,
-  FieldMethod,
-} from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
-import type { EntitityHookFunction } from "#orm/entity/entity/entityRecord/entityRecordTypes.ts";
+import type { EntityHookFunction } from "#orm/entity/entity/entityRecord/entityRecordTypes.ts";
 import type {
   EasyFieldType,
   EasyFieldTypeMap,
+  EntityAction,
+  EntityDefinition,
+  FieldMethod,
   SafeType,
-} from "#orm/entity/field/fieldTypes.ts";
+} from "@vef/types";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
@@ -93,17 +91,17 @@ export class EntityRecord implements EntityRecord {
 
   entityDefinition!: EntityDefinition;
 
-  _beforeInsert!: Array<EntitityHookFunction>;
+  _beforeInsert!: Array<EntityHookFunction>;
 
-  _afterInsert!: Array<EntitityHookFunction>;
+  _afterInsert!: Array<EntityHookFunction>;
 
-  _beforeSave!: Array<EntitityHookFunction>;
+  _beforeSave!: Array<EntityHookFunction>;
 
-  _afterSave!: Array<EntitityHookFunction>;
+  _afterSave!: Array<EntityHookFunction>;
 
-  _validate!: Array<EntitityHookFunction>;
+  _validate!: Array<EntityHookFunction>;
 
-  _beforeValidate!: Array<EntitityHookFunction>;
+  _beforeValidate!: Array<EntityHookFunction>;
 
   actions!: Record<string, EntityAction>;
 

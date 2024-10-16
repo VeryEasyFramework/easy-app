@@ -1,12 +1,14 @@
 import {
   type AdapterColumn,
   DatabaseAdapter,
-  type RowsResult,
 } from "#orm/database/adapter/databaseAdapter.ts";
-import type { EasyFieldType } from "#orm/entity/field/fieldTypes.ts";
-import type { EntityDefinition } from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
-import type { ListOptions } from "#orm/database/database.ts";
-import type { EasyField } from "#orm/entity/field/easyField.ts";
+import type {
+  EasyField,
+  EasyFieldType,
+  EntityDefinition,
+  ListOptions,
+  RowsResult,
+} from "@vef/types";
 import { raiseOrmException } from "#orm/ormException.ts";
 
 export interface DenoKvConfig {

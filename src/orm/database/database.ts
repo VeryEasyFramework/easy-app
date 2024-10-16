@@ -3,50 +3,19 @@ import {
   type PostgresConfig,
 } from "#orm/database/adapter/adapters/pgAdapter.ts";
 
-import type { DatabaseAdapter, RowsResult } from "./adapter/databaseAdapter.ts";
-import type { EasyField } from "#orm/entity/field/easyField.ts";
-import type { EasyFieldType, SafeType } from "#orm/entity/field/fieldTypes.ts";
+import type { DatabaseAdapter } from "./adapter/databaseAdapter.ts";
+import type {
+  EasyField,
+  EasyFieldType,
+  ListOptions,
+  RowsResult,
+  SafeType,
+} from "@vef/types";
 import {
   DenoKvAdapter,
   type DenoKvConfig,
 } from "#orm/database/adapter/adapters/denoKvAdapter.ts";
 
-export interface AdvancedFilter {
-  op:
-    | "contains"
-    | "notContains"
-    | "inList"
-    | "notInList"
-    | "between"
-    | "notBetween"
-    | "is"
-    | "isNot"
-    | "isEmpty"
-    | "isNotEmpty"
-    | "startsWith"
-    | "endsWith"
-    | "greaterThan"
-    | "lessThan"
-    | "greaterThanOrEqual"
-    | "lessThanOrEqual"
-    | "equal"
-    | ">"
-    | "<"
-    | ">="
-    | "<="
-    | "="
-    | "!=";
-  value: any;
-}
-export interface ListOptions {
-  columns?: string[] | "*";
-  filter?: Record<string, string | number | AdvancedFilter>;
-  orFilter?: Record<string, string | number | AdvancedFilter>;
-  limit?: number;
-  offset?: number;
-  orderBy?: string;
-  order?: "asc" | "desc";
-}
 export interface DatabaseConfig {
   postgres: PostgresConfig;
   denoKv: DenoKvConfig;
