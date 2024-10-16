@@ -6,8 +6,8 @@ import type {
 } from "#/realtime/realtimeTypes.ts";
 import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
-import type { SafeType } from "@vef/easy-orm";
-import { EasyCache } from "#/cache/cache.ts";
+import type { SafeType } from "@vef/types";
+import type { EasyCache } from "#/cache/cache.ts";
 
 class SocketRoom {
   roomName: string;

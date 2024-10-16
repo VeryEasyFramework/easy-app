@@ -1,6 +1,6 @@
 import type { EasyResponse } from "#/easyResponse.ts";
 import type { EasyApp } from "#/easyApp.ts";
-import type { EasyFieldType, EasyFieldTypeMap } from "@vef/easy-orm";
+import type { EasyFieldType, EasyFieldTypeMap } from "@vef/types";
 import type { EasyRequest } from "#/easyRequest.ts";
 export interface ActionBase<
   P extends CreateActionParams<P>,

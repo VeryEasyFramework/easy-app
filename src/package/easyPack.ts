@@ -1,6 +1,5 @@
 import type { MiddleWare } from "#/middleware/middleware.ts";
 import { createAction } from "#/actions/createAction.ts";
-import type { EasyEntity, SettingsEntity } from "@vef/easy-orm";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
@@ -10,6 +9,8 @@ import type {
   EasyAction,
 } from "#/actions/actionTypes.ts";
 import type { BootAction, InitAction } from "#/types.ts";
+import type { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
 
 export interface EasyPackInfo {
   EasyPackName: string;

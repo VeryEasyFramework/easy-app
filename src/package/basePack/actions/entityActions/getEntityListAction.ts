@@ -1,5 +1,5 @@
 import { createAction } from "#/actions/createAction.ts";
-import type { ListOptions } from "@vef/easy-orm";
+import type { ListOptions } from "@vef/types";
 import { raiseEasyException } from "#/easyException.ts";
 
 export const getEntityListAction = createAction("getList", {

@@ -1,5 +1,4 @@
-import type { EasyRequest } from "../easyRequest.ts";
-import { FileCache } from "./fileCache.ts";
+import { FileCache } from "#/staticFiles/fileCache.ts";
 import { inferMimeType } from "#/staticFiles/mimeTypes.ts";
 
 /**
@@ -35,7 +34,6 @@ export class StaticFileHandler {
   constructor(options: StaticFilesOptions) {
     this.cache = new FileCache(!options.cache);
     this.staticFilesRoot = options.staticFilesRoot;
-
   }
 
   async serveFile(path: string): Promise<Response> {
