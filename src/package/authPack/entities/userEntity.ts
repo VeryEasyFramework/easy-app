@@ -1,6 +1,7 @@
 import { toTitleCase } from "@vef/string-utils";
 import { generateSalt, hashPassword } from "#/package/authPack/security.ts";
 import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export const userEntity = new EasyEntity("user");
 
@@ -160,6 +161,20 @@ userEntity.addAction("generateApiToken", {
     await entity.save();
     return { token };
   },
+});
+
+userEntity.addAction("sayHello", {
+  action(entity, data) {
+    const name = data?.name as string;
+    const userName = entity.fullName as string;
+    easyLog.debug(`Hello ${name}, I am ${userName}`);
+  },
+  label: "Say Hello",
+  params: [{
+    key: "name",
+    fieldType: "DataField",
+    label: "Name",
+  }],
 });
 
 // userEntity.addChild({

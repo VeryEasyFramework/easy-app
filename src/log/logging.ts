@@ -6,6 +6,7 @@ import {
 } from "@vef/easy-cli";
 import { getEnv } from "#/appConfig/configEnv.ts";
 import { EasyLogger } from "#/log/easyLog.ts";
+
 const { symbol } = printUtils;
 const tab = "  ";
 export type LogType = "error" | "info" | "warning" | "debug" | "message";
@@ -24,6 +25,7 @@ interface LogOptions {
   hideTrace?: boolean;
   traceOffset?: number;
   stack?: string;
+  compact?: boolean;
 }
 export const easyLog = {
   message: (
@@ -36,15 +38,15 @@ export const easyLog = {
     subject?: string,
     options?: LogOptions,
   ): void => log({ content, type: "error", subject, ...options }),
-  info: (content: any | any[], subject?: string): void =>
-    log({ content, type: "info", subject }),
+  info: (content: any | any[], subject?: string, options?: LogOptions): void =>
+    log({ content, type: "info", subject, ...options }),
   warning: (
     content: any | any[],
     subject?: string,
     options?: LogOptions,
   ): void => log({ content, type: "warning", subject, ...options }),
-  debug: (content: any | any[], subject?: string): void =>
-    log({ content, type: "debug", subject }),
+  debug: (content: any | any[], subject?: string, options?: LogOptions): void =>
+    log({ content, type: "debug", subject, ...options }),
 } as const;
 
 const logger = new EasyLogger();
@@ -55,6 +57,7 @@ function log(options: {
   subject?: string;
   hideTrace?: boolean;
   stack?: string;
+  compact?: boolean;
 }) {
   const env = getEnv("VEF_ENVIRONMENT");
   let { content, type, subject, hideTrace, stack } = options;
@@ -143,20 +146,38 @@ function log(options: {
   // message.push(reset);
   // printUtils.symbols;
   // message.push();
-
+  if (options.compact) {
+    printCompactMessage(title, message, type);
+    return;
+  }
   const titleRow = formatUtils.center(title, box.horizontal, {
     color: typeColors[type || "message"],
   });
 
-  printUtils.println(titleRow);
-  printUtils.printLines(1);
+  // printUtils.println(titleRow);
+  console.log(titleRow);
+  // printUtils.printLines(1);
+  console.log();
   for (const line of message) {
-    printUtils.println(line);
+    // printUtils.println(line);
+    console.log(line);
   }
   const row = formatUtils.fill(box.horizontal, {
     color: typeColors[type || "message"],
   });
-  printUtils.printLines(1);
-  printUtils.println(row);
-  printUtils.printLines(1);
+  // printUtils.printLines(1);
+  console.log();
+  // printUtils.println(row);
+  console.log(row);
+  // printUtils.printLines(1);
+  console.log();
+}
+
+function printCompactMessage(title: string, message: string[], type?: LogType) {
+  const label = ColorMe.fromOptions(title, {
+    color: typeColors[type || "message"],
+  });
+  for (const line of message) {
+    console.log(`${label}: ${line.trim()}`);
+  }
 }

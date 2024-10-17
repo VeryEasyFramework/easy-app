@@ -29,26 +29,21 @@ export function asyncPause(ms: number) {
 /**
  * Get the number of CPU cores available on the system.
  */
-export function getCoreCount(): number {
-  if (Deno.build.os === "windows") {
+export async function getCoreCount(): Promise<number> {
+  if (Deno.build.os !== "linux") {
     return 1;
   }
 
-  /// Uncomment the following code to get the core count on Unix-based systems
-  // const cmd = new Deno.Command("nproc", {
-  //    stdout: "piped",
-  // });
-  //
-  // const proc = cmd.spawn();
-  //
-  // const output = await proc.output();
-  // const cors = new TextDecoder().decode(output.stdout).trim();
-  // const coreCount = parseInt(cors);
-  // if (!coreCount) {
-  //    throw new Error("Could not get core count");
-  // }
-  // return coreCount;
-  return 1;
+  const cmd = new Deno.Command("nproc", {
+    stdout: "piped",
+  });
+
+  const proc = cmd.spawn();
+
+  const output = await proc.output();
+  const cors = new TextDecoder().decode(output.stdout).trim();
+  const coreCount = parseInt(cors);
+  return isNaN(coreCount) ? 1 : coreCount;
 }
 
 export function checkForFile(path: string): boolean {

@@ -11,20 +11,20 @@ import { userRoleEntity } from "#/package/authPack/entities/userRole.ts";
 import { resetPasswordAction } from "#/package/authPack/actions/resetPasswordAction.ts";
 import { setNewPasswordAction } from "#/package/authPack/actions/setNewPasswordAction.ts";
 
-export const authPack: EasyPack = new EasyPack("auth", {
-   description: "Package for authentication",
+export const authPack: EasyPack = new EasyPack("authPack", {
+  description: "Package for authentication",
 });
 
 authPack.addEntity(userEntity);
 authPack.addEntity(userSessionEntity);
 authPack.addEntity(userRoleEntity);
 authPack.addActionGroup("auth", [
-   registerUserAction,
-   authCheckAction,
-   loginAction,
-   logoutAction,
-   resetPasswordAction,
-   setNewPasswordAction,
+  registerUserAction,
+  authCheckAction,
+  loginAction,
+  logoutAction,
+  resetPasswordAction,
+  setNewPasswordAction,
 ]);
 authPack.addMiddleware(authMiddleware);
 

@@ -79,6 +79,7 @@ export class EasyRequest {
 
   private getAuthToken() {
     const authHeader = this.request.headers.get("Authorization");
+
     if (authHeader) {
       const parts = authHeader.split(" ");
       if (parts.length === 2 && parts[0].toLowerCase() === "bearer") {
@@ -119,6 +120,9 @@ export class EasyRequest {
           break;
         case "action":
           this.action = value;
+          break;
+        case "authToken":
+          this.authToken = value;
           break;
         default:
           this.params[key] = value;

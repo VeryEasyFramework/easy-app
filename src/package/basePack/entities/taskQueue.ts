@@ -29,19 +29,34 @@ taskQueue.addFields([{
   key: "taskData",
   fieldType: "JSONField",
 }, {
+  key: "worker",
+  fieldType: "ChoicesField",
+  defaultValue: "short",
+  required: true,
+  choices: [{
+    key: "short",
+    label: "Short",
+  }, {
+    key: "medium",
+    label: "Medium",
+  }, {
+    key: "long",
+    label: "Long",
+  }],
+}, {
   key: "status",
   fieldType: "ChoicesField",
-  defaultValue: "pending",
+  defaultValue: "queued",
   required: true,
   readOnly: true,
   choices: [{
-    key: "pending",
-    label: "Pending",
-    color: "warning",
+    key: "queued",
+    label: "Queued",
+    color: "muted",
   }, {
     key: "running",
     label: "Running",
-    color: "primary",
+    color: "warning",
   }, {
     key: "completed",
     label: "Completed",

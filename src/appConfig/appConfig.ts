@@ -15,6 +15,22 @@ const configDefault: EasyAppConfig<"postgres"> = {
     enable: true,
     port: 11254,
   },
+  multiProcessing: {
+    enable: false,
+    processCount: "auto",
+  },
+  workers: {
+    short: {
+      port: 12700,
+    },
+    medium: {
+      port: 12701,
+    },
+    long: {
+      port: 12702,
+    },
+  },
+  easyPacks: ["authPack", "emailPack"],
   serverOptions: {
     hostname: "127.0.0.1",
     port: 8000,

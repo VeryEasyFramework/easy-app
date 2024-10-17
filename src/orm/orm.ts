@@ -20,7 +20,7 @@ import { validateEntityDefinition } from "#orm/entity/entity/entityDefinition/va
 import { FetchRegistry } from "#orm/entity/registry.ts";
 import { buildRecordClass } from "#orm/entity/entity/entityRecord/buildRecordClass.ts";
 import type { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
-import type { User } from "#orm/utils/misc.ts";
+import type { User } from "@vef/types";
 
 import { migrateSettingsEntity } from "#orm/database/migrate/migrateSettingsEntity.ts";
 import type { SettingsRecord } from "#orm/entity/settings/settingsRecord.ts";
@@ -271,17 +271,17 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Get an entity by id
    */
-  async getEntity(
+  async getEntity<E extends EntityRecord = EntityRecord>(
     entityId: string,
     id: EasyFieldTypeMap["IDField"],
     user?: User,
-  ): Promise<EntityRecord> {
+  ): Promise<E> {
     const entityClass = this.getEntityClass(entityId);
 
     const entityRecord = new entityClass();
     entityRecord._user = user;
     await entityRecord.load(id);
-    return entityRecord;
+    return entityRecord as E;
   }
 
   /**
@@ -332,11 +332,11 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Get a list of entities
    */
-  async getEntityList(
+  async getEntityList<E extends Record<string, any> = Record<string, any>>(
     entityId: string,
     options?: ListOptions,
     user?: User,
-  ): Promise<RowsResult<Record<string, SafeType>>> {
+  ): Promise<RowsResult<E>> {
     const entityDef = this.getEntityDef(entityId);
 
     options = options || {};
@@ -347,7 +347,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       options.limit = 100;
     }
 
-    const result = await this.database.getRows<Record<string, SafeType>>(
+    const result = await this.database.getRows<E>(
       entityDef.config.tableName,
       options,
     );
@@ -445,7 +445,9 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return def;
   }
 
-  private getEntityClass(entityId: string): typeof EntityRecord {
+  private getEntityClass<E extends typeof EntityRecord = typeof EntityRecord>(
+    entityId: string,
+  ): E {
     const entityClass = this.entityClasses[entityId];
     if (!entityClass) {
       raiseOrmException(
@@ -453,7 +455,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         `Entity '${entityId}' is not a registered entity!`,
       );
     }
-    return entityClass;
+    return entityClass as E;
   }
 
   /**

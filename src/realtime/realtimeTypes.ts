@@ -10,7 +10,6 @@ export interface RealtimeClient {
 export interface RealtimeRoomDef {
   roomName: string;
   description?: string;
-  events: string[];
 }
 export interface RealtimeMessage {
   room: string;

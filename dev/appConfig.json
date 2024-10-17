@@ -1,0 +1,51 @@
+{
+  "appName": "Easy App",
+  "singlePageApp": false,
+  "staticFilesOptions": {
+    "staticFilesRoot": "./public",
+    "cache": true
+  },
+  "environment": "development",
+  "realtimeOptions": {
+    "enable": true,
+    "port": 11254
+  },
+  "multiProcessing": {
+    "enable": true,
+    "processCount": "auto",
+    "max": 4
+  },
+  "workers": {
+    "short": {
+      "port": 12700
+    },
+    "medium": {
+      "port": 12701
+    },
+    "long": {
+      "port": 12702
+    }
+  },
+  "easyPacks": [
+    "authPack",
+    "emailPack"
+  ],
+  "serverOptions": {
+    "hostname": "127.0.0.1",
+    "port": 8000
+  },
+  "ormOptions": {
+    "databaseType": "postgres",
+    "databaseConfig": {
+      "size": 1,
+      "debug": false,
+      "clientOptions": {
+        "user": "postgres",
+        "password": "postgres",
+        "database": "postgres",
+        "host": "127.0.0.1",
+        "port": 5432
+      }
+    }
+  }
+}

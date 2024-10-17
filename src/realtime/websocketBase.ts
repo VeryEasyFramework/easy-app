@@ -1,12 +1,13 @@
 import type { RealtimeClient } from "#/realtime/realtimeTypes.ts";
 import type { EasyRequest } from "#/app/easyRequest.ts";
 import type { User } from "@vef/types";
+import { easyLog } from "#/log/logging.ts";
 
 export abstract class WebsocketBase {
-  clients: RealtimeClient[];
+  clients: Map<string, RealtimeClient>;
 
   constructor() {
-    this.clients = [];
+    this.clients = new Map();
   }
 
   handleUpgrade(easyRequest: EasyRequest): Response {
@@ -14,7 +15,6 @@ export abstract class WebsocketBase {
       const { socket, response } = Deno.upgradeWebSocket(
         easyRequest.request,
       );
-
       this.addClient(socket, easyRequest.user);
       return response;
     }
@@ -43,7 +43,7 @@ export abstract class WebsocketBase {
   }
   private addListeners(client: RealtimeClient) {
     client.socket.onopen = () => {
-      this.clients.push(client);
+      this.clients.set(client.id, client);
       this.handleConnection(client);
     };
     client.socket.onmessage = (event) => {
@@ -58,7 +58,7 @@ export abstract class WebsocketBase {
     client.socket.onclose = () => {
       this.handleClose(client);
 
-      this.clients = this.clients.filter((c) => c.id !== client.id);
+      this.clients.delete(client.id);
     };
   }
   abstract handleConnection(client: RealtimeClient): void;
