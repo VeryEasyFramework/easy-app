@@ -839,8 +839,7 @@ export class EasyApp {
     }
 
     try {
-      const file = await this.staticFileHandler.serveFile(path);
-      return file;
+      return await this.staticFileHandler.serveFile(path);
     } catch (e) {
       if (e instanceof EasyException) {
         if (e.status === 404 && this.config.singlePageApp) {
