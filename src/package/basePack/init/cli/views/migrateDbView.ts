@@ -1,5 +1,5 @@
 import { ColorMe, TaskView } from "@vef/easy-cli";
-import type { EasyApp } from "#/easyApp.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
 export function setupMigrateDbView(app: EasyApp): void {
   const migrateDbView = new TaskView({
     title: "Migrate Database",

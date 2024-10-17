@@ -1,8 +1,8 @@
 import { ColorMe, MenuView, TaskView } from "@vef/easy-cli";
-import type { EasyApp } from "#/easyApp.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
 import { camelToTitleCase } from "@vef/string-utils";
-import { EasyResponse } from "#/easyResponse.ts";
-import { EasyRequest } from "#/easyRequest.ts";
+import { EasyResponse } from "#/app/easyResponse.ts";
+import { EasyRequest } from "#/app/easyRequest.ts";
 
 export function setupGroupsMenu(app: EasyApp): void {
   const groupsMenu = new MenuView({

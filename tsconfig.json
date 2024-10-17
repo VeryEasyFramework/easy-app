@@ -1,8 +1,17 @@
 {
   "compilerOptions": {
     "paths": {
-      "#/*": ["./src/*"],
-      "#orm/*": ["./src/orm/*"]
+      "#/*": [
+        "./src/*"
+      ],
+      "#orm/*": [
+        "./src/orm/*"
+      ],
+      "@vef/types": [
+        "../vef-types/mod.ts"
+      ],
+
     }
   }
 }
+

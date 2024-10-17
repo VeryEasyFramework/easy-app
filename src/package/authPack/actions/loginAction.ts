@@ -1,8 +1,8 @@
 import { createAction } from "#/actions/createAction.ts";
 import { raiseEasyException } from "#/easyException.ts";
 
-import type { EasyApp } from "#/easyApp.ts";
-import type { EasyResponse } from "#/easyResponse.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
+import type { EasyResponse } from "#/app/easyResponse.ts";
 import type { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
 
 export const loginAction = createAction("login", {

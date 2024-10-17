@@ -1,5 +1,5 @@
 import { WebsocketBase } from "#/realtime/websocketBase.ts";
-import { EasyRequest } from "#/easyRequest.ts";
+import { EasyRequest } from "#/app/easyRequest.ts";
 import type { RealtimeClient } from "#/realtime/realtimeTypes.ts";
 import { easyLog } from "#/log/logging.ts";
 

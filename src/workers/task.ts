@@ -1,4 +1,4 @@
-import type { EasyApp } from "#/easyApp.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
 
 export class EasyWorker {
   worker!: Worker;

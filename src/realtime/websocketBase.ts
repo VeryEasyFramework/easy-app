@@ -2,7 +2,7 @@ import type {
   RealtimeClient,
   RealtimeMessage,
 } from "#/realtime/realtimeTypes.ts";
-import type { EasyRequest } from "#/easyRequest.ts";
+import type { EasyRequest } from "#/app/easyRequest.ts";
 
 export abstract class WebsocketBase {
   clients: RealtimeClient[];
@@ -12,7 +12,9 @@ export abstract class WebsocketBase {
 
   handleUpgrade(easyRequest: EasyRequest): Response {
     if (easyRequest.upgradeSocket) {
-      const { socket, response } = Deno.upgradeWebSocket(easyRequest.request);
+      const { socket, response } = Deno.upgradeWebSocket(
+        easyRequest.request,
+      );
       this.addClient(socket);
       return response;
     }

@@ -1,5 +1,5 @@
 import { InputListener, MenuView } from "@vef/easy-cli";
-import type { EasyApp } from "#/easyApp.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
 import { asyncPause, checkForFile } from "#/utils.ts";
 
 export function setupRunMenu(app: EasyApp): void {
