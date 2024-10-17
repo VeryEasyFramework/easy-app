@@ -28,7 +28,8 @@
   },
   "easyPacks": [
     "authPack",
-    "emailPack"
+    "emailPack",
+    "workersPack"
   ],
   "serverOptions": {
     "hostname": "127.0.0.1",

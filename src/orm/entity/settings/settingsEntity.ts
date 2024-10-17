@@ -1,13 +1,10 @@
 import { BaseDefinition } from "#orm/entity/baseDefinition.ts";
 import type {
   SettingsAction,
+  SettingsEntityConfig,
   SettingsEntityHooks,
-} from "#orm/entity/settings/settingsDefTypes.ts";
+} from "@vef/types";
 
-export interface SettingsEntityConfig {
-  label: string;
-  description: string;
-}
 export class SettingsEntity
   extends BaseDefinition<SettingsEntityConfig, "settings"> {
   settingsId: string;

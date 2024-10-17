@@ -46,6 +46,15 @@ export const appActions = [
     },
     response: "EntityDefinition[]",
   }),
+
+  createAction("settings", {
+    description: "Get the settings definitions for the app",
+    action(app) {
+      return app.settingsInfo;
+    },
+    response: "SettingsEntityDefinition[]",
+  }),
+
   createAction("notify", {
     description: "Send a realtime notification",
     action: (app, { room, event, data }) => {

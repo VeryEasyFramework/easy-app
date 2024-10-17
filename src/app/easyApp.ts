@@ -34,6 +34,8 @@ import { PgError } from "#orm/database/adapter/adapters/postgres/pgError.ts";
 import { authPack } from "#/package/authPack/authPack.ts";
 import { emailPack } from "#/package/emailPack/emailPack.ts";
 import appRunner from "#/app/runner/mod.ts";
+import { workersPack } from "#/package/workers/workersPack.ts";
+import type { SettingsEntityDefinition } from "../../../vef-types/src/orm/settings.ts";
 
 const config = await initAppConfig();
 /**
@@ -154,6 +156,9 @@ export class EasyApp {
           break;
         case "emailPack":
           this.addEasyPack(emailPack);
+          break;
+        case "workersPack":
+          this.addEasyPack(workersPack);
           break;
         default:
           raiseEasyException(`Unknown EasyPack: ${pack}`, 500);
@@ -339,6 +344,10 @@ export class EasyApp {
    */
   get entityInfo(): EntityDefinition[] {
     return Object.values(this.orm.entities);
+  }
+
+  get settingsInfo(): SettingsEntityDefinition[] {
+    return Object.values(this.orm.settingsDefinitions);
   }
 
   /**

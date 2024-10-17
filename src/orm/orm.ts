@@ -20,12 +20,11 @@ import { validateEntityDefinition } from "#orm/entity/entity/entityDefinition/va
 import { FetchRegistry } from "#orm/entity/registry.ts";
 import { buildRecordClass } from "#orm/entity/entity/entityRecord/buildRecordClass.ts";
 import type { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
-import type { User } from "@vef/types";
+import type { SettingsEntityDefinition, User } from "@vef/types";
 
 import { migrateSettingsEntity } from "#orm/database/migrate/migrateSettingsEntity.ts";
 import type { SettingsRecord } from "#orm/entity/settings/settingsRecord.ts";
 import { buildSettingsEntity } from "#orm/entity/settings/buildSettingsEntity.ts";
-import type { SettingsEntityDefinition } from "#orm/entity/settings/settingsDefTypes.ts";
 import { buildSettingsRecordClass } from "#orm/entity/settings/buildSettingsRecordClass.ts";
 import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
 

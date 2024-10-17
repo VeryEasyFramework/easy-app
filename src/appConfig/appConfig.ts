@@ -30,7 +30,7 @@ const configDefault: EasyAppConfig<"postgres"> = {
       port: 12702,
     },
   },
-  easyPacks: ["authPack", "emailPack"],
+  easyPacks: ["authPack", "emailPack", "workersPack"],
   serverOptions: {
     hostname: "127.0.0.1",
     port: 8000,

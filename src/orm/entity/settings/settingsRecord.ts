@@ -1,11 +1,12 @@
-import type { User } from "#orm/utils/misc.ts";
 import type { EasyOrm } from "#orm/orm.ts";
-import type { EasyFieldType, SafeType } from "@vef/types";
-import type { SettingsHookFunction } from "#orm/entity/settings/settingsRecordTypes.ts";
 import type {
+  EasyFieldType,
+  SafeType,
   SettingsAction,
   SettingsEntityDefinition,
-} from "#orm/entity/settings/settingsDefTypes.ts";
+  User,
+} from "@vef/types";
+import type { SettingsHookFunction } from "#orm/entity/settings/settingsRecordTypes.ts";
 
 export interface SettingsRecord {
   beforeSave(): Promise<void> | void;
