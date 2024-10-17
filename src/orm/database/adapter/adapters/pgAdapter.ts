@@ -15,6 +15,7 @@ import { camelToSnakeCase, toCamelCase } from "@vef/string-utils";
 import { PostgresPool } from "#orm/database/adapter/adapters/postgres/pgPool.ts";
 import type { PgClientConfig } from "#orm/database/adapter/adapters/postgres/pgTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export interface PostgresConfig {
   clientOptions: PgClientConfig;
@@ -59,7 +60,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
   }
   override async query<T>(query: string): Promise<RowsResult<T>> {
     if (this.config.debug) {
-      console.log(query);
+      easyLog.debug(query, "Postgres Query");
     }
     const result = await this.pool.query<T>(query);
     const columns = result.columns.map((column) => {

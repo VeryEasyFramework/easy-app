@@ -55,7 +55,6 @@ export class EasyApp {
   workersMap: Record<string, Worker> = {};
   realtime: RealtimeServer = new RealtimeServer();
   packages: Array<EasyPackInfo> = [];
-  private easyPacks: Array<EasyPack> = [];
   orm: EasyOrm;
   actions: Record<string, Record<string, EasyAction>>;
   requestTypes: string = "";
@@ -79,6 +78,7 @@ export class EasyApp {
    * // Create a new instance of EasyApp
    * const app = new EasyApp();
    *  // Run the app
+   *
    * app.run();
    *
    * ```
@@ -515,15 +515,15 @@ export class EasyApp {
     return process.pid;
   }
 
-  async begin(
+  begin(
     options: { args: string[]; flags?: string[]; signal?: AbortSignal },
-  ): Promise<void> {
+  ): void {
     this.startProcess({
       args: ["broker", ...options.args],
       flags: options.flags,
       signal: options.signal,
     });
-    const cores = await getCoreCount();
+    const cores = getCoreCount();
     const pids: number[] = [];
     for (let i = 0; i < cores; i++) {
       pids.push(
@@ -605,7 +605,7 @@ export class EasyApp {
       return;
     }
     if (argsRecord.serve) {
-      await this.begin({ args });
+      this.begin({ args });
       return;
     }
 
