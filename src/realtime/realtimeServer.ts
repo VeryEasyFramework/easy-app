@@ -165,8 +165,7 @@ export class RealtimeServer extends WebsocketBase {
     });
   }
   addRoom(room: RealtimeRoomDef) {
-    const newRoom = new SocketRoom(room.roomName, room.events);
-    this.rooms[room.roomName] = newRoom;
+    this.rooms[room.roomName] = new SocketRoom(room.roomName, room.events);
     this.info.rooms.push(room);
   }
 
@@ -186,11 +185,25 @@ export class RealtimeServer extends WebsocketBase {
       }
     }
   }
-
-  join(room: string, clientId: string, events?: string[]): void {
+  private validateRoom(room: string, events?: string[]) {
     if (!this.rooms[room]) {
+      this.addRoom({
+        roomName: room,
+        events: events || [],
+      });
       return;
     }
+    if (events) {
+      for (const event of events) {
+        if (!this.rooms[room].events[event]) {
+          this.rooms[room].events[event] = [];
+          this.info.rooms.find((r) => r.roomName === room)?.events.push(event);
+        }
+      }
+    }
+  }
+  join(room: string, clientId: string, events?: string[]): void {
+    this.validateRoom(room, events);
     if (!events) {
       for (const event in this.rooms[room].events) {
         if (!this.rooms[room].events[event]?.includes(clientId)) {
@@ -204,10 +217,19 @@ export class RealtimeServer extends WebsocketBase {
         }
       }
     }
-    this.clients.find((client) => client.id === clientId)?.rooms.push(room);
-    this.sendToRoomEvent(room, "join", {
-      message: `Client ${clientId} joined room ${room}`,
-    });
+    const client = this.clients.find((client) => client.id === clientId);
+    if (!client) {
+      return;
+    }
+    events = events || ["all"];
+    events = events.filter((event) => !["join", "leave"].includes(event));
+    for (const event of events) {
+      this.sendToRoomEvent(room, "join", {
+        room,
+        user: client.user,
+        event,
+      });
+    }
   }
 
   sendToRoomEvent(room: string, event: string, data: Record<string, any>) {
@@ -215,12 +237,7 @@ export class RealtimeServer extends WebsocketBase {
       const operation = event as keyof EasyCache;
       this.onCache(operation, data);
     }
-    if (!this.rooms[room]) {
-      return;
-    }
-    if (!this.rooms[room].events[event]) {
-      return;
-    }
+    this.validateRoom(room, [event]);
     this.rooms[room].events[event].forEach((clientId, index) => {
       const client = this.clients.find((client) => client.id === clientId);
       if (!client) {
@@ -238,10 +255,19 @@ export class RealtimeServer extends WebsocketBase {
   }
 
   leave(room: string, clientId: string, events?: string[]) {
-    if (!this.rooms[room]) {
-      return;
+    this.validateRoom(room, events);
+    const client = this.clients.find((client) => client.id === clientId);
+    if (client) {
+      events = events || ["all"];
+      events = events.filter((event) => !["join", "leave"].includes(event));
+      for (const event of events) {
+        this.sendToRoomEvent(room, "leave", {
+          room,
+          user: client.user,
+          event,
+        });
+      }
     }
-
     if (events) {
       for (const event of events) {
         this.rooms[room].events[event] = this.rooms[room].events[event]
@@ -249,17 +275,14 @@ export class RealtimeServer extends WebsocketBase {
             client,
           ) => client !== clientId);
       }
-    } else {
-      for (const event in this.rooms[room].events) {
-        this.rooms[room].events[event] = this.rooms[room].events[event]
-          .filter((
-            client,
-          ) => client !== clientId);
-      }
+      return;
     }
-    this.sendToRoomEvent(room, "leave", {
-      message: `Client ${clientId} left room ${room}`,
-    });
+    for (const event in this.rooms[room].events) {
+      this.rooms[room].events[event] = this.rooms[room].events[event]
+        .filter((
+          client,
+        ) => client !== clientId);
+    }
   }
 
   cache(operation: string, content: Record<string, SafeType>) {

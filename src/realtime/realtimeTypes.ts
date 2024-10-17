@@ -1,6 +1,9 @@
+import type { User } from "@vef/types";
+
 export interface RealtimeClient {
   id: string;
   socket: WebSocket;
+  user?: User;
   rooms: string[];
 }
 

@@ -1,4 +1,5 @@
 import type { BootAction } from "#/types.ts";
+
 export const ormGlobalHooks: BootAction = {
   actionName: "addOrmGlobalHooks",
   description: "Create realtime rooms for each entity",
@@ -25,7 +26,6 @@ export const ormGlobalHooks: BootAction = {
         entityId,
         data: entityRecord.data,
       };
-      app.notify(room, "create", notifyData);
       app.notify(room, "list", {
         action: "create",
         ...notifyData,
@@ -61,7 +61,7 @@ export const ormGlobalHooks: BootAction = {
           entity,
           data: entityRecord.data,
         };
-        app.notify(room, "update", notifyData);
+        app.notify(`${room}:${entityRecord.id}`, "update", notifyData);
         app.notify(room, "list", {
           action: "update",
           ...notifyData,
@@ -90,7 +90,7 @@ export const ormGlobalHooks: BootAction = {
         entity,
         data: entityRecord.data,
       };
-      app.notify(room, "delete", notifyData);
+      app.notify(`${room}:${entityRecord.id}`, "delete", notifyData);
       app.notify(room, "list", {
         action: "delete",
         ...notifyData,

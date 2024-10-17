@@ -2,11 +2,14 @@ import { EasyPack } from "#/package/easyPack.ts";
 import { appActions } from "#/package/basePack/actions/appActions.ts";
 import { bootEntityRooms } from "#/package/basePack/boot/realtimeRooms.ts";
 import { entityActions } from "#/package/basePack/actions/entityActions/index.ts";
-import { requestOptionsMiddleware } from "#/package/basePack/middleware/requestOptionsMiddleware.ts";
+import {
+  requestOptionsMiddleware
+} from "#/package/basePack/middleware/requestOptionsMiddleware.ts";
 import { buildCli } from "#/package/basePack/init/cli/cli.ts";
 import { editLogEntity } from "#/package/basePack/entities/editLogEntity.ts";
 import { ormGlobalHooks } from "#/package/basePack/boot/ormGlobalHooks.ts";
 import { settingsActions } from "#/package/basePack/actions/settingsActions/index.ts";
+import { taskQueue } from "#/package/basePack/entities/taskQueue.ts";
 
 const basePack = new EasyPack("base", {
   description:
@@ -25,6 +28,7 @@ basePack.addRealtimeRoom({
 basePack.addMiddleware(requestOptionsMiddleware);
 
 basePack.addEntity(editLogEntity);
+basePack.addEntity(taskQueue);
 
 basePack.setVersion(0, 1, 0);
 basePack.addBootAction(bootEntityRooms);

@@ -10,11 +10,7 @@ import type { EasyPack, EasyPackInfo } from "#/package/easyPack.ts";
 import { basePack } from "#/package/basePack/basePack.ts";
 import { RealtimeServer } from "#/realtime/realtimeServer.ts";
 
-import type {
-  DocsActionGroup,
-  DocsActionParam,
-  EasyAction,
-} from "#/actions/actionTypes.ts";
+import type { DocsActionGroup, DocsActionParam, EasyAction, } from "#/actions/actionTypes.ts";
 import type { BootAction, InitAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
 import { asyncPause, getCoreCount } from "#/utils.ts";
@@ -47,12 +43,8 @@ export class EasyApp {
   > = [];
 
   mode: "development" | "production" = "development";
-  workers: Array<{
-    path: string;
-    name: string;
-  }> = [];
+
   cache: EasyCache;
-  workersMap: Record<string, Worker> = {};
   realtime: RealtimeServer = new RealtimeServer();
   packages: Array<EasyPackInfo> = [];
   orm: EasyOrm;
@@ -324,30 +316,6 @@ export class EasyApp {
     return Object.values(this.orm.entities);
   }
 
-  addWorker(name: string, path: string) {
-    this.workers.push({ name, path });
-    easyLog.info(`Worker ${name} at ${path} added`, "Worker");
-    // Deno.exit(0);
-    // const worker = new Worker(path, { type: "module", name: name });
-    // if (!worker) {
-    //   raiseEasyException(`Worker ${name} not found`, 404);
-    // }
-    // if (this.workers[name]) {
-    //   raiseEasyException(`Worker ${name} already exists`, 500);
-    // }
-    // this.workers[name] = worker;
-  }
-
-  queryWorker(name: string, data: Record<string, any>) {
-    const worker = this.workersMap[name];
-    if (!worker) {
-      raiseEasyException(`Worker ${name} not found`, 404);
-    }
-    worker.postMessage(data);
-  }
-  queueTask(taskName: string, params?: Record<string, any>) {
-    this.queryWorker("task", { taskName, params });
-  }
   /**
    * Add an EasyPack to the app
    */

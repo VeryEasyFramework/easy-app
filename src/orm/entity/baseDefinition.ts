@@ -8,11 +8,7 @@ import type {
   EntityHookDefinition,
   FieldGroupDefinition,
 } from "@vef/types";
-import {
-  camelToSnakeCase,
-  camelToTitleCase,
-  toCamelCase,
-} from "@vef/string-utils";
+import { camelToSnakeCase, camelToTitleCase, toCamelCase, } from "@vef/string-utils";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type {
   SettingsAction,
@@ -21,9 +17,11 @@ import type {
   SettingsEntityHooks,
   SettingsHook,
 } from "#orm/entity/settings/settingsDefTypes.ts";
+
 export interface BaseDefinitionConfig {
   label: string;
   description: string;
+  statusField?: string;
 }
 
 type DefType = "entity" | "settings";
@@ -58,6 +56,24 @@ export abstract class BaseDefinition<
   readonly fields: Array<EasyField>;
   readonly fieldGroups: Array<FieldGroupDefinition>;
 
+  private _statusField?: EasyField;
+
+  get statusField(): EasyField | undefined {
+    return this._statusField;
+  }
+
+  set statusField(fieldKey: string) {
+    const field = this.fields.find((f) => f.key === fieldKey);
+    if (!field) {
+      raiseOrmException(
+        "InvalidField",
+        `Field with key ${fieldKey} not found in entity ${this.key}`,
+      );
+    }
+
+    this._statusField = field;
+  }
+
   readonly children: Array<ChildListDefinition>;
 
   config: C = {} as C;
@@ -65,7 +81,7 @@ export abstract class BaseDefinition<
   readonly actions: Array<ActionsMap[T]>;
 
   readonly hooks: EasyHooksMap[T];
-  constructor(key: string, options?: {
+  protected constructor(key: string, options?: {
     label?: string;
     description?: string;
   }) {
@@ -117,6 +133,9 @@ export abstract class BaseDefinition<
         "InvalidField",
         `Field with key ${field.key} is a protected keyword in entity ${this.key}`,
       );
+    }
+    if (!field.label) {
+      field.label = camelToTitleCase(field.key);
     }
     this.fields.push(field);
   }

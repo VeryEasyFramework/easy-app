@@ -7,9 +7,3 @@ export function generateId(length?: number): string {
 export function isEmpty(value: any): boolean {
   return value === null || value === undefined || value === "";
 }
-
-export interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-}
