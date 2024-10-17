@@ -32,6 +32,7 @@
   "tasks": {
     "dev": "cd dev && deno run -A --unstable-kv main.ts",
     "check": "deno publish --dry-run",
+    "lint": "deno lint mod.ts src/**/*.ts",
     "update": "deno add jsr:@vef/easy-cli jsr:@vef/string-utils jsr:@vef/easy-ops"
   }
 }

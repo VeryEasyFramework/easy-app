@@ -28,7 +28,7 @@ export class MessageBroker {
       onListen: (addr) => {
         easyLog.info(`Realtime server listening on port ${addr.port}`);
       },
-    }, async (request) => {
+    }, (request) => {
       const easyRequest = new EasyRequest(request);
       return this.realtime.handleUpgrade(easyRequest);
     });

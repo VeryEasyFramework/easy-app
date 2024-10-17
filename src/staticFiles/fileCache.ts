@@ -1,7 +1,6 @@
-import { EasyException, raiseEasyException } from "#/easyException.ts";
-import { easyLog } from "#/log/logging.ts";
-import { joinPath } from "../utils.ts";
-import { inferMimeType, type MimeValue } from "./mimeTypes.ts";
+import { EasyException } from "#/easyException.ts";
+import { joinPath } from "#/utils.ts";
+import { inferMimeType, type MimeValue } from "#/staticFiles/mimeTypes.ts";
 
 export interface CachedFile {
   content: Uint8Array;

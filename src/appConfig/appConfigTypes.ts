@@ -1,7 +1,8 @@
 import type { DatabaseConfig, DBType } from "#orm/database/database.ts";
 import type { StaticFilesOptions } from "#/staticFiles/staticFileHandler.ts";
-import { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
+import type { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
 import type { EasyFieldType } from "@vef/types";
+
 export interface EasyAppConfig<D extends DBType> {
   /**
    * The root path of the app. Defaults to the current directory.
