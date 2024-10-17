@@ -157,7 +157,6 @@ export class PostgresClient {
               });
 
               //  md5 authentication
-              break;
             }
             case AUTH.SASL_STARTUP: {
               const clientFirstMessage = client.composeChallenge();
@@ -305,7 +304,6 @@ export class PostgresClient {
         case QR_TYPE.ROW_DESCRIPTION: {
           if (gotDescription) {
             throw new PgError({ message: "Got row description twice" });
-            break;
           }
           gotDescription = true;
           const columns = this.parseRowDescription();

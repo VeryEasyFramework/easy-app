@@ -1,4 +1,12 @@
-import type { AdvancedFilter, ListOptions } from "@vef/types";
+import type {
+  AdvancedFilter,
+  EasyField,
+  EasyFieldType,
+  IdMethodType,
+  ListOptions,
+  RowsResult,
+  SafeType,
+} from "@vef/types";
 import {
   type AdapterColumn,
   DatabaseAdapter,
@@ -6,13 +14,6 @@ import {
 import { camelToSnakeCase, toCamelCase } from "@vef/string-utils";
 import { PostgresPool } from "#orm/database/adapter/adapters/postgres/pgPool.ts";
 import type { PgClientConfig } from "#orm/database/adapter/adapters/postgres/pgTypes.ts";
-import type {
-  EasyField,
-  EasyFieldType,
-  IdMethodType,
-  RowsResult,
-  SafeType,
-} from "@vef/types";
 import { raiseOrmException } from "#orm/ormException.ts";
 
 export interface PostgresConfig {
@@ -145,7 +146,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       `CREATE TABLE IF NOT EXISTS ${this.schema}.${tableName} (${columnName} ${columnType} PRIMARY KEY)`;
     await this.query<any>(query);
   }
-  async dropTable(tableName: string): Promise<void> {
+  dropTable(tableName: string): Promise<void> {
     tableName = this.toSnake(tableName);
     throw new Error(`dropTable not implemented for postgres`);
   }
