@@ -11,7 +11,7 @@ import { raiseOrmException } from "#orm/ormException.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
 import { generateId, isEmpty, type User } from "#orm/utils/misc.ts";
-import type { ChildList, ChildRecord } from "#orm/entity/child/childRecord.ts";
+import type { ChildList } from "#orm/entity/child/childRecord.ts";
 
 export interface EntityRecord {
   beforeInsert(): Promise<void>;
@@ -533,12 +533,11 @@ export class EntityRecord implements EntityRecord {
         this[thisFieldKey] = null;
         continue;
       }
-      const value = await this.orm.getValue(
+      this[thisFieldKey] = await this.orm.getValue(
         fetchEntity,
         id,
         thatFieldKey,
       );
-      this[thisFieldKey] = value;
     }
   }
 

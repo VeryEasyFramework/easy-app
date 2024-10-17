@@ -167,8 +167,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const query = `INSERT INTO ${this.schema}.${tableName} (${
       columns.join(", ")
     }) VALUES (${values.join(", ")}) RETURNING *`;
-    const result = await this.query(query);
-    return result;
+    return await this.query(query);
   }
 
   async delete(tableName: string, field: string, value: any): Promise<void> {
@@ -193,8 +192,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const query = `UPDATE ${this.schema}.${tableName} SET ${
       values.join(", ")
     } WHERE id = ${idValue} RETURNING *`;
-    const result = await this.query<T>(query);
-    return result;
+    return await this.query<T>(query);
   }
 
   async getRows<T>(

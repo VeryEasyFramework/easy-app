@@ -819,15 +819,13 @@ export class EasyApp {
         proxy.toString(),
       );
 
-      const response = await fetch(url);
-      return response;
+      return await fetch(url);
     }
     let path = easyRequest.path;
     if (path.startsWith("/dev")) {
       path = path.replace("/dev", "");
       try {
-        const file = await this.devStaticFileHandler.serveFile(path);
-        return file;
+        return await this.devStaticFileHandler.serveFile(path);
       } catch (e) {
         if (e instanceof EasyException) {
           if (e.status === 404 && this.config.singlePageApp) {

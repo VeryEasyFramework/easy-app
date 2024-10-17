@@ -242,9 +242,7 @@ export class PostgresClient {
       if (!field) {
         break;
       }
-      const value = this.reader.readCString();
-
-      errorFields[errorCodeMap[field]] = value;
+      errorFields[errorCodeMap[field]] = this.reader.readCString();
       offset++;
       if (offset > this.reader.messageLength) {
         break;
@@ -369,11 +367,10 @@ export class PostgresClient {
     if (errors.length) {
       throw new PgError(errors[0]);
     }
-    const result: QueryResponse<T> = {
+    return {
       rowCount: data.length,
       rows: data,
       columns: fields,
     };
-    return result;
   }
 }
