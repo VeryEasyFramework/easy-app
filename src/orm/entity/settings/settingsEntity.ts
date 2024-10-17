@@ -1,5 +1,5 @@
 import { BaseDefinition } from "#orm/entity/baseDefinition.ts";
-import {
+import type {
   SettingsAction,
   SettingsEntityHooks,
 } from "#orm/entity/settings/settingsDefTypes.ts";

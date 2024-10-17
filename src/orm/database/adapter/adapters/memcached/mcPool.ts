@@ -1,8 +1,8 @@
 import { MemcacheClient } from "#orm/database/adapter/adapters/memcached/mcClient.ts";
-import {
+import type {
   ClientConfig,
   GetOptions,
-  type PoolConfig,
+  PoolConfig,
 } from "#orm/database/adapter/adapters/memcached/mcTypes.ts";
 
 class PoolClient {

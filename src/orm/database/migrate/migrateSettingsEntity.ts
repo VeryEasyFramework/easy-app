@@ -1,5 +1,5 @@
-import { Database } from "#orm/database/database.ts";
-import { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
+import type { Database } from "#orm/database/database.ts";
+import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
 import { OrmException } from "#orm/ormException.ts";
 import type { EasyField } from "@vef/types";
 import { validateField } from "#orm/entity/field/validateField.ts";
