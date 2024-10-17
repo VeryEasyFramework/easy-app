@@ -1,11 +1,9 @@
-import type {
-  RealtimeClient,
-  RealtimeMessage,
-} from "#/realtime/realtimeTypes.ts";
+import type { RealtimeClient } from "#/realtime/realtimeTypes.ts";
 import type { EasyRequest } from "#/app/easyRequest.ts";
 
 export abstract class WebsocketBase {
   clients: RealtimeClient[];
+
   constructor() {
     this.clients = [];
   }

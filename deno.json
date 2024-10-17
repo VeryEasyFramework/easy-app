@@ -16,6 +16,11 @@
       "src/client/**/*"
     ]
   },
+  "lint": {
+    "rules": {
+      "exclude": ["no-unused-vars", "no-explicit-any"]
+    }
+  },
   "imports": {
     "#/": "./src/",
     "#orm/": "./src/orm/",
