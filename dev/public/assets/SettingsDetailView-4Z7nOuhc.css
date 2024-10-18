@@ -1,0 +1,1 @@
+.settings-view{grid-template-areas:"title title" "fields actions";grid-template-columns:1fr auto;grid-template-rows:auto 1fr}.settings-view .title-area{grid-area:title}.settings-view .fields-area{grid-area:fields}.settings-view .actions-area{grid-area:actions}
