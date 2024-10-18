@@ -9,6 +9,7 @@ import {
 import type { EasyApp } from "#/app/easyApp.ts";
 import { asyncPause, checkForFile } from "#/utils.ts";
 import begin from "#/app/runner/begin.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export function setupRunMenu(app: EasyApp): void {
   const runMenu = new MenuView({
@@ -33,24 +34,32 @@ export function setupRunMenu(app: EasyApp): void {
     abortController,
     hideCursor: true,
   });
+  const run = async (watch: boolean, prod?: boolean) => {
+    app.cli.onStop = async () => {
+      listener.listen();
+
+      const procs = await begin({
+        multiProcess: app.config.multiProcessing,
+        flags: watch ? ["--watch"] : [],
+        app,
+      });
+      app.processes.push(...procs);
+    };
+    app.cli.stop();
+  };
+  signal.addEventListener("abort", async (event) => {
+    listener.stop();
+    easyLog.warning("Shutting down...", "Lifecycle", {
+      hideTrace: true,
+    });
+    app.exit(0);
+  });
   if (dev) {
     runMenu.addAction({
       name: "Development",
       description: "Run the app in development mode",
       action: () => {
-        app.cli.onStop = () => {
-          begin({
-            multiProcess: app.config.multiProcessing,
-            args: [],
-            signal,
-          });
-          listener.listen();
-          signal.addEventListener("abort", async (event) => {
-            await asyncPause(1000);
-            Deno.exit();
-          });
-        };
-        app.cli.stop();
+        run(false);
       },
     });
 
@@ -58,20 +67,7 @@ export function setupRunMenu(app: EasyApp): void {
       name: "Development Watch",
       description: "Run the app in development mode with a file watcher",
       action: () => {
-        app.cli.onStop = () => {
-          begin({
-            multiProcess: app.config.multiProcessing,
-            args: [],
-            flags: ["--watch"],
-            signal,
-          });
-          listener.listen();
-          signal.addEventListener("abort", async (event) => {
-            await asyncPause(1000);
-            Deno.exit();
-          });
-        };
-        app.cli.stop();
+        run(true);
       },
     });
     return;
@@ -96,19 +92,7 @@ export function setupRunMenu(app: EasyApp): void {
       name: "Production",
       description: "Run the app in production mode",
       action: () => {
-        app.cli.onStop = () => {
-          begin({
-            multiProcess: app.config.multiProcessing,
-            args: ["--prod"],
-            signal,
-          });
-          listener.listen();
-          signal.addEventListener("abort", async (event) => {
-            await asyncPause(1000);
-            Deno.exit();
-          });
-        };
-        app.cli.stop();
+        run(false, true);
       },
     });
   }

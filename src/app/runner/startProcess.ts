@@ -1,13 +1,16 @@
 import { raiseEasyException } from "#/easyException.ts";
+import type { AppProcess } from "#/app/runner/begin.ts";
+import { easyLog } from "#/log/logging.ts";
+import { checkForFile } from "#/utils.ts";
 
 /**
  * Start a new process with the given options.
  */
-export default function startProcess(options?: {
+export default function startProcess(name: string, options?: {
   args?: string[];
   flags?: string[];
   signal?: AbortSignal;
-}): number {
+}): AppProcess {
   const cwd = Deno.cwd();
 
   const args = options?.args || [];
@@ -18,8 +21,21 @@ export default function startProcess(options?: {
   ) {
     flags.push("--unstable-kv");
   }
-  if (args.includes("--prod")) {
-    const platform = Deno.build.os;
+  let prodBinary = "app";
+  const platform = Deno.build.os;
+  switch (platform) {
+    case "windows":
+      prodBinary = "app.exe";
+      break;
+    case "darwin":
+      prodBinary = "appOsx";
+
+      break;
+    default:
+      prodBinary = "app";
+      break;
+  }
+  if (checkForFile(prodBinary)) {
     let bin = "./app";
     switch (platform) {
       case "windows":
@@ -37,18 +53,16 @@ export default function startProcess(options?: {
     const cmd = new Deno.Command(bin, {
       args,
       cwd,
+
       signal: options?.signal,
       // stdout: "piped",
     });
     const process = cmd.spawn();
-    // process.stdout.pipeTo(
-    //   new WritableStream({
-    //     write(chunk) {
-    //       console.log(chunk);
-    //     },
-    //   }),
-    // );
-    return process.pid;
+
+    return {
+      name,
+      process,
+    };
   }
   const denoBin = Deno.execPath();
   const mainModule = "main.ts";
@@ -69,5 +83,8 @@ export default function startProcess(options?: {
 
   const process = cmd.spawn();
 
-  return process.pid;
+  return {
+    name,
+    process,
+  };
 }

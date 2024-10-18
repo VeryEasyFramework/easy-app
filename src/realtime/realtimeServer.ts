@@ -111,9 +111,6 @@ class BrokerConnection {
   }
   broadcast(message: Record<string, any>) {
     if (!this.connected) {
-      easyLog.error("Broker not connected", "Broker", {
-        hideTrace: true,
-      });
       return;
     }
     this.broker!.send(JSON.stringify(message));
@@ -165,9 +162,6 @@ export class RealtimeServer extends WebsocketBase {
   }
 
   notify(room: string, event: string, data: Record<string, any>) {
-    easyLog.info(data, this.appId);
-    // this.sendToRoom(room, event, data);
-
     this.broker.broadcast({
       room,
       event,
@@ -207,7 +201,6 @@ export class RealtimeServer extends WebsocketBase {
     }
   }
   join(room: string, client: RealtimeClient, data: any): void {
-    easyLog.info(data, this.appId);
     this.validateRoom(room);
 
     if (!this.rooms[room].clients.includes(client.id)) {

@@ -4,8 +4,12 @@ import begin from "#/app/runner/begin.ts";
 import processArgs from "#/app/runner/processArgs.ts";
 import runMessageBroker from "#/app/runner/runMessageBroker.ts";
 import runWorker from "#/app/runner/runWorker.ts";
+import { InputListener } from "@vef/easy-cli";
 
 export default async function appRunner(app: EasyApp, args: string[]) {
+  Deno.addSignalListener("SIGTERM", () => {
+    app.exit(0);
+  });
   const argsRecord = processArgs(args);
   const { realtimeOptions } = app.config;
   if (argsRecord.broker && realtimeOptions.enable) {
@@ -44,12 +48,25 @@ export default async function appRunner(app: EasyApp, args: string[]) {
   }
 
   if (argsRecord.serve) {
-    console.clear();
-    begin({
-      multiProcess: app.config.multiProcessing,
-      signal: new AbortController().signal,
-      args,
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+    const listener = new InputListener({
+      abortController,
+      hideCursor: true,
     });
+    signal.addEventListener("abort", (event) => {
+      easyLog.warning("Shutting down...", "Lifecycle", {
+        hideTrace: true,
+      });
+      listener.stop();
+      app.exit(0);
+    });
+    listener.listen();
+    const procs = await begin({
+      multiProcess: app.config.multiProcessing,
+      app,
+    });
+    app.processes.push(...procs);
     return;
   }
 

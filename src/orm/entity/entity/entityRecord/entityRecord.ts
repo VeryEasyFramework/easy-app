@@ -6,11 +6,12 @@ import type {
   EntityDefinition,
   FieldMethod,
   SafeType,
+  User,
 } from "@vef/types";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
-import { generateId, isEmpty, type User } from "#orm/utils/misc.ts";
+import { generateId, isEmpty } from "#orm/utils/misc.ts";
 import type { ChildList } from "#orm/entity/child/childRecord.ts";
 
 export interface EntityRecord {
@@ -288,7 +289,7 @@ export class EntityRecord implements EntityRecord {
 
   async runAction<R = void>(
     actionKey: string,
-    data?: Record<string, SafeType>,
+    data?: Record<string, any>,
   ): Promise<R> {
     const action = this.actions[actionKey];
     if (!action) {
@@ -307,6 +308,7 @@ export class EntityRecord implements EntityRecord {
         }
       }
     }
+    data = data || {};
     return await action.action(this, data) as R;
   }
   /**

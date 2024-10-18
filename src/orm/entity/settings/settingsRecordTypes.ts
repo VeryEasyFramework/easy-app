@@ -1,11 +1,11 @@
-import type { SettingsRecord } from "#orm/entity/settings/settingsRecord.ts";
+import type { SettingsRecordClass } from "#orm/entity/settings/settingsRecord.ts";
 import type { SafeReturnType, SafeType } from "@vef/types";
 
 export type SettingsHookFunction = (
-  settingsRecord: SettingsRecord,
+  settingsRecord: SettingsRecordClass,
 ) => Promise<void> | void;
 
 export type SettingsActionFunction = (
-  settingsRecord: SettingsRecord,
+  settingsRecord: SettingsRecordClass,
   params?: Record<string, SafeType>,
 ) => SafeReturnType;

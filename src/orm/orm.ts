@@ -23,14 +23,28 @@ import type { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.
 import type { SettingsEntityDefinition, User } from "@vef/types";
 
 import { migrateSettingsEntity } from "#orm/database/migrate/migrateSettingsEntity.ts";
-import type { SettingsRecord } from "#orm/entity/settings/settingsRecord.ts";
+import type { SettingsRecordClass } from "#orm/entity/settings/settingsRecord.ts";
 import { buildSettingsEntity } from "#orm/entity/settings/buildSettingsEntity.ts";
 import { buildSettingsRecordClass } from "#orm/entity/settings/buildSettingsRecordClass.ts";
 import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
 
 type GlobalHook = (
   entityId: string,
   record: EntityRecord,
+) => Promise<void> | void;
+
+type GlobalSettingsHook = {
+  (
+    settingsId: string,
+    record: SettingsRecordClass,
+  ): Promise<void> | void;
+};
+
+type GlobalSettingsSaveHook = (
+  settingsId: string,
+  record: SettingsRecordClass,
+  changedData: Record<string, any> | undefined,
 ) => Promise<void> | void;
 type GlobalSaveHook = (
   entityId: string,
@@ -47,6 +61,22 @@ interface GlobalHooks {
   beforeValidate: GlobalHook[];
 
   afterDelete: GlobalHook[];
+}
+
+interface GlobalSettingsHooks {
+  beforeSave: GlobalSettingsHook[];
+  afterSave: GlobalSettingsHook[];
+  afterChange: GlobalSettingsSaveHook[];
+  validate: GlobalSettingsHook[];
+  beforeValidate: GlobalSettingsHook[];
+}
+
+interface SettingsHookMap {
+  beforeSave: GlobalSettingsHook;
+  afterSave: GlobalSettingsHook;
+  validate: GlobalSettingsHook;
+  beforeValidate: GlobalSettingsHook;
+  afterChange: GlobalSettingsSaveHook;
 }
 
 interface HookMap {
@@ -66,7 +96,8 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
 
   settingsEntities: Array<SettingsEntity> = [];
   entityClasses: Record<string, typeof EntityRecord> = {};
-  settingsClasses: Record<string, typeof SettingsRecord> = {};
+  settingsClasses: Record<string, typeof SettingsRecordClass> = {};
+  app: EasyApp;
   private globalHooks: GlobalHooks = {
     beforeInsert: [],
     afterInsert: [],
@@ -76,6 +107,14 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     beforeValidate: [],
     afterChange: [],
     afterDelete: [],
+  };
+
+  private globalSettingsHooks: GlobalSettingsHooks = {
+    beforeSave: [],
+    afterSave: [],
+    validate: [],
+    beforeValidate: [],
+    afterChange: [],
   };
   private initialized: boolean = false;
 
@@ -89,8 +128,10 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     entities?: EasyEntity[];
     databaseType: D;
     databaseConfig: DatabaseConfig[D];
+    app: EasyApp;
     idFieldType?: EasyFieldType;
   }) {
+    this.app = options.app;
     this.registry = new FetchRegistry();
     this.dbType = options.databaseType;
     if (options.idFieldType) {
@@ -163,6 +204,23 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     for (const callback of this.globalHooks[hook]) {
       await callback(entityId, record, changedData);
     }
+  }
+
+  async runGlobalSettingsHook<H extends keyof GlobalSettingsHooks>(
+    hook: H,
+    settingsId: string,
+    record: SettingsRecordClass,
+    changedData?: Record<string, any>,
+  ) {
+    for (const callback of this.globalSettingsHooks[hook]) {
+      await callback(settingsId, record, changedData);
+    }
+  }
+  addGlobalSettingsHook<H extends keyof GlobalSettingsHooks>(
+    hook: H,
+    callback: SettingsHookMap[H],
+  ) {
+    (this.globalSettingsHooks[hook] as SettingsHookMap[H][]).push(callback);
   }
   addGlobalHook<H extends keyof GlobalHooks>(
     hook: H,
@@ -495,7 +553,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   async getSettings(
     settingsId: string,
     user?: User,
-  ): Promise<SettingsRecord> {
+  ): Promise<SettingsRecordClass> {
     const settingsClass = this.getSettingsClass(settingsId);
     const settingsRecord = new settingsClass();
     settingsRecord._user = user;
@@ -507,13 +565,13 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     settingsId: string,
     data: Record<string, any>,
     user?: User,
-  ): Promise<SettingsRecord> {
+  ): Promise<SettingsRecordClass> {
     const settingsRecord = await this.getSettings(settingsId, user);
     settingsRecord.update(data);
     await settingsRecord.save();
     return settingsRecord;
   }
-  private getSettingsClass(settingsId: string): typeof SettingsRecord {
+  private getSettingsClass(settingsId: string): typeof SettingsRecordClass {
     const settingsClass = this.settingsClasses[settingsId];
     if (!settingsClass) {
       raiseOrmException(

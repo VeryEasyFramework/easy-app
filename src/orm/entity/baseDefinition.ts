@@ -16,13 +16,12 @@ import {
   toCamelCase,
 } from "@vef/string-utils";
 import { raiseOrmException } from "#orm/ormException.ts";
+import type { SettingsHook } from "@vef/types";
+import type { SettingsActionDefinition } from "#orm/entity/settings/settingsRecord.ts";
 import type {
-  SettingsAction,
-  SettingsActionDefinition,
   SettingsEntityHookDefinition,
   SettingsEntityHooks,
-  SettingsHook,
-} from "@vef/types";
+} from "#orm/entity/settings/settingsEntity.ts";
 
 export interface BaseDefinitionConfig {
   label: string;
@@ -48,7 +47,7 @@ interface ActionsDefMap<F extends Array<EasyField>> {
 }
 interface ActionsMap {
   entity: EntityAction;
-  settings: SettingsAction;
+  settings: SettingsActionDefinition & { key: string };
 }
 interface HooksMap {
   entity: EntityHook;

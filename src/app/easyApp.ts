@@ -36,6 +36,7 @@ import { emailPack } from "#/package/emailPack/emailPack.ts";
 import appRunner from "#/app/runner/mod.ts";
 import { workersPack } from "#/package/workers/workersPack.ts";
 import type { SettingsEntityDefinition } from "../../../vef-types/src/orm/settings.ts";
+import type { AppProcess } from "#/app/runner/begin.ts";
 
 const config = await initAppConfig();
 /**
@@ -43,9 +44,9 @@ const config = await initAppConfig();
  */
 export class EasyApp {
   private hasError: boolean = false;
-  private server?: Deno.HttpServer;
+  server?: Deno.HttpServer;
   config!: Required<EasyAppConfig<DBType>>;
-  processNumber: string = "0";
+  processNumber: string = "Main";
 
   get fullAppName(): string {
     return `${this.config.appName} (${this.processNumber})`;
@@ -107,6 +108,7 @@ export class EasyApp {
     this.actions = {};
     this.orm = new EasyOrm({
       databaseType: this.config.ormOptions.databaseType,
+      app: this,
       databaseConfig: this.config.ormOptions.databaseConfig,
       idFieldType: this.config.ormOptions.idFieldType,
       entities: [],
@@ -165,6 +167,7 @@ export class EasyApp {
       }
     });
   }
+  processes: Array<AppProcess> = [];
 
   cacheGet(table: string, id: string): SafeType | undefined {
     return this.cache.get(table, id);
@@ -491,9 +494,33 @@ export class EasyApp {
   addInitAction(initAction: InitAction): void {
     this.initActions.push(initAction);
   }
-  exit(code?: number): void {
+  exit(code?: number, wait?: boolean): void {
     this.server?.shutdown();
-    prompt("Press enter to exit...");
+    this.processes.forEach((appProcess) => {
+      try {
+        appProcess.process.kill("SIGTERM");
+        easyLog.info(
+          `Stopped ${appProcess.name} (${appProcess.process.pid})`,
+          "Shutdown",
+          {
+            compact: true,
+          },
+        );
+      } catch (e) {
+        if (e instanceof Deno.errors.NotFound) {
+          easyLog.warning(
+            `Process ${appProcess.name} (${appProcess.process.pid}) not found`,
+            `${this.fullAppName}`,
+            {
+              compact: true,
+            },
+          );
+        }
+      }
+    });
+    if (wait) {
+      prompt("Press enter to exit...");
+    }
     Deno.exit(code);
   }
 

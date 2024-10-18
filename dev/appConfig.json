@@ -12,8 +12,7 @@
   },
   "multiProcessing": {
     "enable": true,
-    "processCount": "auto",
-    "max": 4
+    "processCount": "auto"
   },
   "workers": {
     "short": {

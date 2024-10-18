@@ -1,5 +1,5 @@
 import type { EasyOrm } from "#orm/orm.ts";
-import { SettingsRecord } from "#orm/entity/settings/settingsRecord.ts";
+import { SettingsRecordClass } from "#orm/entity/settings/settingsRecord.ts";
 import { validateField } from "#orm/entity/field/validateField.ts";
 
 import type {
@@ -7,7 +7,7 @@ import type {
   SettingsEntityDefinition,
   SettingsEntityHookDefinition,
   SettingsHook,
-} from "#orm/entity/settings/settingsDefTypes.ts";
+} from "@vef/types";
 import type { SettingsHookFunction } from "#orm/entity/settings/settingsRecordTypes.ts";
 
 export function buildSettingsRecordClass(
@@ -16,7 +16,7 @@ export function buildSettingsRecordClass(
 ) {
   const hooks = extractHooks(settingsEntity);
   const actions = extractActions(settingsEntity);
-  const settingsRecordClass = class extends SettingsRecord {
+  const settingsRecordClass = class extends SettingsRecordClass {
     override orm = orm;
     override settingsDefinition = settingsEntity;
     override _beforeSave = hooks.beforeSave;
@@ -31,7 +31,7 @@ export function buildSettingsRecordClass(
 }
 
 function setFields(
-  settingsRecordClass: typeof SettingsRecord,
+  settingsRecordClass: typeof SettingsRecordClass,
   settingsEntity: SettingsEntityDefinition,
 ) {
   settingsEntity.fields.forEach((field) => {

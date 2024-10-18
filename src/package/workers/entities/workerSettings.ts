@@ -1,5 +1,8 @@
 import { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
 import type { Choice, EasyField } from "@vef/types";
+import startProcess from "#/app/runner/startProcess.ts";
+import { toTitleCase } from "@vef/string-utils";
+import { easyLog } from "#/log/logging.ts";
 
 export const workerSettings = new SettingsEntity("workerSettings");
 
@@ -42,9 +45,9 @@ Object.keys(workerFields).forEach((worker) => {
     defaultValue: "idle",
     readOnly: true,
     choices: [{
-      key: "idle",
-      label: "Idle",
-      color: "muted",
+      key: "ready",
+      label: "Ready",
+      color: "success",
     }, {
       key: "running",
       label: "Running",
@@ -69,25 +72,35 @@ workerSettings.addFields(workerFields.short);
 workerSettings.addFields(workerFields.medium);
 workerSettings.addFields(workerFields.long);
 
-workerSettings.addAction("stopWorker", {
-  label: "Stop Worker",
-  description: "Stop the worker",
-  async action(settings, { worker }) {
+workerSettings.addHook("beforeSave", {
+  label: "Toggle Workers",
+  action(settings) {
+    const workers = ["short", "medium", "long"];
+    for (const worker of workers) {
+      const enabled = settings[`${worker}WorkerEnabled`] as boolean;
+      const pid = settings[`${worker}WorkerPid`] as number;
+      if (enabled && !pid) {
+        const title = `Worker - ${toTitleCase(worker)}`;
+        const process = startProcess(title, {
+          args: ["--worker", worker],
+        });
+        settings[`${worker}WorkerStatus`] = "ready";
+        settings[`${worker}WorkerPid`] = process.process.pid;
+        settings.orm.app.processes.push(process);
+      }
+      if (!enabled && pid) {
+        try {
+          Deno.kill(pid, "SIGTERM");
+        } catch (e) {
+          if (e instanceof Deno.errors.NotFound) {
+            // Worker already stopped
+          } else {
+            throw e;
+          }
+        }
+        settings[`${worker}WorkerPid`] = null;
+        settings[`${worker}WorkerStatus`] = "stopped";
+      }
+    }
   },
-  params: [{
-    key: "worker",
-    fieldType: "ChoicesField",
-    label: "Worker",
-    description: "The worker to stop",
-    choices: [{
-      key: "short",
-      label: "Short Worker",
-    }, {
-      key: "medium",
-      label: "Medium Worker",
-    }, {
-      key: "long",
-      label: "Long Worker",
-    }],
-  }],
 });

@@ -10,7 +10,6 @@ export const bootEntityRooms: BootAction = {
       rooms.push({
         roomName: `entity:${entity.entityId}`,
         description: `Realtime room for the ${entity.config.label} entity`,
-        events: ["create", "update", "delete", "list"],
       });
     }
     app.addRealtimeRooms(rooms);

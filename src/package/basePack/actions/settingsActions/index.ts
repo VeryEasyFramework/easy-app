@@ -5,10 +5,12 @@ import {
   updateSettingsRecordAction,
   updateSettingsValueAction,
 } from "#/package/basePack/actions/settingsActions/updateSettingsRecordAction.ts";
+import { runSettingsAction } from "#/package/basePack/actions/settingsActions/runSettingsAction.ts";
 
 export const settingsActions: EasyAction[] = [
   getSettingsRecordAction,
   getSettingsDefAction,
   updateSettingsRecordAction,
   updateSettingsValueAction,
+  runSettingsAction,
 ];

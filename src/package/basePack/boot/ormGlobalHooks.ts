@@ -69,6 +69,29 @@ export const ormGlobalHooks: BootAction = {
       },
     );
 
+    app.orm.addGlobalSettingsHook(
+      "afterChange",
+      async (settingsId, settingsRecord, changedData) => {
+        if (!changedData) {
+          return;
+        }
+        const room = `settings:${settingsId}`;
+        if (settingsRecord.settingsDefinition.config.editLog) {
+          await app.orm.createEntity("editLog", {
+            entity: "settings",
+            recordId: settingsId,
+            action: "update",
+            recordTitle: settingsId,
+            user: settingsRecord._user?.id,
+            editData: changedData,
+          }, settingsRecord._user);
+        }
+        app.notify(room, "update", {
+          settingsId,
+          data: settingsRecord.data,
+        });
+      },
+    );
     app.orm.addGlobalHook("afterDelete", async (entity, entityRecord) => {
       if (entity === "editLog") {
         return;

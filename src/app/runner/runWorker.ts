@@ -18,10 +18,17 @@ export default function runWorker(
   app.serve({
     name: `${mode} worker`,
   });
-  Deno.pid;
-  app.orm.updateSettings("workerSettings", {
-    [`${mode}WorkerPid`]: Deno.pid,
-    [`${mode}WorkerStatus`]: "running",
+
+  Deno.addSignalListener("SIGTERM", async () => {
+    await app.orm.updateSettings("workerSettings", {
+      [`${mode}WorkerStatus`]: "stopped",
+      [`${mode}WorkerPid`]: null,
+    });
+    easyLog.warning("Shutting down", `Worker - ${mode}`, {
+      compact: true,
+      hideTrace: true,
+    });
+    app.exit(0);
   });
   checkForTasks(app);
 }
