@@ -1,14 +1,20 @@
 import type {
   ChildListDefinition,
+  Choice,
   EasyEntityHooks,
   EasyField,
+  EasyFieldType,
   EntityAction,
   EntityActionDefinition,
   EntityHook,
   EntityHookDefinition,
   FieldGroupDefinition,
 } from "@vef/types";
-import { camelToSnakeCase, camelToTitleCase, toCamelCase, } from "@vef/string-utils";
+import {
+  camelToSnakeCase,
+  camelToTitleCase,
+  toCamelCase,
+} from "@vef/string-utils";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type {
   SettingsAction,
@@ -16,7 +22,7 @@ import type {
   SettingsEntityHookDefinition,
   SettingsEntityHooks,
   SettingsHook,
-} from "#orm/entity/settings/settingsDefTypes.ts";
+} from "@vef/types";
 
 export interface BaseDefinitionConfig {
   label: string;
@@ -36,9 +42,9 @@ interface EasyHooksMap {
   settings: SettingsEntityHooks;
 }
 
-interface ActionsDefMap {
-  entity: EntityActionDefinition;
-  settings: SettingsActionDefinition;
+interface ActionsDefMap<F extends Array<EasyField>> {
+  entity: EntityActionDefinition<F>;
+  settings: SettingsActionDefinition<F>;
 }
 interface ActionsMap {
   entity: EntityAction;
@@ -168,7 +174,15 @@ export abstract class BaseDefinition<
     (this.hooks as any)[hook].push(definition);
   }
 
-  addAction(actionName: string, actionDefinition: ActionsDefMap[T]) {
+  addAction<
+    P extends string,
+    K extends PropertyKey,
+    C extends Choice<K>[],
+    F extends Array<EasyField<P, K, C>>,
+  >(
+    actionName: string,
+    actionDefinition: ActionsDefMap<F>[T],
+  ) {
     this.actions.push(
       {
         key: actionName,

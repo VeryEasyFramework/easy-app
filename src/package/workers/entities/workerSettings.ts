@@ -1,6 +1,5 @@
 import { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
-import type { Choice } from "../../../../../vef-types/mod.ts";
-import { w } from "../../../../dev/public/assets/index-CQnUWCV4.js";
+import type { Choice, EasyField } from "@vef/types";
 
 export const workerSettings = new SettingsEntity("workerSettings");
 
@@ -8,19 +7,6 @@ workerSettings.setConfig({
   label: "Worker Settings",
   description: "Settings for the worker",
 });
-
-const workerStatusChoices: Choice[] = [{
-  key: "idle",
-  label: "Idle",
-  color: "muted",
-}, {
-  key: "running",
-  label: "Running",
-  color: "warning",
-}, {
-  key: "stopped",
-  label: "Stopped",
-}];
 
 workerSettings.addFieldGroups([{
   key: "shortWorker",
@@ -33,57 +19,75 @@ workerSettings.addFieldGroups([{
   title: "Long Worker",
 }]);
 
-workerSettings.addFields([{
-  key: "shortWorkerEnabled",
-  fieldType: "BooleanField",
-  label: "Short Worker Enabled",
-  description: "Enable the short worker",
-  defaultValue: true,
-  group: "shortWorker",
-}, {
-  key: "shortWorkerStatus",
-  fieldType: "ChoicesField",
-  label: "Short Worker Status",
-  description: "The status of the short worker",
-  defaultValue: "idle",
-  readOnly: true,
-  choices: workerStatusChoices,
-  group: "shortWorker",
-}]);
+const workerFields: Record<string, EasyField[]> = {
+  short: [],
+  medium: [],
+  long: [],
+};
 
-workerSettings.addFields([{
-  key: "mediumWorkerEnabled",
-  fieldType: "BooleanField",
-  label: "Medium Worker Enabled",
-  description: "Enable the medium worker",
-  defaultValue: true,
+Object.keys(workerFields).forEach((worker) => {
+  workerFields[worker].push({
+    key: `${worker}WorkerEnabled`,
+    fieldType: "BooleanField",
+    label: `${worker} Worker Enabled`,
+    description: `Enable the ${worker} worker`,
+    defaultValue: true,
+    group: `${worker}Worker`,
+  });
+  workerFields[worker].push({
+    key: `${worker}WorkerStatus`,
+    fieldType: "ChoicesField",
+    label: `${worker} Worker Status`,
+    description: `The status of the ${worker} worker`,
+    defaultValue: "idle",
+    readOnly: true,
+    choices: [{
+      key: "idle",
+      label: "Idle",
+      color: "muted",
+    }, {
+      key: "running",
+      label: "Running",
+      color: "warning",
+    }, {
+      key: "stopped",
+      label: "Stopped",
+    }],
+    group: `${worker}Worker`,
+  });
+  workerFields[worker].push({
+    key: `${worker}WorkerPid`,
+    fieldType: "IntField",
+    label: `${worker} Worker PID`,
+    description: `The PID of the ${worker} worker`,
+    readOnly: true,
+    group: `${worker}Worker`,
+  });
+});
 
-  group: "mediumWorker",
-}, {
-  key: "mediumWorkerStatus",
-  fieldType: "ChoicesField",
-  label: "Medium Worker Status",
-  description: "The status of the medium worker",
-  defaultValue: "idle",
-  readOnly: true,
-  choices: workerStatusChoices,
-  group: "mediumWorker",
-}]);
+workerSettings.addFields(workerFields.short);
+workerSettings.addFields(workerFields.medium);
+workerSettings.addFields(workerFields.long);
 
-workerSettings.addFields([{
-  key: "longWorkerEnabled",
-  fieldType: "BooleanField",
-  label: "Long Worker Enabled",
-  description: "Enable the long worker",
-  defaultValue: true,
-  group: "longWorker",
-}, {
-  key: "longWorkerStatus",
-  fieldType: "ChoicesField",
-  label: "Long Worker Status",
-  description: "The status of the long worker",
-  defaultValue: "idle",
-  readOnly: true,
-  choices: workerStatusChoices,
-  group: "longWorker",
-}]);
+workerSettings.addAction("stopWorker", {
+  label: "Stop Worker",
+  description: "Stop the worker",
+  async action(settings, { worker }) {
+  },
+  params: [{
+    key: "worker",
+    fieldType: "ChoicesField",
+    label: "Worker",
+    description: "The worker to stop",
+    choices: [{
+      key: "short",
+      label: "Short Worker",
+    }, {
+      key: "medium",
+      label: "Medium Worker",
+    }, {
+      key: "long",
+      label: "Long Worker",
+    }],
+  }],
+});

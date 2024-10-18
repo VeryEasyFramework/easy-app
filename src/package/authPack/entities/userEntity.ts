@@ -164,8 +164,7 @@ userEntity.addAction("generateApiToken", {
 });
 
 userEntity.addAction("sayHello", {
-  action(entity, data) {
-    const name = data?.name as string;
+  action(entity, { name }) {
     const userName = entity.fullName as string;
     easyLog.debug(`Hello ${name}, I am ${userName}`);
   },

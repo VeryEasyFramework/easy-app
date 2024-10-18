@@ -8,7 +8,6 @@ import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
 import type { SafeType, User } from "@vef/types";
 import type { EasyCache } from "#/cache/cache.ts";
-import { C } from "../../dev/public/assets/index-CQnUWCV4.js";
 
 class SocketRoom {
   roomName: string;

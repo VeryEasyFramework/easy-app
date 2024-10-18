@@ -18,7 +18,11 @@ export default function runWorker(
   app.serve({
     name: `${mode} worker`,
   });
-
+  Deno.pid;
+  app.orm.updateSettings("workerSettings", {
+    [`${mode}WorkerPid`]: Deno.pid,
+    [`${mode}WorkerStatus`]: "running",
+  });
   checkForTasks(app);
 }
 async function checkForTasks(app: EasyApp) {
