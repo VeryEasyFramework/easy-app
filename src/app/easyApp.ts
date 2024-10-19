@@ -169,28 +169,64 @@ export class EasyApp {
   }
   processes: Array<AppProcess> = [];
 
-  cacheGet(table: string, id: string): SafeType | undefined {
-    return this.cache.get(table, id);
+  /**
+   * Get an item from the in-memory cache.
+   * The cache is shared across all instances of the app and is not persisted.
+   * @param table The table to get the list from
+   * @param id The id of the item to get
+   * @returns The item from the cache
+   */
+  cacheGet<T = SafeType>(table: string, id: string): T | undefined {
+    return this.cache.get<T>(table, id);
   }
 
-  cacheGetList(table: string): Array<{ id: string; value: SafeType }> {
-    const list = this.cache.getList(table);
+  /**
+   * Get a list of items from the in-memory cache.
+   * The cache is shared across all instances of the app and is not persisted.
+   * @param table The table to get the list from
+   * @returns An array of items in the list
+   */
+  cacheGetList<T = SafeType>(table: string): Array<{ id: string; value: T }> {
+    const list = this.cache.getList<T>(table);
     return list.filter((item) => item !== undefined) as Array<
-      { id: string; value: SafeType }
+      { id: string; value: T }
     >;
   }
+  /**
+   * Set an item in the in-memory cache. This will sync the cache across all instances of the app.
+   * @param table The table to store the item in
+   * @param id The id of the item used to retrieve it later
+   * @param value The value to store
+   */
   cacheSet(table: string, id: string, value: SafeType): void {
     this.realtime.cache("set", { table, id, value });
     this.cache.set(table, id, value);
   }
+
+  /**
+   * Delete an item from the in-memory cache. This will delete the item from all instances of the app.
+   * @param table
+   * @param id
+   */
   cacheDelete(table: string, id: string): void {
     this.realtime.cache("delete", { table, id });
     this.cache.delete(table, id);
   }
+
+  /**
+   * Clear the in-memory cache. This will delete all items from the cache across all instances of the app.
+   */
   cacheClear(): void {
     this.realtime.cache("clear", {});
     this.cache.clear();
   }
+
+  /**
+   * Add items to an existing list. If the list doesn't exist, it will create a new one.
+   * @param table The table to store the list in
+   * @param values The items to add to the list
+   * @returns void
+   */
   cacheSetList(
     table: string,
     values: { id: string; value: SafeType }[],
@@ -198,6 +234,13 @@ export class EasyApp {
     this.realtime.cache("setList", { table, values });
     this.cache.setList(table, values);
   }
+
+  /**
+   * Replace an existing list with new items. Deletes all existing items in the list!
+   * If there's no existing list, it will create a new one.
+   * @param table The table to store the list in
+   * @param values The items to add to the list
+   */
   cacheAppendList(
     table: string,
     values: { id: string; value: SafeType }[],
@@ -205,6 +248,11 @@ export class EasyApp {
     this.realtime.cache("appendList", { table, values });
     this.cache.appendList(table, values);
   }
+
+  /**
+   * Delete a list from the cache. This will delete the list from all instances of the app.
+   * @param table The table to delete the list from
+   */
   cacheDeleteList(table: string): void {
     this.realtime.cache("deleteList", { table });
     this.cache.deleteList(table);
@@ -223,17 +271,6 @@ export class EasyApp {
       fullDocs.push(groupDocs);
     }
     return fullDocs;
-  }
-
-  set mainModule(module: string) {
-    let mainFile = "main.ts";
-    let mainDir = module;
-    if (module.endsWith(".ts")) {
-      mainFile = module.split("/").pop() || "main.ts";
-      mainDir = module.split("/").slice(0, -1).join("/");
-    }
-    this.config.appRootPath = mainDir.replace("file://", "");
-    this.config.mainModule = mainFile;
   }
 
   /**

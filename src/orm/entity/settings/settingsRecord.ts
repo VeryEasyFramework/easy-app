@@ -108,6 +108,13 @@ export class SettingsRecordClass implements SettingsRecordClass {
         }),
       });
     }
+    await this.load();
+
+    this.orm.app.cacheSet(
+      "settings",
+      this.settingsDefinition.settingsId,
+      this.data,
+    );
     await this.afterSave();
 
     await this.orm.runGlobalSettingsHook(
@@ -118,7 +125,14 @@ export class SettingsRecordClass implements SettingsRecordClass {
     );
     return this.data;
   }
+
   async load(): Promise<void> {
+    const data = await this.orm.app.cacheGet(
+      "settings",
+      this.settingsDefinition.settingsId,
+    );
+  }
+  async reload(): Promise<void> {
     // load data from db
 
     const results = await this.orm.database.getRows<{

@@ -52,7 +52,6 @@ const configDefault: EasyAppConfig<"postgres"> = {
 
 const optionalDefault: Partial<EasyAppConfig<"postgres">> = {
   appRootPath: ".",
-  mainModule: "main.ts",
   pathPrefix: "",
 };
 

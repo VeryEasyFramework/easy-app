@@ -89,25 +89,12 @@ export interface EasyAppConfig<D extends DBType> {
   };
 
   /**
-   * The file name of the main module for the app.
-   *
-   * For example `main.ts` or `app.ts`
-   */
-  mainModule?: string;
-  /**
    * The name of the app. This is used in the logs and other places where the app name is needed.
    */
 
   appName?: string;
   /**
    * The path prefix for the app. This is useful when the app is running behind a reverse proxy.
-   *
-   * **Example:**
-   * ```ts
-   * const app = new EasyApp({
-   * pathPrefix: "/myapp",
-   * });
-   * ```
    */
   pathPrefix?: string;
 
@@ -158,6 +145,4 @@ export interface EasyAppConfig<D extends DBType> {
     enable: boolean;
     port: number;
   };
-
-  emailOptions?: SMTPOptions;
 }
