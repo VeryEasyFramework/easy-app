@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/VeryEasyFramework/easy-app/c6aa966fbec6ed7d043a74570c259b6e0c6819b3/src/appConfig/easyAppConfig.json",
   "appName": "Easy App",
   "singlePageApp": false,
   "staticFilesOptions": {
