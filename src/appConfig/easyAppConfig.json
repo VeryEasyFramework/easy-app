@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EasyAppConfig",
+  "type": "object",
+  "properties": {
+    "environment": {
+      "type": "string",
+      "enum": ["development", "production"],
+      "description": "The environment in which the app is running."
+    },
+    "appRootPath": {
+      "type": "string",
+      "description": "The root path of the app. Defaults to the current directory."
+    },
+    "easyPacks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of easy packs."
+    },
+    "multiProcessing": {
+      "type": "object",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to enable multiprocessing or not."
+        },
+        "processCount": {
+          "type": ["string", "number"],
+          "enum": ["auto"],
+          "default": "auto",
+          "description": "The number of instances of the app to run in parallel."
+        },
+        "max": {
+          "type": "number",
+          "description": "The maximum number of instances of the app to run in parallel."
+        }
+      },
+      "required": ["enable", "processCount"]
+    },
+    "workers": {
+      "type": "object",
+      "properties": {
+        "short": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "number",
+              "default": 12700,
+              "description": "The port to run the short worker on."
+            }
+          },
+          "required": ["port"]
+        },
+        "medium": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "number",
+              "default": 12701,
+              "description": "The port to run the medium worker on."
+            }
+          },
+          "required": ["port"]
+        },
+        "long": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "number",
+              "default": 12702,
+              "description": "The port to run the long worker on."
+            }
+          },
+          "required": ["port"]
+        }
+      },
+      "required": ["short", "medium", "long"]
+    },
+    "mainModule": {
+      "type": "string",
+      "description": "The file name of the main module for the app."
+    },
+    "appName": {
+      "type": "string",
+      "description": "The name of the app."
+    },
+    "pathPrefix": {
+      "type": "string",
+      "description": "The path prefix for the app."
+    },
+    "singlePageApp": {
+      "type": "boolean",
+      "description": "Set to true if the app is a single page app (SPA)."
+    },
+    "staticFilesOptions": {
+      "type": "object",
+      "properties": {
+        "cache": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to cache files or not."
+        },
+        "staticFilesRoot": {
+          "type": "string",
+          "description": "The root directory of the static files."
+        }
+      }
+    },
+    "serverOptions": {
+      "type": "object",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "The hostname to run the server on."
+        },
+        "port": {
+          "type": "number",
+          "default": 8000,
+          "description": "The port to run the server on."
+        },
+        "reusePort": {
+          "type": "boolean",
+          "description": "Whether to reuse the port or not."
+        }
+      }
+    },
+    "ormOptions": {
+      "type": "object",
+      "properties": {
+        "databaseType": {
+          "type": "string",
+          "description": "The type of database to use."
+        },
+        "databaseConfig": {
+          "type": "object",
+          "description": "The configuration object for the database."
+        },
+        "idFieldType": {
+          "type": "string",
+          "description": "The type of the ID field."
+        }
+      }
+    },
+    "realtimeOptions": {
+      "type": "object",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "description": "Whether to enable real-time features or not."
+        },
+        "port": {
+          "type": "number",
+          "description": "The port to run the real-time server on."
+        }
+      }
+    },
+    "emailOptions": {
+      "type": "object",
+      "description": "SMTP options for email configuration."
+    }
+  }
+}
