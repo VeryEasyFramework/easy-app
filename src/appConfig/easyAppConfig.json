@@ -14,13 +14,16 @@
     },
     "easyPacks": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
-        "type": "string"
+        "enum": ["authPack", "emailPack", "workersPack"]
       },
-      "description": "Array of easy packs."
+      "description": "The built-in Easy Packs to include in the app."
     },
     "multiProcessing": {
       "type": "object",
+      "title": "Multi-Processing",
+      "description": "Options for running multiple instances of the app on separate threads. This controls the number of instances of the app that will run in parallel to handle requests on the web server.",
       "properties": {
         "enable": {
           "type": "boolean",
@@ -29,12 +32,21 @@
         },
         "processCount": {
           "type": ["string", "number"],
-          "enum": ["auto"],
+          "oneOf": [
+            {
+              "enum": ["auto"]
+            },
+            {
+              "type": "number",
+              "minimum": 1
+            }
+          ],
           "default": "auto",
           "description": "The number of instances of the app to run in parallel."
         },
         "max": {
           "type": "number",
+          "minimum": 1,
           "description": "The maximum number of instances of the app to run in parallel."
         }
       },
@@ -42,6 +54,8 @@
     },
     "workers": {
       "type": "object",
+      "description": "Options for running worker processes.",
+      "title": "Task Queue Workers",
       "properties": {
         "short": {
           "type": "object",
@@ -79,12 +93,10 @@
       },
       "required": ["short", "medium", "long"]
     },
-    "mainModule": {
-      "type": "string",
-      "description": "The file name of the main module for the app."
-    },
     "appName": {
       "type": "string",
+      "title": "App Name",
+      "default": "Easy App",
       "description": "The name of the app."
     },
     "pathPrefix": {
@@ -97,6 +109,7 @@
     },
     "staticFilesOptions": {
       "type": "object",
+      "description": "Options for serving static files.",
       "properties": {
         "cache": {
           "type": "boolean",
@@ -114,16 +127,13 @@
       "properties": {
         "hostname": {
           "type": "string",
+          "default": "127.0.0.1",
           "description": "The hostname to run the server on."
         },
         "port": {
           "type": "number",
           "default": 8000,
           "description": "The port to run the server on."
-        },
-        "reusePort": {
-          "type": "boolean",
-          "description": "Whether to reuse the port or not."
         }
       }
     },
@@ -136,30 +146,65 @@
         },
         "databaseConfig": {
           "type": "object",
-          "description": "The configuration object for the database."
-        },
-        "idFieldType": {
-          "type": "string",
-          "description": "The type of the ID field."
+          "description": "The configuration object for the database.",
+          "properties": {
+            "size": {
+              "type": "number",
+              "default": 1,
+              "description": "The size of the database connection pool."
+            },
+            "debug": {
+              "type": "boolean",
+              "title": "Debug Mode",
+              "default": false,
+              "description": "Enables debug mode for the database. This will log all queries to the console."
+            },
+            "clientOptions": {
+              "type": "object",
+              "description": "The client connection options for the database.",
+              "properties": {
+                "user": {
+                  "type": "string",
+                  "description": "The username for the database."
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password for the database."
+                },
+                "database": {
+                  "type": "string",
+                  "description": "The name of the database."
+                },
+                "host": {
+                  "type": "string",
+                  "description": "The host of the database."
+                },
+                "port": {
+                  "type": "number",
+                  "description": "The port of the database."
+                }
+              }
+            }
+          }
         }
       }
     },
     "realtimeOptions": {
       "type": "object",
+      "description": "Options for real-time features.",
+      "title": "Real-Time Options",
       "properties": {
         "enable": {
           "type": "boolean",
+          "default": true,
           "description": "Whether to enable real-time features or not."
         },
         "port": {
           "type": "number",
+          "default": 11254,
           "description": "The port to run the real-time server on."
         }
       }
-    },
-    "emailOptions": {
-      "type": "object",
-      "description": "SMTP options for email configuration."
     }
   }
 }

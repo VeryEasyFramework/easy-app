@@ -12,6 +12,10 @@ workerSettings.setConfig({
 });
 
 workerSettings.addFieldGroups([{
+  key: "shared",
+  title: "Shared Settings",
+  description: "Shared settings for all workers",
+}, {
   key: "shortWorker",
   title: "Short Worker",
 }, {
@@ -27,45 +31,99 @@ const workerFields: Record<string, EasyField[]> = {
   medium: [],
   long: [],
 };
-
-Object.keys(workerFields).forEach((worker) => {
-  workerFields[worker].push({
-    key: `${worker}WorkerEnabled`,
-    fieldType: "BooleanField",
-    label: `${worker} Worker Enabled`,
-    description: `Enable the ${worker} worker`,
-    defaultValue: true,
-    group: `${worker}Worker`,
-  });
-  workerFields[worker].push({
-    key: `${worker}WorkerStatus`,
-    fieldType: "ChoicesField",
-    label: `${worker} Worker Status`,
-    description: `The status of the ${worker} worker`,
-    defaultValue: "idle",
-    readOnly: true,
-    choices: [{
-      key: "ready",
-      label: "Ready",
-      color: "success",
-    }, {
-      key: "running",
-      label: "Running",
-      color: "warning",
-    }, {
-      key: "stopped",
-      label: "Stopped",
-    }],
-    group: `${worker}Worker`,
-  });
-  workerFields[worker].push({
-    key: `${worker}WorkerPid`,
+workerSettings.addFields([
+  {
+    key: "maxTaskCount",
     fieldType: "IntField",
-    label: `${worker} Worker PID`,
-    description: `The PID of the ${worker} worker`,
-    readOnly: true,
-    group: `${worker}Worker`,
-  });
+    label: "Max Concurrent Tasks",
+    description:
+      `The maximum number of tasks that can be run concurrently for each worker`,
+    defaultValue: 5,
+    group: "shared",
+  },
+  {
+    key: "waitInterval",
+    fieldType: "IntField",
+    label: "Wait Interval",
+    description:
+      `The interval in seconds to wait before checking for new tasks`,
+    defaultValue: 60,
+    group: "shared",
+  },
+]);
+Object.keys(workerFields).forEach((worker) => {
+  const title = toTitleCase(worker);
+  workerFields[worker] = [
+    {
+      key: `${worker}WorkerEnabled`,
+      fieldType: "BooleanField",
+      label: "Enabled",
+      description: `Enable the ${worker} worker`,
+      defaultValue: true,
+      group: `${worker}Worker`,
+    },
+    {
+      key: `${worker}WorkerStatus`,
+      fieldType: "ChoicesField",
+      label: "Status",
+      description: `The status of the ${worker} worker`,
+      defaultValue: "idle",
+      readOnly: true,
+      choices: [{
+        key: "ready",
+        label: "Ready",
+        color: "success",
+      }, {
+        key: "running",
+        label: "Running",
+        color: "warning",
+      }, {
+        key: "stopped",
+        label: "Stopped",
+      }],
+      group: `${worker}Worker`,
+    },
+    {
+      key: `${worker}WorkerPid`,
+      fieldType: "IntField",
+      label: "Worker PID",
+      description: `The PID of the ${worker} worker`,
+      readOnly: true,
+      group: `${worker}Worker`,
+    },
+    {
+      key: `${worker}QueuedTasks`,
+      fieldType: "IntField",
+      label: "Queued Tasks",
+      description: `The number of tasks queued for the ${worker} worker`,
+      readOnly: true,
+      group: `${worker}Worker`,
+    },
+    {
+      key: `${worker}RunningTasks`,
+      fieldType: "IntField",
+      label: "Running Tasks",
+      description: `The number of tasks running for the ${worker} worker`,
+      readOnly: true,
+      group: `${worker}Worker`,
+    },
+    {
+      key: `${worker}CompletedTasks`,
+      fieldType: "IntField",
+      label: "Completed Tasks",
+      description: `The number of tasks completed for the ${worker} worker`,
+      readOnly: true,
+      group: `${worker}Worker`,
+    },
+    {
+      key: `${worker}FailedTasks`,
+      fieldType: "IntField",
+      label: "Failed Tasks",
+      description: `The number of tasks failed for the ${worker} worker`,
+      readOnly: true,
+      group: `${worker}Worker`,
+    },
+  ];
 });
 
 workerSettings.addFields(workerFields.short);
@@ -76,6 +134,7 @@ workerSettings.addHook("beforeSave", {
   label: "Toggle Workers",
   action(settings) {
     const workers = ["short", "medium", "long"];
+
     for (const worker of workers) {
       const enabled = settings[`${worker}WorkerEnabled`] as boolean;
       const pid = settings[`${worker}WorkerPid`] as number;
@@ -102,5 +161,47 @@ workerSettings.addHook("beforeSave", {
         settings[`${worker}WorkerStatus`] = "stopped";
       }
     }
+  },
+});
+
+workerSettings.addAction("updateTaskCount", {
+  async action(settings) {
+    const results = await settings.orm.countGrouped("taskQueue", [
+      "worker",
+      "status",
+    ]);
+    const workerCounts: Record<string, Record<string, number>> = {
+      short: {
+        queued: 0,
+        running: 0,
+        completed: 0,
+        failed: 0,
+      },
+      medium: {
+        queued: 0,
+        running: 0,
+        completed: 0,
+        failed: 0,
+      },
+      long: {
+        queued: 0,
+        running: 0,
+        completed: 0,
+        failed: 0,
+      },
+    };
+    results.forEach((result) => {
+      workerCounts[result.worker][result.status] = result.count;
+    });
+
+    for (const worker of ["short", "medium", "long"]) {
+      settings[`${worker}QueuedTasks`] = workerCounts[worker].queued;
+      settings[`${worker}RunningTasks`] = workerCounts[worker].running;
+      settings[`${worker}CompletedTasks`] = workerCounts[worker].completed;
+      settings[`${worker}FailedTasks`] = workerCounts[worker].failed;
+    }
+
+    settings.save();
+    return results;
   },
 });

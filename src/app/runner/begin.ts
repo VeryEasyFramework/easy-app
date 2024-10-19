@@ -4,7 +4,6 @@ import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
 import { easyLog } from "#/log/logging.ts";
 import { toTitleCase } from "@vef/string-utils";
 import type { EasyApp } from "#/app/easyApp.ts";
-import { w } from "../../../dev/release/public/assets/index-hlzIjE76.js";
 
 interface BeginOptions {
   multiProcess: EasyAppConfig<"postgres">["multiProcessing"];

@@ -39,6 +39,12 @@ export const appActions = [
     },
     response: "string",
   }),
+  createAction("getCache", {
+    description: "Get the cache",
+    action: (app) => {
+      return app.cache.getAll();
+    },
+  }),
   createAction("entities", {
     description: "Get the entities for the app",
     action: (app): EntityDefinition[] => {

@@ -108,13 +108,8 @@ export class SettingsRecordClass implements SettingsRecordClass {
         }),
       });
     }
-    await this.load();
+    await this.reload();
 
-    this.orm.app.cacheSet(
-      "settings",
-      this.settingsDefinition.settingsId,
-      this.data,
-    );
     await this.afterSave();
 
     await this.orm.runGlobalSettingsHook(
@@ -127,10 +122,15 @@ export class SettingsRecordClass implements SettingsRecordClass {
   }
 
   async load(): Promise<void> {
-    const data = await this.orm.app.cacheGet(
+    const data = this.orm.app.cacheGet<typeof this._data>(
       "settings",
       this.settingsDefinition.settingsId,
     );
+    if (data) {
+      this._data = data;
+    } else {
+      await this.reload();
+    }
   }
   async reload(): Promise<void> {
     // load data from db
@@ -153,13 +153,19 @@ export class SettingsRecordClass implements SettingsRecordClass {
         (f) => f.key === row.key,
       );
       if (!field) {
-        throw new Error(`Field not found: ${row.key}`);
+        continue;
       }
       this._data[row.key] = this.orm.database.adaptLoadValue(
         field,
         row.value.value,
       );
     }
+
+    this.orm.app.cacheSet(
+      "settings",
+      this.settingsDefinition.settingsId,
+      this._data,
+    );
   }
   private getChangedData(): Record<string, any> | undefined {
     let hasChanged = false;

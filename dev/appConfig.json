@@ -1,7 +1,8 @@
 {
-  "$schema": "https://raw.githubusercontent.com/VeryEasyFramework/easy-app/c6aa966fbec6ed7d043a74570c259b6e0c6819b3/src/appConfig/easyAppConfig.json",
-  "appName": "Easy App",
-  "singlePageApp": false,
+  "$schema": "/home/eliveffer/VeryEasyFramework/app-orm/easy-app/src/appConfig/easyAppConfig.json",
+  "appName": "dev",
+  "singlePageApp": true,
+
   "staticFilesOptions": {
     "staticFilesRoot": "./public",
     "cache": true
@@ -12,8 +13,9 @@
     "port": 11254
   },
   "multiProcessing": {
-    "enable": true,
-    "processCount": "auto"
+    "enable": false,
+    "processCount": 1,
+    "max": 1
   },
   "workers": {
     "short": {
@@ -35,11 +37,12 @@
     "hostname": "127.0.0.1",
     "port": 8000
   },
+
   "ormOptions": {
     "databaseType": "postgres",
     "databaseConfig": {
       "size": 1,
-      "debug": false,
+
       "clientOptions": {
         "user": "postgres",
         "password": "postgres",

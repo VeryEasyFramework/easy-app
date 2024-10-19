@@ -2,10 +2,13 @@ import { Database, type DatabaseConfig } from "#orm/database/database.ts";
 import { type BasicFgColor, ColorMe } from "@vef/easy-cli";
 
 import type {
+  CountGroupedResult,
+  CountOptions,
   EasyFieldType,
   EasyFieldTypeMap,
   EntityDefinition,
   ListOptions,
+  ReportOptions,
   RowsResult,
   SafeType,
 } from "@vef/types";
@@ -19,7 +22,7 @@ import { buildEasyEntity } from "#orm/entity/entity/entityDefinition/buildEasyEn
 import { validateEntityDefinition } from "#orm/entity/entity/entityDefinition/validateEasyEntity.ts";
 import { FetchRegistry } from "#orm/entity/registry.ts";
 import { buildRecordClass } from "#orm/entity/entity/entityRecord/buildRecordClass.ts";
-import type { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
+import type { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
 import type { SettingsEntityDefinition, User } from "@vef/types";
 
 import { migrateSettingsEntity } from "#orm/database/migrate/migrateSettingsEntity.ts";
@@ -31,7 +34,7 @@ import type { EasyApp } from "#/app/easyApp.ts";
 
 type GlobalHook = (
   entityId: string,
-  record: EntityRecord,
+  record: EntityRecordClass,
 ) => Promise<void> | void;
 
 type GlobalSettingsHook = {
@@ -48,7 +51,7 @@ type GlobalSettingsSaveHook = (
 ) => Promise<void> | void;
 type GlobalSaveHook = (
   entityId: string,
-  record: EntityRecord,
+  record: EntityRecordClass,
   changedData: Record<string, any> | undefined,
 ) => Promise<void> | void;
 interface GlobalHooks {
@@ -95,7 +98,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   settingsDefinitions: Record<string, SettingsEntityDefinition> = {};
 
   settingsEntities: Array<SettingsEntity> = [];
-  entityClasses: Record<string, typeof EntityRecord> = {};
+  entityClasses: Record<string, typeof EntityRecordClass> = {};
   settingsClasses: Record<string, typeof SettingsRecordClass> = {};
   app: EasyApp;
   private globalHooks: GlobalHooks = {
@@ -198,7 +201,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   async runGlobalHook<H extends keyof GlobalHooks>(
     hook: H,
     entityId: string,
-    record: EntityRecord,
+    record: EntityRecordClass,
     changedData?: Record<string, any>,
   ) {
     for (const callback of this.globalHooks[hook]) {
@@ -328,7 +331,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Get an entity by id
    */
-  async getEntity<E extends EntityRecord = EntityRecord>(
+  async getEntity<E extends EntityRecordClass = EntityRecordClass>(
     entityId: string,
     id: EasyFieldTypeMap["IDField"],
     user?: User,
@@ -348,7 +351,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     entityId: string,
     data: Record<string, SafeType | undefined>,
     user?: User,
-  ): Promise<EntityRecord> {
+  ): Promise<EntityRecordClass> {
     const entityClass = this.getEntityClass(entityId);
 
     const entityRecord = new entityClass();
@@ -366,7 +369,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     id: string,
     data: Record<string, SafeType>,
     user?: User,
-  ): Promise<EntityRecord> {
+  ): Promise<EntityRecordClass> {
     const entityRecord = await this.getEntity(entityId, id, user);
     entityRecord.update(data);
     await entityRecord.save();
@@ -411,13 +414,20 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return result;
   }
 
+  async getReport(entityId: string, options: ReportOptions) {
+    const entityDef = this.getEntityDef(entityId);
+    const result = await this.database.getReport(
+      entityDef.config.tableName,
+      options,
+    );
+  }
   /**
    * Find an entity by a filter. Returns the first entity that matches the filter
    */
   async findEntity(
     entityId: string,
     filter: Required<ListOptions["filter"]>,
-  ): Promise<EntityRecord | null> {
+  ): Promise<EntityRecordClass | null> {
     const entityDef = this.getEntityDef(entityId);
     const result = await this.database.getRows<Record<string, SafeType>>(
       entityDef.config.tableName,
@@ -433,23 +443,52 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return await this.getEntity(entityId, id);
   }
 
-  async countEntities(
+  async count(
     entityId: string,
-    options?: {
-      filter: ListOptions["filter"];
-      orFilter?: ListOptions["orFilter"];
-    },
+    options?: CountOptions,
   ): Promise<number> {
     const entityDef = this.getEntityDef(entityId);
-    const result = await this.database.getRows(entityDef.config.tableName, {
-      filter: options?.filter,
-      orFilter: options?.orFilter,
-      columns: ["id"],
-    });
+    const total = await this.database.count(
+      entityDef.config.tableName,
+      options,
+    );
 
-    return result.totalCount;
+    return total;
   }
 
+  async countGrouped<
+    P extends PropertyKey,
+    K extends Array<P>,
+    R extends
+      & {
+        [key in K[number]]: string;
+      }
+      & {
+        count: number;
+      },
+  >(
+    entityId: string,
+    groupBy: K,
+    options?: CountOptions,
+  ): Promise<Array<R>> {
+    const entityDef = this.getEntityDef(entityId);
+    for (const item of groupBy) {
+      const field = entityDef.fields.find((f) => f.key === item);
+      if (!field) {
+        raiseOrmException(
+          "InvalidField",
+          `Field ${item as string} does not exist in entity ${entityId}`,
+        );
+      }
+    }
+
+    const result = await this.database.countGrouped<K>(
+      entityDef.config.tableName,
+      groupBy,
+      options,
+    );
+    return result as Array<R>;
+  }
   async getValue<T = SafeType>(
     entityId: string,
     id: string,
@@ -502,7 +541,9 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return def;
   }
 
-  private getEntityClass<E extends typeof EntityRecord = typeof EntityRecord>(
+  private getEntityClass<
+    E extends typeof EntityRecordClass = typeof EntityRecordClass,
+  >(
     entityId: string,
   ): E {
     const entityClass = this.entityClasses[entityId];

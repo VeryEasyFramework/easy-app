@@ -4,7 +4,7 @@ import type {
   EntityHook,
   EntityHookDefinition,
 } from "@vef/types";
-import { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
+import { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
 import type { EntityHookFunction } from "#orm/entity/entity/entityRecord/entityRecordTypes.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { validateField } from "#orm/entity/field/validateField.ts";
@@ -13,7 +13,7 @@ import { ChildList } from "#orm/entity/child/childRecord.ts";
 export function buildRecordClass(orm: EasyOrm, entity: EntityDefinition) {
   const hooks = extractHooks(entity);
   const actions = extractActions(entity);
-  const entityRecordClass = class extends EntityRecord {
+  const entityRecordClass = class extends EntityRecordClass {
     override entityDefinition = entity;
     override _beforeInsert: Array<EntityHookFunction> = hooks.beforeInsert;
 
@@ -24,6 +24,9 @@ export function buildRecordClass(orm: EasyOrm, entity: EntityDefinition) {
 
     override _validate: Array<EntityHookFunction> = hooks.validate;
     override _beforeValidate: Array<EntityHookFunction> = hooks.beforeValidate;
+
+    override _beforeDelete: Array<EntityHookFunction> = hooks.beforeDelete;
+    override _afterDelete: Array<EntityHookFunction> = hooks.afterDelete;
 
     override actions: Record<string, EntityAction> = actions;
     override orm = orm;
@@ -44,7 +47,7 @@ function extractActions(entity: EntityDefinition) {
 }
 
 function setFields(
-  entityRecordClass: typeof EntityRecord,
+  entityRecordClass: typeof EntityRecordClass,
   entity: EntityDefinition,
 ) {
   entity.fields.forEach((field) => {
@@ -79,6 +82,8 @@ function extractHooks(entity: EntityDefinition) {
     afterSave: [],
     validate: [],
     beforeValidate: [],
+    beforeDelete: [],
+    afterDelete: [],
   };
   Object.entries(entity.hooks).forEach(([key, value]) => {
     hooks[key as EntityHook] = getHookActions(value);
@@ -88,7 +93,7 @@ function extractHooks(entity: EntityDefinition) {
 }
 
 function buildChildren(
-  entityRecordClass: typeof EntityRecord,
+  entityRecordClass: typeof EntityRecordClass,
   entity: EntityDefinition,
   orm: EasyOrm,
 ) {

@@ -1,7 +1,8 @@
 import type { EasyApp } from "#/app/easyApp.ts";
 import { easyLog } from "#/log/logging.ts";
 import { PgError } from "#orm/database/adapter/adapters/postgres/pgError.ts";
-import type { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
+import type { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
+import { asyncPause } from "#/utils.ts";
 
 export default function runWorker(
   app: EasyApp,
@@ -38,35 +39,54 @@ async function checkForTasks(app: EasyApp) {
     easyLog.warning("No worker mode set", app.fullAppName);
     return;
   }
-  // easyLog.info("Checking for tasks", app.fullAppName);
-  try {
-    const tasks = await app.orm.getEntityList("taskQueue", {
-      filter: {
-        status: "queued",
-        worker,
-      },
+  const workerSettings = await app.orm.getSettings("workerSettings");
+  const maxTasks = workerSettings.maxTaskCount as number;
+  const tasks = await app.orm.getEntityList("taskQueue", {
+    filter: {
+      status: "queued",
+      worker,
+    },
+    columns: ["id"],
+    limit: maxTasks < 1 ? 1 : maxTasks,
+  });
+  let count = tasks.data.length;
+  const currentCount = count;
+  const totalCount = tasks.totalCount;
+  const done = new Promise<void>((resolve) => {
+    if (count === 0) {
+      resolve();
+    }
+    workerSettings[`${worker}WorkerStatus`] = "running";
+    workerSettings.save().then(() => {
+      for (const item of tasks.data) {
+        app.orm.getEntity<Task>("taskQueue", item.id).then(async (task) => {
+          await task.runAction("runTask");
+          count--;
+          if (count === 0) {
+            resolve();
+          }
+        });
+      }
     });
-    // easyLog.info(`${tasks.rowCount} tasks`, app.fullAppName);
-    for (const task of tasks.data) {
-      await runTask(app, task.id);
-    }
-  } catch (e) {
-    if (e instanceof PgError) {
-      // const subject = toTitleCase(e.name);
-      const subject = e.name;
-      const message = `${subject}: ${e.message}`;
-      easyLog.error(message, "Database Error (Postgres)", {
-        hideTrace: true,
-      });
-    }
+  });
+  await done;
+  await workerSettings.load();
+
+  workerSettings[`${worker}WorkerStatus`] = "ready";
+  await workerSettings.save();
+  let seconds = workerSettings.waitInterval as number || 10;
+
+  if (seconds < 5) {
+    seconds = 5;
   }
 
-  setTimeout(() => {
-    checkForTasks(app);
-  }, 10000);
+  if (totalCount === currentCount) {
+    await asyncPause(seconds * 1000);
+  }
+  checkForTasks(app);
 }
 
-interface Task extends EntityRecord {
+interface Task extends EntityRecordClass {
   taskType: "entity" | "app";
   recordType: string;
   recordId: string;
@@ -74,14 +94,4 @@ interface Task extends EntityRecord {
   taskData: Record<string, any>;
   worker: "short" | "medium" | "long";
   status: "queued" | "running" | "completed" | "failed";
-}
-async function runTask(app: EasyApp, taskId: string) {
-  const task = await app.orm.getEntity<Task>("taskQueue", taskId);
-  if (!task) {
-    easyLog.warning(`Task ${taskId} not found`, app.fullAppName);
-    return;
-  }
-  task.status = "running";
-  await task.save();
-  easyLog.debug(task.data);
 }

@@ -5,7 +5,7 @@ import type { DBType } from "#orm/database/database.ts";
 
 const configDefault: EasyAppConfig<"postgres"> = {
   appName: "Easy App",
-  singlePageApp: false,
+  singlePageApp: true,
   staticFilesOptions: {
     staticFilesRoot: "./public",
     cache: true,
@@ -83,9 +83,13 @@ export async function initAppConfig(): Promise<
         hideTrace: true,
       },
     );
+    const configJson = {
+      $schema: "https://veryeasyframework.com/easyAppConfigSchema.json",
+      ...configDefault,
+    };
     await Deno.writeTextFile(
       "./appConfig.json",
-      JSON.stringify(configDefault, null, 2),
+      JSON.stringify(configJson, null, 2),
     );
 
     prompt("Press Enter to continue...");

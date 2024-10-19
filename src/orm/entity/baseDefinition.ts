@@ -1,13 +1,7 @@
 import type {
   ChildListDefinition,
   Choice,
-  EasyEntityHooks,
   EasyField,
-  EasyFieldType,
-  EntityAction,
-  EntityActionDefinition,
-  EntityHook,
-  EntityHookDefinition,
   FieldGroupDefinition,
 } from "@vef/types";
 import {
@@ -22,6 +16,12 @@ import type {
   SettingsEntityHookDefinition,
   SettingsEntityHooks,
 } from "#orm/entity/settings/settingsEntity.ts";
+import type {
+  EasyEntityHooks,
+  EntityActionDefinition,
+  EntityHook,
+  EntityHookDefinition,
+} from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
 
 export interface BaseDefinitionConfig {
   label: string;
@@ -46,7 +46,7 @@ interface ActionsDefMap<F extends Array<EasyField>> {
   settings: SettingsActionDefinition<F>;
 }
 interface ActionsMap {
-  entity: EntityAction;
+  entity: EntityActionDefinition & { key: string };
   settings: SettingsActionDefinition & { key: string };
 }
 interface HooksMap {
@@ -107,6 +107,8 @@ export abstract class BaseDefinition<
       afterInsert: [],
       validate: [],
       beforeValidate: [],
+      beforeDelete: [],
+      afterDelete: [],
     };
 
     this.actions = [];

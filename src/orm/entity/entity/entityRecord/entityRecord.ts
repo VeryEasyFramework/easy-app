@@ -14,9 +14,12 @@ import { dateUtils } from "#orm/utils/dateUtils.ts";
 import { generateId, isEmpty } from "#orm/utils/misc.ts";
 import type { ChildList } from "#orm/entity/child/childRecord.ts";
 
-export interface EntityRecord {
+export interface EntityRecordClass {
   beforeInsert(): Promise<void>;
   afterInsert(): Promise<void>;
+  beforeDelete(): Promise<void>;
+
+  afterDelete(): Promise<void>;
   beforeSave(): Promise<void>;
   afterSave(): Promise<void>;
   validate(data: Record<string, any>): Promise<void>;
@@ -28,7 +31,7 @@ export interface EntityRecord {
 
   [key: string]: SafeType | null | undefined;
 }
-export class EntityRecord implements EntityRecord {
+export class EntityRecordClass implements EntityRecordClass {
   private _data: Record<string, any> = {};
 
   private _prevData: Record<string, any> = {};
@@ -104,8 +107,16 @@ export class EntityRecord implements EntityRecord {
 
   _beforeValidate!: Array<EntityHookFunction>;
 
+  _beforeDelete!: Array<EntityHookFunction>;
+
+  _afterDelete!: Array<EntityHookFunction>;
+
   actions!: Record<string, EntityAction>;
 
+  get _title(): string {
+    const titleField = this.entityDefinition.config.titleField || "id";
+    return this[titleField] as string;
+  }
   async beforeInsert() {
     this._data = this.setDefaultValues(this._data);
     for (const hook of this._beforeInsert) {
@@ -124,6 +135,18 @@ export class EntityRecord implements EntityRecord {
       await hook(this);
     }
     this.setUpdatedAt();
+  }
+
+  async beforeDelete() {
+    for (const hook of this._beforeDelete) {
+      await hook(this);
+    }
+  }
+
+  async afterDelete() {
+    for (const hook of this._afterDelete) {
+      await hook(this);
+    }
   }
   async afterSave() {
     await this.syncFetchFields();
@@ -251,19 +274,32 @@ export class EntityRecord implements EntityRecord {
     }
   }
 
+  private async deleteChildren() {
+    const childrenKeys = this.entityDefinition.children.map((child) =>
+      child.childName
+    );
+    for (const key of childrenKeys) {
+      const childList = this[key] as ChildList;
+      await childList.clear();
+    }
+  }
+
   private async validateChildren() {
   }
   async delete() {
     if (!this.id) {
       raiseOrmException("InvalidId", "Cannot delete entity without an id");
     }
+    await this.beforeDelete();
+
+    await this.deleteChildren();
     const idKey = this.primaryKey || "id";
     await this.orm.database.deleteRow(
       this.entityDefinition.config.tableName,
       idKey,
       this.id,
     );
-
+    await this.afterDelete();
     await this.orm.runGlobalHook(
       "afterDelete",
       this.entityDefinition.entityId,
@@ -287,10 +323,22 @@ export class EntityRecord implements EntityRecord {
     }
   }
 
-  async runAction<R = void>(
-    actionKey: string,
-    data?: Record<string, any>,
-  ): Promise<R> {
+  async enqueueAction(actionKey: string, data?: Record<string, any>) {
+    this.validateAction(actionKey, data);
+    data = data || {};
+
+    const task = await this.orm.createEntity("taskQueue", {
+      taskType: "entity",
+      recordType: this.entityDefinition.entityId,
+      recordId: this.id,
+      recordTitle: this._title,
+      action: actionKey,
+      taskData: data,
+    });
+    return task.data;
+  }
+
+  private validateAction(actionKey: string, data?: Record<string, any>) {
     const action = this.actions[actionKey];
     if (!action) {
       raiseOrmException(
@@ -308,6 +356,14 @@ export class EntityRecord implements EntityRecord {
         }
       }
     }
+    return action;
+  }
+  async runAction<R = Record<string, any> | string | number | void>(
+    actionKey: string,
+    data?: Record<string, any>,
+  ): Promise<R> {
+    const action = this.validateAction(actionKey, data);
+
     data = data || {};
     return await action.action(this, data) as R;
   }

@@ -1,4 +1,5 @@
 import type { SafeType } from "@vef/types";
+import { easyLog } from "#/log/logging.ts";
 
 /**
  * A simple cache that stores data in-memory for the current execution context.
@@ -107,5 +108,44 @@ export class EasyCache {
         this.delete(table, id);
       }
     });
+  }
+
+  /**
+   * Get all items in the cache.
+   * @returns An object with the table names as keys and the items in the table as values
+   */
+  getAll(): Record<
+    string,
+    Array<{
+      id: string;
+      value: SafeType;
+    }> | Record<string, Array<{ id: string; value: SafeType }>>
+  > {
+    const tables: Record<string, Array<any> | Record<string, any>> = {};
+    const length = this.cache.length;
+    for (let i = 0; i < length; i++) {
+      const key = this.cache.key(i) as string;
+      const keys = key.split(":");
+      const table = keys[0];
+      easyLog.info(`key: ${key}`);
+      switch (keys.length) {
+        case 2:
+          tables[table] = this.getList(table);
+          break;
+        case 3:
+          if (!tables[table]) {
+            tables[table] = {};
+          }
+
+          (tables[table] as Record<string, any>)[keys[1]] = {
+            [keys[2]]: this.get(
+              `${table}:${keys[1]}`,
+              keys[2],
+            ),
+          };
+          break;
+      }
+    }
+    return tables;
   }
 }

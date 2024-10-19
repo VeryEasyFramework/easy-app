@@ -3,7 +3,7 @@ import { raiseEasyException } from "#/easyException.ts";
 
 import type { EasyApp } from "#/app/easyApp.ts";
 import type { EasyResponse } from "#/app/easyResponse.ts";
-import type { EntityRecord } from "#orm/entity/entity/entityRecord/entityRecord.ts";
+import type { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
 
 export const loginAction = createAction("login", {
   description: "Login user",
@@ -38,7 +38,7 @@ export const loginAction = createAction("login", {
 
 async function createUserSession(
   app: EasyApp,
-  user: EntityRecord,
+  user: EntityRecordClass,
   response: EasyResponse,
 ) {
   const sessionData = {
