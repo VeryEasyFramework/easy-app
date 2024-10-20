@@ -23,13 +23,13 @@ export class SettingsRecordClass {
 
   settingsDefinition!: SettingsEntityDefinition;
 
-  private _beforeSave!: Array<SettingsHookFunction>;
+  _beforeSave!: Array<SettingsHookFunction>;
 
-  private _afterSave!: Array<SettingsHookFunction>;
+  _afterSave!: Array<SettingsHookFunction>;
 
-  private _validate!: Array<SettingsHookFunction>;
+  _validate!: Array<SettingsHookFunction>;
 
-  private _beforeValidate!: Array<SettingsHookFunction>;
+  _beforeValidate!: Array<SettingsHookFunction>;
 
   actions!: Record<string, SettingsAction>;
   get data(): Record<string, SafeType> {

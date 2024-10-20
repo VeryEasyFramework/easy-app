@@ -19,14 +19,13 @@ export function buildSettingsRecordClass(
   const settingsRecordClass = class extends SettingsRecordClass {
     override orm = orm;
     override settingsDefinition = settingsEntity;
+    override _beforeSave = hooks.beforeSave;
+    override _afterSave = hooks.afterSave;
+    override _validate = hooks.validate;
+    override _beforeValidate = hooks.beforeValidate;
+
     override actions: Record<string, SettingsAction> = actions;
   };
-  Object.keys(hooks).forEach((key) => {
-    Object.defineProperty(settingsRecordClass, `_${key}`, {
-      value: hooks[key as SettingsHook],
-      writable: false,
-    });
-  });
 
   setFields(settingsRecordClass, settingsEntity);
   return settingsRecordClass;

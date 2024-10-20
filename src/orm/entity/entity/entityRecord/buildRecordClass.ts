@@ -17,14 +17,17 @@ export function buildRecordClass(orm: EasyOrm, entity: EntityDefinition) {
     override entityDefinition = entity;
 
     override actions: Record<string, EntityAction> = actions;
+    override _beforeInsert: EntityHookFunction[] = hooks.beforeInsert;
+    override _afterInsert: EntityHookFunction[] = hooks.afterInsert;
+    override _beforeSave: EntityHookFunction[] = hooks.beforeSave;
+    override _afterSave: EntityHookFunction[] = hooks.afterSave;
+    override _validate: EntityHookFunction[] = hooks.validate;
+    override _beforeValidate: EntityHookFunction[] = hooks.beforeValidate;
+    override _beforeDelete: EntityHookFunction[] = hooks.beforeDelete;
+    override _afterDelete: EntityHookFunction[] = hooks.afterDelete;
+
     override orm = orm;
   };
-  Object.keys(hooks).forEach((key) => {
-    Object.defineProperty(entityRecordClass, `_${key}`, {
-      value: hooks[key as keyof typeof hooks],
-      writable: false,
-    });
-  });
 
   // entityRecordClass = bindHooks(entityRecordClass, entity);
   setFields(entityRecordClass, entity);

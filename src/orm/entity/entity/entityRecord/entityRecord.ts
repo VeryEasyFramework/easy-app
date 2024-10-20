@@ -78,21 +78,21 @@ export class EntityRecordClass {
 
   entityDefinition!: EntityDefinition;
 
-  private _beforeInsert!: Array<EntityHookFunction>;
+  _beforeInsert!: Array<EntityHookFunction>;
 
-  private _afterInsert!: Array<EntityHookFunction>;
+  _afterInsert!: Array<EntityHookFunction>;
 
-  private _beforeSave!: Array<EntityHookFunction>;
+  _beforeSave!: Array<EntityHookFunction>;
 
-  private _afterSave!: Array<EntityHookFunction>;
+  _afterSave!: Array<EntityHookFunction>;
 
-  private _validate!: Array<EntityHookFunction>;
+  _validate!: Array<EntityHookFunction>;
 
-  private _beforeValidate!: Array<EntityHookFunction>;
+  _beforeValidate!: Array<EntityHookFunction>;
 
-  private _beforeDelete!: Array<EntityHookFunction>;
+  _beforeDelete!: Array<EntityHookFunction>;
 
-  private _afterDelete!: Array<EntityHookFunction>;
+  _afterDelete!: Array<EntityHookFunction>;
 
   actions!: Record<string, EntityAction>;
 
