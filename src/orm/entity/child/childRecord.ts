@@ -15,7 +15,7 @@ export class ChildRecord {
 export class ChildList {
   _records: ChildRecord[] = [];
 
-  get records() {
+  get records(): ChildRecord[] {
     return this._records;
   }
 

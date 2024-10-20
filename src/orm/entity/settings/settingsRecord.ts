@@ -5,30 +5,16 @@ import type {
   EasyFieldType,
   EasyFieldTypeMap,
   SafeType,
-  SettingsAction,
   SettingsEntityDefinition,
   User,
 } from "@vef/types";
-import type { SettingsHookFunction } from "#orm/entity/settings/settingsRecordTypes.ts";
+import type {
+  SettingsAction,
+  SettingsHookFunction,
+} from "#orm/entity/settings/settingsRecordTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
-import { easyLog } from "#/log/logging.ts";
-export interface SettingsRecordClass {
-  orm: EasyOrm;
 
-  settingsDefinition: SettingsEntityDefinition;
-  _user?: User;
-
-  beforeSave(): Promise<void> | void;
-  afterSave(): Promise<void> | void;
-  validate(): Promise<void> | void;
-  beforeValidate(): Promise<void> | void;
-  save(): Promise<Record<string, any>>;
-  load(): Promise<void>;
-  runAction(actionKey: string, data?: Record<string, SafeType>): Promise<any>;
-  update(data: Record<string, any>): void;
-  [key: string]: SafeType | null | undefined;
-}
-export class SettingsRecordClass implements SettingsRecordClass {
+export class SettingsRecordClass {
   private _data: Record<string, any> = {};
   private _prevData: Record<string, any> = {};
   _user?: User;
@@ -37,13 +23,13 @@ export class SettingsRecordClass implements SettingsRecordClass {
 
   settingsDefinition!: SettingsEntityDefinition;
 
-  _beforeSave!: Array<SettingsHookFunction>;
+  private _beforeSave!: Array<SettingsHookFunction>;
 
-  _afterSave!: Array<SettingsHookFunction>;
+  private _afterSave!: Array<SettingsHookFunction>;
 
-  _validate!: Array<SettingsHookFunction>;
+  private _validate!: Array<SettingsHookFunction>;
 
-  _beforeValidate!: Array<SettingsHookFunction>;
+  private _beforeValidate!: Array<SettingsHookFunction>;
 
   actions!: Record<string, SettingsAction>;
   get data(): Record<string, SafeType> {
@@ -84,7 +70,7 @@ export class SettingsRecordClass implements SettingsRecordClass {
       if (field.readOnly) {
         continue;
       }
-      this[key] = data[key];
+      this[key as keyof this] = data[key];
     }
   }
   async save(): Promise<Record<string, any>> {
@@ -206,30 +192,4 @@ export class SettingsRecordClass implements SettingsRecordClass {
     data = data || {};
     return await action.action(this, data);
   }
-}
-export interface SettingsActionDefinition<
-  F extends Array<EasyField> = Array<EasyField>,
-  D extends {
-    [key in F[number]["key"]]: F[number]["choices"] extends Choice<infer T>[]
-      ? F[number]["choices"][number]["key"]
-      : EasyFieldTypeMap[F[number]["fieldType"]];
-  } = {
-    [key in F[number]["key"]]: F[number]["choices"] extends Choice<infer T>[]
-      ? F[number]["choices"][number]["key"]
-      : EasyFieldTypeMap[F[number]["fieldType"]];
-  },
-> // D extends {
-//   [key in F[number]["key"]]: EasyFieldTypeMap[F[number]["fieldType"]];
-// } = { [key in F[number]["key"]]: EasyFieldTypeMap[F[number]["fieldType"]] },
-{
-  label?: string;
-  description?: string;
-  action(
-    settingsRecord: SettingsRecordClass,
-    params: D,
-  ): Promise<any> | any;
-
-  private?: boolean;
-
-  params?: F;
 }

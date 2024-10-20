@@ -14,24 +14,7 @@ import { dateUtils } from "#orm/utils/dateUtils.ts";
 import { generateId, isEmpty } from "#orm/utils/misc.ts";
 import type { ChildList } from "#orm/entity/child/childRecord.ts";
 
-export interface EntityRecordClass {
-  beforeInsert(): Promise<void>;
-  afterInsert(): Promise<void>;
-  beforeDelete(): Promise<void>;
-
-  afterDelete(): Promise<void>;
-  beforeSave(): Promise<void>;
-  afterSave(): Promise<void>;
-  validate(data: Record<string, any>): Promise<void>;
-  load(id: string | number): Promise<void>;
-  save(): Promise<Record<string, any>>;
-  delete(): Promise<void>;
-  update(data: Record<string, any>): void;
-  syncFetchFields(): Promise<void>;
-
-  [key: string]: SafeType | null | undefined;
-}
-export class EntityRecordClass implements EntityRecordClass {
+export class EntityRecordClass {
   private _data: Record<string, any> = {};
 
   private _prevData: Record<string, any> = {};
@@ -87,7 +70,7 @@ export class EntityRecordClass implements EntityRecordClass {
     );
 
     for (const key of childrenKeys) {
-      data[key] = (this[key] as ChildList).records;
+      data[key] = (this[key as keyof this] as ChildList).records;
     }
 
     return data;
@@ -95,27 +78,28 @@ export class EntityRecordClass implements EntityRecordClass {
 
   entityDefinition!: EntityDefinition;
 
-  _beforeInsert!: Array<EntityHookFunction>;
+  private _beforeInsert!: Array<EntityHookFunction>;
 
-  _afterInsert!: Array<EntityHookFunction>;
+  private _afterInsert!: Array<EntityHookFunction>;
 
-  _beforeSave!: Array<EntityHookFunction>;
+  private _beforeSave!: Array<EntityHookFunction>;
 
-  _afterSave!: Array<EntityHookFunction>;
+  private _afterSave!: Array<EntityHookFunction>;
 
-  _validate!: Array<EntityHookFunction>;
+  private _validate!: Array<EntityHookFunction>;
 
-  _beforeValidate!: Array<EntityHookFunction>;
+  private _beforeValidate!: Array<EntityHookFunction>;
 
-  _beforeDelete!: Array<EntityHookFunction>;
+  private _beforeDelete!: Array<EntityHookFunction>;
 
-  _afterDelete!: Array<EntityHookFunction>;
+  private _afterDelete!: Array<EntityHookFunction>;
 
   actions!: Record<string, EntityAction>;
 
   get _title(): string {
     const titleField = this.entityDefinition.config.titleField || "id";
-    return this[titleField] as string;
+
+    return this[titleField as keyof this] as string;
   }
   async beforeInsert() {
     this._data = this.setDefaultValues(this._data);
@@ -183,7 +167,7 @@ export class EntityRecordClass implements EntityRecordClass {
 
   private async loadChildren() {
     for (const child of this.entityDefinition.children) {
-      const childClass = this[child.childName] as ChildList;
+      const childClass = this[child.childName as keyof this] as ChildList;
       await childClass.load(this.id);
     }
   }
@@ -253,7 +237,7 @@ export class EntityRecordClass implements EntityRecordClass {
     );
     const changed: string[] = [];
     for (const key of childrenKeys) {
-      const child = this[key] as ChildList;
+      const child = this[key as keyof this] as ChildList;
       if (child.changed) {
         changed.push(key);
       }
@@ -268,7 +252,7 @@ export class EntityRecordClass implements EntityRecordClass {
     }
 
     for (const key of changedChildren) {
-      const child = this[key] as ChildList;
+      const child = this[key as keyof this] as ChildList;
       child.parentId = this.id as string;
       await child.save();
     }
@@ -279,7 +263,7 @@ export class EntityRecordClass implements EntityRecordClass {
       child.childName
     );
     for (const key of childrenKeys) {
-      const childList = this[key] as ChildList;
+      const childList = this[key as keyof this] as ChildList;
       await childList.clear();
     }
   }
@@ -313,13 +297,13 @@ export class EntityRecordClass implements EntityRecordClass {
     );
     for (const key in data) {
       if (childKeys.includes(key)) {
-        this[key] = data[key];
+        this[key as keyof this] = data[key];
         continue;
       }
       if (!this.entityDefinition.fields.find((field) => field.key === key)) {
         continue;
       }
-      this[key] = data[key];
+      this[key as keyof this] = data[key];
     }
   }
 
@@ -431,7 +415,7 @@ export class EntityRecordClass implements EntityRecordClass {
         break;
     }
     if (this.primaryKey) {
-      this[this.primaryKey] = id;
+      this[this.primaryKey as keyof this] = id as any;
       return;
     }
     this._data.id = id;
@@ -444,7 +428,7 @@ export class EntityRecordClass implements EntityRecordClass {
     );
 
     for (const key of childrenKeys) {
-      (this[key] as ChildList).parentId = id as string;
+      (this[key as keyof this] as ChildList).parentId = id as string;
     }
   }
   private parseDatabaseRow(row: Record<string, any>) {
@@ -588,13 +572,13 @@ export class EntityRecordClass implements EntityRecordClass {
       const { fetchEntity, thatFieldKey, thisFieldKey, thisIdKey } = field
         .fetchOptions!;
 
-      const id = this[thisIdKey] as string | undefined;
+      const id = this[thisIdKey as keyof this] as string | undefined;
 
       if (!id) {
-        this[thisFieldKey] = null;
+        this[thisFieldKey as keyof this] = null as any;
         continue;
       }
-      this[thisFieldKey] = await this.orm.getValue(
+      this[thisFieldKey as keyof this] = await this.orm.getValue(
         fetchEntity,
         id,
         thatFieldKey,

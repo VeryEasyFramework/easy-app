@@ -1,3 +1,15 @@
+export { ChildList } from "#orm/entity/child/childRecord.ts";
+
+export type {
+  ActionsDefMap,
+  ActionsMap,
+  BaseDefinition,
+  BaseDefinitionConfig,
+  EasyHooksMap,
+  HooksDefMap,
+  HooksMap,
+} from "#orm/entity/baseDefinition.ts";
+
 export { OrmException, raiseOrmException } from "#orm/ormException.ts";
 
 export { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
@@ -26,3 +38,21 @@ export type {
   CreateActionParams,
   EasyAction,
 } from "#/actions/actionTypes.ts";
+
+export type {
+  EasyEntityHooks,
+  EntityActionDefinition,
+  EntityHook,
+  EntityHookDefinition,
+  EntityRecord,
+} from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
+
+export type {
+  SettingsAction,
+  SettingsActionDefinition,
+  SettingsActionFunction,
+  SettingsEntityHookDefinition,
+  SettingsEntityHooks,
+  SettingsHookFunction,
+  SettingsRecord,
+} from "#orm/entity/settings/settingsRecordTypes.ts";

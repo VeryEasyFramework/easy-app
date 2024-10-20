@@ -6,6 +6,9 @@ import type {
 } from "@vef/types";
 import type { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
 
+export interface EntityRecord extends EntityRecordClass {
+  [key: string]: any;
+}
 export interface EntityActionDefinition<
   F extends Array<EasyField> = Array<EasyField>,
   D extends {
@@ -31,7 +34,7 @@ export interface EntityActionDefinition<
    */
   global?: boolean;
   action(
-    entity: EntityRecordClass,
+    entity: EntityRecord,
     params: D,
   ): SafeReturnType;
   params?: F;
@@ -40,7 +43,9 @@ export interface EntityHookDefinition {
   label?: string;
   description?: string;
 
-  action(entity: EntityRecordClass): Promise<void> | void;
+  action(
+    entity: EntityRecord,
+  ): Promise<void> | void;
 }
 
 export type EntityHook = keyof EasyEntityHooks;

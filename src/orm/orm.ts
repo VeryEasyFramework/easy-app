@@ -31,27 +31,29 @@ import { buildSettingsEntity } from "#orm/entity/settings/buildSettingsEntity.ts
 import { buildSettingsRecordClass } from "#orm/entity/settings/buildSettingsRecordClass.ts";
 import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
 import type { EasyApp } from "#/app/easyApp.ts";
+import type { SettingsRecord } from "#orm/entity/settings/settingsRecordTypes.ts";
+import type { EntityRecord } from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
 
 type GlobalHook = (
   entityId: string,
-  record: EntityRecordClass,
+  record: EntityRecord,
 ) => Promise<void> | void;
 
 type GlobalSettingsHook = {
   (
     settingsId: string,
-    record: SettingsRecordClass,
+    record: SettingsRecord,
   ): Promise<void> | void;
 };
 
 type GlobalSettingsSaveHook = (
   settingsId: string,
-  record: SettingsRecordClass,
+  record: SettingsRecord,
   changedData: Record<string, any> | undefined,
 ) => Promise<void> | void;
 type GlobalSaveHook = (
   entityId: string,
-  record: EntityRecordClass,
+  record: EntityRecord,
   changedData: Record<string, any> | undefined,
 ) => Promise<void> | void;
 interface GlobalHooks {
@@ -331,7 +333,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Get an entity by id
    */
-  async getEntity<E extends EntityRecordClass = EntityRecordClass>(
+  async getEntity<E extends EntityRecord = EntityRecord>(
     entityId: string,
     id: EasyFieldTypeMap["IDField"],
     user?: User,
@@ -351,7 +353,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     entityId: string,
     data: Record<string, SafeType | undefined>,
     user?: User,
-  ): Promise<EntityRecordClass> {
+  ): Promise<EntityRecord> {
     const entityClass = this.getEntityClass(entityId);
 
     const entityRecord = new entityClass();
@@ -369,7 +371,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     id: string,
     data: Record<string, SafeType>,
     user?: User,
-  ): Promise<EntityRecordClass> {
+  ): Promise<EntityRecord> {
     const entityRecord = await this.getEntity(entityId, id, user);
     entityRecord.update(data);
     await entityRecord.save();
@@ -427,7 +429,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   async findEntity(
     entityId: string,
     filter: Required<ListOptions["filter"]>,
-  ): Promise<EntityRecordClass | null> {
+  ): Promise<EntityRecord | null> {
     const entityDef = this.getEntityDef(entityId);
     const result = await this.database.getRows<Record<string, SafeType>>(
       entityDef.config.tableName,
@@ -594,7 +596,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   async getSettings(
     settingsId: string,
     user?: User,
-  ): Promise<SettingsRecordClass> {
+  ): Promise<SettingsRecord> {
     const settingsClass = this.getSettingsClass(settingsId);
     const settingsRecord = new settingsClass();
     settingsRecord._user = user;
@@ -606,7 +608,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     settingsId: string,
     data: Record<string, any>,
     user?: User,
-  ): Promise<SettingsRecordClass> {
+  ): Promise<SettingsRecord> {
     const settingsRecord = await this.getSettings(settingsId, user);
     settingsRecord.update(data);
     await settingsRecord.save();

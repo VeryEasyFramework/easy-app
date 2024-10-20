@@ -11,11 +11,11 @@ import {
 } from "@vef/string-utils";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { SettingsHook } from "@vef/types";
-import type { SettingsActionDefinition } from "#orm/entity/settings/settingsRecord.ts";
+import type { SettingsActionDefinition } from "#orm/entity/settings/settingsRecordTypes.ts";
 import type {
   SettingsEntityHookDefinition,
   SettingsEntityHooks,
-} from "#orm/entity/settings/settingsEntity.ts";
+} from "#orm/entity/settings/settingsRecordTypes.ts";
 import type {
   EasyEntityHooks,
   EntityActionDefinition,
@@ -31,29 +31,29 @@ export interface BaseDefinitionConfig {
 
 type DefType = "entity" | "settings";
 
-interface HooksDefMap {
+export interface HooksDefMap {
   entity: EntityHookDefinition;
   settings: SettingsEntityHookDefinition;
 }
 
-interface EasyHooksMap {
+export interface EasyHooksMap {
   entity: EasyEntityHooks;
   settings: SettingsEntityHooks;
 }
 
-interface ActionsDefMap<F extends Array<EasyField>> {
+export interface ActionsDefMap<F extends Array<EasyField>> {
   entity: EntityActionDefinition<F>;
   settings: SettingsActionDefinition<F>;
 }
-interface ActionsMap {
+export interface ActionsMap {
   entity: EntityActionDefinition & { key: string };
   settings: SettingsActionDefinition & { key: string };
 }
-interface HooksMap {
+export interface HooksMap {
   entity: EntityHook;
   settings: SettingsHook;
 }
-export abstract class BaseDefinition<
+export class BaseDefinition<
   C extends BaseDefinitionConfig,
   T extends DefType,
 > {
