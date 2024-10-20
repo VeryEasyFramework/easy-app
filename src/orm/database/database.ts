@@ -5,9 +5,11 @@ import {
 
 import type { DatabaseAdapter } from "./adapter/databaseAdapter.ts";
 import type {
+  CountOptions,
   EasyField,
   EasyFieldType,
   ListOptions,
+  ReportOptions,
   RowsResult,
   SafeType,
 } from "@vef/types";
@@ -35,8 +37,7 @@ type ExtractConfig<A extends keyof DatabaseConfig> = A extends
 export class Database<
   A extends keyof DatabaseConfig,
 > {
-  adapter: DatabaseAdapter<DatabaseConfig[keyof DatabaseConfig]>;
-
+  adapter: PostgresAdapter;
   private config: DatabaseConfig[A];
   constructor(options: {
     adapter: A;
@@ -49,10 +50,6 @@ export class Database<
         this.adapter = new PostgresAdapter(
           options.config as PostgresConfig,
         );
-        break;
-
-      case "denoKv":
-        this.adapter = new DenoKvAdapter(options.config as DenoKvConfig);
         break;
 
       default:
@@ -89,8 +86,8 @@ export class Database<
     tableName: string,
     id: any,
     data: Record<string, any>,
-  ): Promise<T> {
-    return await this.adapter.update(tableName, id, data);
+  ): Promise<RowsResult<T>> {
+    return await this.adapter.update<T>(tableName, id, data);
   }
   async deleteRow(
     tableName: string,
@@ -98,6 +95,13 @@ export class Database<
     value: any,
   ): Promise<void> {
     await this.adapter.delete(tableName, field, value);
+  }
+
+  async deleteRows(
+    tableName: string,
+    filters: Record<string, any>,
+  ): Promise<void> {
+    await this.adapter.deleteRows(tableName, filters);
   }
   async getRows<T extends Record<string, SafeType>>(
     tableName: string,
@@ -127,12 +131,34 @@ export class Database<
     return await this.adapter.getValue(tableName, id, field);
   }
 
+  async count(tableName: string, options?: CountOptions): Promise<number> {
+    return await this.adapter.count(tableName, options) as number;
+  }
+
+  async countGrouped<K extends Array<PropertyKey>>(
+    tableName: string,
+    groupBy: K,
+    options?: CountOptions,
+  ): Promise<any> {
+    return await this.adapter.count(tableName, {
+      ...options,
+      groupBy,
+    });
+  }
+
+  async getReport<T>(
+    tableName: string,
+    options: ReportOptions,
+  ): Promise<void> {
+    // const results = await this.adapter.getReport(tableName, options);
+    // return results;
+  }
   async batchUpdateField(
     tableName: string,
     field: string,
     value: any,
     filters: Record<string, any>,
-  ) {
+  ): Promise<void> {
     await this.adapter.batchUpdateField(tableName, field, value, filters);
   }
 }

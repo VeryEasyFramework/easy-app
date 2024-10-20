@@ -1,11 +1,7 @@
 import type {
   ChildListDefinition,
-  EasyEntityHooks,
+  Choice,
   EasyField,
-  EntityAction,
-  EntityActionDefinition,
-  EntityHook,
-  EntityHookDefinition,
   FieldGroupDefinition,
 } from "@vef/types";
 import {
@@ -14,16 +10,23 @@ import {
   toCamelCase,
 } from "@vef/string-utils";
 import { raiseOrmException } from "#orm/ormException.ts";
+import type { SettingsHook } from "@vef/types";
+import type { SettingsActionDefinition } from "#orm/entity/settings/settingsRecord.ts";
 import type {
-  SettingsAction,
-  SettingsActionDefinition,
   SettingsEntityHookDefinition,
   SettingsEntityHooks,
-  SettingsHook,
-} from "#orm/entity/settings/settingsDefTypes.ts";
+} from "#orm/entity/settings/settingsEntity.ts";
+import type {
+  EasyEntityHooks,
+  EntityActionDefinition,
+  EntityHook,
+  EntityHookDefinition,
+} from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
+
 export interface BaseDefinitionConfig {
   label: string;
   description: string;
+  statusField?: string;
 }
 
 type DefType = "entity" | "settings";
@@ -38,13 +41,13 @@ interface EasyHooksMap {
   settings: SettingsEntityHooks;
 }
 
-interface ActionsDefMap {
-  entity: EntityActionDefinition;
-  settings: SettingsActionDefinition;
+interface ActionsDefMap<F extends Array<EasyField>> {
+  entity: EntityActionDefinition<F>;
+  settings: SettingsActionDefinition<F>;
 }
 interface ActionsMap {
-  entity: EntityAction;
-  settings: SettingsAction;
+  entity: EntityActionDefinition & { key: string };
+  settings: SettingsActionDefinition & { key: string };
 }
 interface HooksMap {
   entity: EntityHook;
@@ -58,6 +61,24 @@ export abstract class BaseDefinition<
   readonly fields: Array<EasyField>;
   readonly fieldGroups: Array<FieldGroupDefinition>;
 
+  private _statusField?: EasyField;
+
+  get statusField(): EasyField | undefined {
+    return this._statusField;
+  }
+
+  set statusField(fieldKey: string) {
+    const field = this.fields.find((f) => f.key === fieldKey);
+    if (!field) {
+      raiseOrmException(
+        "InvalidField",
+        `Field with key ${fieldKey} not found in entity ${this.key}`,
+      );
+    }
+
+    this._statusField = field;
+  }
+
   readonly children: Array<ChildListDefinition>;
 
   config: C = {} as C;
@@ -65,7 +86,7 @@ export abstract class BaseDefinition<
   readonly actions: Array<ActionsMap[T]>;
 
   readonly hooks: EasyHooksMap[T];
-  constructor(key: string, options?: {
+  protected constructor(key: string, options?: {
     label?: string;
     description?: string;
   }) {
@@ -86,6 +107,8 @@ export abstract class BaseDefinition<
       afterInsert: [],
       validate: [],
       beforeValidate: [],
+      beforeDelete: [],
+      afterDelete: [],
     };
 
     this.actions = [];
@@ -118,6 +141,9 @@ export abstract class BaseDefinition<
         `Field with key ${field.key} is a protected keyword in entity ${this.key}`,
       );
     }
+    if (!field.label) {
+      field.label = camelToTitleCase(field.key);
+    }
     this.fields.push(field);
   }
 
@@ -149,7 +175,15 @@ export abstract class BaseDefinition<
     (this.hooks as any)[hook].push(definition);
   }
 
-  addAction(actionName: string, actionDefinition: ActionsDefMap[T]) {
+  addAction<
+    P extends string,
+    K extends PropertyKey,
+    C extends Choice<K>[],
+    F extends Array<EasyField<P, K, C>>,
+  >(
+    actionName: string,
+    actionDefinition: ActionsDefMap<F>[T],
+  ) {
     this.actions.push(
       {
         key: actionName,

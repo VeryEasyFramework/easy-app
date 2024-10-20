@@ -2,7 +2,9 @@ import { EasyPack } from "#/package/easyPack.ts";
 import { appActions } from "#/package/basePack/actions/appActions.ts";
 import { bootEntityRooms } from "#/package/basePack/boot/realtimeRooms.ts";
 import { entityActions } from "#/package/basePack/actions/entityActions/index.ts";
-import { requestOptionsMiddleware } from "#/package/basePack/middleware/requestOptionsMiddleware.ts";
+import {
+  requestOptionsMiddleware,
+} from "#/package/basePack/middleware/requestOptionsMiddleware.ts";
 import { buildCli } from "#/package/basePack/init/cli/cli.ts";
 import { editLogEntity } from "#/package/basePack/entities/editLogEntity.ts";
 import { ormGlobalHooks } from "#/package/basePack/boot/ormGlobalHooks.ts";
@@ -18,8 +20,7 @@ basePack.addActionGroup("entity", entityActions);
 basePack.addActionGroup("settings", settingsActions);
 
 basePack.addRealtimeRoom({
-  roomName: "app",
-  events: ["announce"],
+  roomName: "broadcast",
 });
 
 basePack.addMiddleware(requestOptionsMiddleware);

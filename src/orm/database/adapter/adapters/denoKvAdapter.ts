@@ -147,10 +147,10 @@ export class DenoKvAdapter extends DatabaseAdapter<DenoKvConfig> {
   }
   async adaptSaveValue(field: EasyField | EasyFieldType, value: any) {
   }
-  async syncTable(
+  syncTable(
     tableName: string,
     entity: EntityDefinition,
-  ): Promise<string> {
+  ): string {
     return "";
   }
 }

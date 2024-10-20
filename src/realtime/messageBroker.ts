@@ -14,23 +14,52 @@ class RealtimeBroker extends WebsocketBase {
 }
 
 export class MessageBroker {
+  private static instance: MessageBroker;
+
+  static getInstance(port?: number) {
+    if (!MessageBroker.instance) {
+      MessageBroker.instance = new MessageBroker(port);
+    }
+    return MessageBroker.instance;
+  }
+
   realtime: RealtimeBroker;
   port: number;
-  constructor(port?: number) {
+
+  running: boolean = false;
+
+  private constructor(port?: number) {
     this.port = port || 11254;
     this.realtime = new RealtimeBroker();
+    this.running = false;
   }
 
   run() {
-    Deno.serve({
+    if (this.running) {
+      easyLog.warning("Realtime server already running");
+      return;
+    }
+    this.running = true;
+    const server = Deno.serve({
       port: this.port,
       hostname: "127.0.0.1",
       onListen: (addr) => {
-        easyLog.info(`Realtime server listening on port ${addr.port}`);
+        easyLog.warning(
+          `Realtime server listening on port ${addr.port}`,
+          "Realtime",
+          {
+            compact: true,
+            hideTrace: true,
+          },
+        );
       },
-    }, async (request) => {
+    }, (request) => {
       const easyRequest = new EasyRequest(request);
       return this.realtime.handleUpgrade(easyRequest);
+    });
+    server.finished.then(() => {
+      easyLog.warning("Realtime server closed");
+      this.running = false;
     });
   }
 }

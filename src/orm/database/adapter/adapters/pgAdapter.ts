@@ -1,4 +1,16 @@
-import type { AdvancedFilter, ListOptions } from "@vef/types";
+import type {
+  AdvancedFilter,
+  CountGroupedResult,
+  CountOptions,
+  EasyField,
+  EasyFieldType,
+  IdMethodType,
+  ListOptions,
+  ReportOptions,
+  ReportResult,
+  RowsResult,
+  SafeType,
+} from "@vef/types";
 import {
   type AdapterColumn,
   DatabaseAdapter,
@@ -6,14 +18,8 @@ import {
 import { camelToSnakeCase, toCamelCase } from "@vef/string-utils";
 import { PostgresPool } from "#orm/database/adapter/adapters/postgres/pgPool.ts";
 import type { PgClientConfig } from "#orm/database/adapter/adapters/postgres/pgTypes.ts";
-import type {
-  EasyField,
-  EasyFieldType,
-  IdMethodType,
-  RowsResult,
-  SafeType,
-} from "@vef/types";
 import { raiseOrmException } from "#orm/ormException.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export interface PostgresConfig {
   clientOptions: PgClientConfig;
@@ -58,7 +64,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
   }
   override async query<T>(query: string): Promise<RowsResult<T>> {
     if (this.config.debug) {
-      console.log(query);
+      easyLog.debug(query, "Postgres Query");
     }
     const result = await this.pool.query<T>(query);
     const columns = result.columns.map((column) => {
@@ -145,7 +151,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       `CREATE TABLE IF NOT EXISTS ${this.schema}.${tableName} (${columnName} ${columnType} PRIMARY KEY)`;
     await this.query<any>(query);
   }
-  async dropTable(tableName: string): Promise<void> {
+  dropTable(tableName: string): Promise<void> {
     tableName = this.toSnake(tableName);
     throw new Error(`dropTable not implemented for postgres`);
   }
@@ -166,8 +172,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const query = `INSERT INTO ${this.schema}.${tableName} (${
       columns.join(", ")
     }) VALUES (${values.join(", ")}) RETURNING *`;
-    const result = await this.query(query);
-    return result;
+    return await this.query(query);
   }
 
   async delete(tableName: string, field: string, value: any): Promise<void> {
@@ -178,6 +183,18 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     await this.query(query);
   }
 
+  async deleteRows(
+    tableName: string,
+    filters: Record<string, any>,
+  ): Promise<void> {
+    tableName = this.toSnake(tableName);
+    let query = `DELETE FROM ${this.schema}.${tableName}`;
+    if (filters) {
+      query += " WHERE ";
+      query += this.makeFilter(filters);
+    }
+    await this.query(query);
+  }
   async update<T>(
     tableName: string,
     id: string | number,
@@ -192,8 +209,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const query = `UPDATE ${this.schema}.${tableName} SET ${
       values.join(", ")
     } WHERE id = ${idValue} RETURNING *`;
-    const result = await this.query<T>(query);
-    return result;
+    return await this.query<T>(query);
   }
 
   async getRows<T>(
@@ -254,6 +270,46 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     return result;
   }
 
+  async count<K extends Array<PropertyKey>>(
+    tableName: string,
+    options?: CountOptions & { groupBy?: K },
+  ): Promise<any> {
+    tableName = this.toSnake(tableName);
+    let countQuery = `SELECT COUNT(*) FROM ${this.schema}.${tableName}`;
+    if (options?.groupBy) {
+      countQuery = `SELECT ${
+        options.groupBy.map((column) => {
+          return this.formatColumnName(column as string);
+        }).join(", ")
+      }, COUNT(*) FROM ${this.schema}.${tableName}`;
+    }
+    let andFilter = "";
+    let orFilter = "";
+    if (options?.filter) {
+      andFilter = this.makeAndFilter(options.filter);
+    }
+    if (options?.orFilter) {
+      orFilter = this.makeOrFilter(options.orFilter);
+    }
+    if (andFilter && orFilter) {
+      countQuery += ` WHERE ${andFilter} AND (${orFilter})`;
+    } else if (andFilter) {
+      countQuery += ` WHERE ${andFilter}`;
+    } else if (orFilter) {
+      countQuery += ` WHERE ${orFilter}`;
+    }
+    if (options?.groupBy) {
+      countQuery += ` GROUP BY ${
+        options.groupBy.map((column) => {
+          return this.formatColumnName(column as string);
+        }).join(", ")
+      }`;
+      const groupedResult = await this.query<CountGroupedResult<K>>(countQuery);
+      return groupedResult.data;
+    }
+    const countResult = await this.query<{ count: number }>(countQuery);
+    return countResult.data[0].count;
+  }
   private formatColumnName(column: string): string {
     column = camelToSnakeCase(column);
     const reservedWords = ["order", "user"];
@@ -296,6 +352,14 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       );
     }
     return result.data[0][field];
+  }
+
+  async getReport<T>(
+    tableName: string,
+    options: ReportOptions,
+  ): Promise<ReportResult<T>> {
+    tableName = this.toSnake(tableName);
+    return {} as ReportResult<T>;
   }
   private makeFilter(
     filters: Record<string, SafeType | AdvancedFilter>,

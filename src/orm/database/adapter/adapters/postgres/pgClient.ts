@@ -157,7 +157,6 @@ export class PostgresClient {
               });
 
               //  md5 authentication
-              break;
             }
             case AUTH.SASL_STARTUP: {
               const clientFirstMessage = client.composeChallenge();
@@ -243,9 +242,7 @@ export class PostgresClient {
       if (!field) {
         break;
       }
-      const value = this.reader.readCString();
-
-      errorFields[errorCodeMap[field]] = value;
+      errorFields[errorCodeMap[field]] = this.reader.readCString();
       offset++;
       if (offset > this.reader.messageLength) {
         break;
@@ -305,7 +302,6 @@ export class PostgresClient {
         case QR_TYPE.ROW_DESCRIPTION: {
           if (gotDescription) {
             throw new PgError({ message: "Got row description twice" });
-            break;
           }
           gotDescription = true;
           const columns = this.parseRowDescription();
@@ -371,11 +367,10 @@ export class PostgresClient {
     if (errors.length) {
       throw new PgError(errors[0]);
     }
-    const result: QueryResponse<T> = {
+    return {
       rowCount: data.length,
       rows: data,
       columns: fields,
     };
-    return result;
   }
 }

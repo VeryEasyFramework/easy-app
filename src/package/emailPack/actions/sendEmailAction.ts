@@ -11,8 +11,8 @@ export const sendEmailAction = createAction("sendEmail", {
       body,
     });
 
-    await email.runAction("send");
-    return { message: "Email sent successfully" };
+    await email.enqueueAction("send");
+    return { message: "Email queued for sending" };
   },
   params: {
     recipientEmail: {

@@ -55,6 +55,14 @@ export class ChildList {
   async updateOrder() {
   }
 
+  async clear() {
+    await this.orm.database.deleteRows(this.tableName, {
+      parentId: this.parentId,
+    });
+
+    await this.load(this.parentId);
+  }
+
   private async deleteStaleRecords() {
     const dbRecords = this.orm.database.getRows(this.tableName, {
       filter: {

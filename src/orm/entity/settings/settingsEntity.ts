@@ -1,13 +1,18 @@
 import { BaseDefinition } from "#orm/entity/baseDefinition.ts";
-import {
-  SettingsAction,
-  SettingsEntityHooks,
-} from "#orm/entity/settings/settingsDefTypes.ts";
-
-export interface SettingsEntityConfig {
-  label: string;
-  description: string;
+import type { SettingsAction, SettingsEntityConfig } from "@vef/types";
+import type { SettingsRecordClass } from "#orm/entity/settings/settingsRecord.ts";
+export interface SettingsEntityHookDefinition {
+  label?: string;
+  description?: string;
+  action(settings: SettingsRecordClass): Promise<void> | void;
 }
+
+export type SettingsEntityHooks = {
+  beforeSave: Array<SettingsEntityHookDefinition>;
+  afterSave: Array<SettingsEntityHookDefinition>;
+  validate: Array<SettingsEntityHookDefinition>;
+  beforeValidate: Array<SettingsEntityHookDefinition>;
+};
 export class SettingsEntity
   extends BaseDefinition<SettingsEntityConfig, "settings"> {
   settingsId: string;

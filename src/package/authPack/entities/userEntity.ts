@@ -1,6 +1,8 @@
 import { toTitleCase } from "@vef/string-utils";
 import { generateSalt, hashPassword } from "#/package/authPack/security.ts";
 import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { easyLog } from "#/log/logging.ts";
+import { asyncPause } from "#/utils.ts";
 
 export const userEntity = new EasyEntity("user");
 
@@ -160,6 +162,16 @@ userEntity.addAction("generateApiToken", {
     await entity.save();
     return { token };
   },
+});
+
+userEntity.addAction("sayHello", {
+  async action(entity) {
+    const userName = entity.fullName as string;
+    const message = `Hello ${name}, I am ${userName}`;
+    await asyncPause(5000);
+    return message;
+  },
+  label: "Say Hello",
 });
 
 // userEntity.addChild({

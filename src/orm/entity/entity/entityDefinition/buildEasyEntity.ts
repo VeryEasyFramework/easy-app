@@ -5,7 +5,6 @@ import type {
   EntityDefinition,
   FieldGroup,
 } from "@vef/types";
-import type {} from "@vef/types";
 import { camelToSnakeCase, toPascalCase } from "@vef/string-utils";
 import type { EasyOrm } from "#orm/orm.ts";
 import { buildFieldGroups } from "#orm/entity/field/buildFieldGroups.ts";
@@ -16,6 +15,9 @@ export function buildEasyEntity(
   orm: EasyOrm,
   easyEntity: EasyEntity,
 ): EntityDefinition {
+  if (easyEntity.config.statusField) {
+    easyEntity.statusField = easyEntity.config.statusField;
+  }
   buildConnectionFields(orm, easyEntity);
   buildChildEntities(orm, easyEntity);
   const groups: FieldGroup[] = buildFieldGroups(easyEntity);
@@ -23,6 +25,7 @@ export function buildEasyEntity(
 
   return {
     entityId: easyEntity.entityId,
+    statusField: easyEntity.statusField,
     fields: easyEntity.fields,
     fieldGroups: groups,
     children: easyEntity.children,
