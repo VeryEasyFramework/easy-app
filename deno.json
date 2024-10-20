@@ -1,6 +1,6 @@
 {
   "name": "@vef/easy-app",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "exports": "./mod.ts",
   "exclude": [
     "references",

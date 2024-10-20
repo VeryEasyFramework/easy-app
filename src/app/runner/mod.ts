@@ -5,6 +5,7 @@ import processArgs from "#/app/runner/processArgs.ts";
 import runMessageBroker from "#/app/runner/runMessageBroker.ts";
 import runWorker from "#/app/runner/runWorker.ts";
 import { InputListener } from "@vef/easy-cli";
+import { getEnv } from "#/appConfig/configEnv.ts";
 
 export default async function appRunner(app: EasyApp, args: string[]) {
   Deno.addSignalListener("SIGTERM", () => {
@@ -54,14 +55,18 @@ export default async function appRunner(app: EasyApp, args: string[]) {
       abortController,
       hideCursor: true,
     });
-    signal.addEventListener("abort", (event) => {
-      easyLog.warning("Shutting down...", "Lifecycle", {
-        hideTrace: true,
+    if (getEnv("VEF_ENVIRONMENT") == "development") {
+      signal.addEventListener("abort", (event) => {
+        easyLog.warning("Shutting down...", "Lifecycle", {
+          hideTrace: true,
+        });
+        listener.stop();
+        app.exit(0);
       });
-      listener.stop();
-      app.exit(0);
-    });
-    listener.listen();
+
+      listener.listen();
+    }
+
     const procs = await begin({
       multiProcess: app.config.multiProcessing,
       app,
