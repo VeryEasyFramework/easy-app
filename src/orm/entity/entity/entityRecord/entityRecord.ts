@@ -323,7 +323,10 @@ export class EntityRecordClass implements EntityRecordClass {
     }
   }
 
-  async enqueueAction(actionKey: string, data?: Record<string, any>) {
+  async enqueueAction(
+    actionKey: string,
+    data?: Record<string, any>,
+  ): Promise<Record<string, any>> {
     this.validateAction(actionKey, data);
     data = data || {};
 

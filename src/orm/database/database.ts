@@ -149,16 +149,16 @@ export class Database<
   async getReport<T>(
     tableName: string,
     options: ReportOptions,
-  ) {
-    const results = await this.adapter.getReport(tableName, options);
-    return results;
+  ): Promise<void> {
+    // const results = await this.adapter.getReport(tableName, options);
+    // return results;
   }
   async batchUpdateField(
     tableName: string,
     field: string,
     value: any,
     filters: Record<string, any>,
-  ) {
+  ): Promise<void> {
     await this.adapter.batchUpdateField(tableName, field, value, filters);
   }
 }
