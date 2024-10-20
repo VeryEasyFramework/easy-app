@@ -1,8 +1,13 @@
+export { OrmException, raiseOrmException } from "#orm/ormException.ts";
+
+export { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
+
+export { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+
 export { createMiddleware } from "#/middleware/middleware.ts";
 
 export { authPack } from "#/package/authPack/authPack.ts";
 export { emailPack } from "#/package/emailPack/emailPack.ts";
-
 export { easyLog } from "#/log/logging.ts";
 
 export { EasyException, raiseEasyException } from "#/easyException.ts";
