@@ -171,27 +171,6 @@ export class BaseDefinition<
     });
   }
 
-  addHook(hook: HooksMap[T], definition: HooksDefMap[T]) {
-    (this.hooks as any)[hook].push(definition);
-  }
-
-  addAction<
-    P extends string,
-    K extends PropertyKey,
-    C extends Choice<K>[],
-    F extends Array<EasyField<P, K, C>>,
-  >(
-    actionName: string,
-    actionDefinition: ActionsDefMap<F>[T],
-  ) {
-    this.actions.push(
-      {
-        key: actionName,
-        ...actionDefinition,
-      } as ActionsMap[T],
-    );
-  }
-
   addChild(child: ChildListDefinition) {
     // check if the child is already in the list by the key
     if (this.children.find((c) => c.childName === child.childName)) {

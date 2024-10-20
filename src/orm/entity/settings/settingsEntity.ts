@@ -1,11 +1,20 @@
 import { BaseDefinition } from "#orm/entity/baseDefinition.ts";
-import type { SettingsAction, SettingsEntityConfig } from "@vef/types";
-import type { SettingsEntityHooks } from "#orm/entity/settings/settingsRecordTypes.ts";
+import type {
+  Choice,
+  EasyField,
+  SettingsAction,
+  SettingsEntityConfig,
+  SettingsHook,
+} from "@vef/types";
+import type {
+  SettingsActionDefinition,
+  SettingsEntityHookDefinition,
+  SettingsEntityHooks,
+} from "#orm/entity/settings/settingsRecordTypes.ts";
 
 export class SettingsEntity
   extends BaseDefinition<SettingsEntityConfig, "settings"> {
   settingsId: string;
-  declare readonly actions: Array<SettingsAction>;
 
   declare readonly hooks: SettingsEntityHooks;
 
@@ -15,5 +24,25 @@ export class SettingsEntity
   }) {
     super(settingsName, options);
     this.settingsId = this.key;
+  }
+  addHook(hook: SettingsHook, definition: SettingsEntityHookDefinition) {
+    (this.hooks as any)[hook].push(definition);
+  }
+
+  addAction<
+    P extends string,
+    K extends PropertyKey,
+    C extends Choice<K>[],
+    F extends Array<EasyField<P, K, C>>,
+  >(
+    actionName: string,
+    actionDefinition: SettingsActionDefinition<F>,
+  ) {
+    this.actions.push(
+      {
+        key: actionName,
+        ...actionDefinition,
+      } as SettingsActionDefinition & { key: string },
+    );
   }
 }
