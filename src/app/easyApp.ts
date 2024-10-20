@@ -17,7 +17,6 @@ import type {
 } from "#/actions/actionTypes.ts";
 import type { BootAction, InitAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
-import { asyncPause } from "#/utils.ts";
 
 import { ColorMe, type EasyCli, type MenuView } from "@vef/easy-cli";
 
@@ -35,7 +34,7 @@ import { authPack } from "#/package/authPack/authPack.ts";
 import { emailPack } from "#/package/emailPack/emailPack.ts";
 import appRunner from "#/app/runner/mod.ts";
 import { workersPack } from "#/package/workers/workersPack.ts";
-import type { SettingsEntityDefinition } from "../../../vef-types/src/orm/settings.ts";
+import type { SettingsEntityDefinition } from "@vef/types";
 import type { AppProcess } from "#/app/runner/begin.ts";
 
 const config = await initAppConfig();
