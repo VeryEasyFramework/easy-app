@@ -67,7 +67,7 @@ Object.keys(workerFields).forEach((worker) => {
       fieldType: "ChoicesField",
       label: "Status",
       description: `The status of the ${worker} worker`,
-      defaultValue: "idle",
+      defaultValue: "stopped",
       readOnly: true,
       choices: [{
         key: "ready",
