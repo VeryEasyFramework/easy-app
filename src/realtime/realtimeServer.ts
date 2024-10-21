@@ -250,7 +250,7 @@ export class RealtimeServer extends WebsocketBase {
     );
 
     this.rooms[room].users = this.rooms[room].users.filter((u) =>
-      u.id !== client.user?.id
+      u?.id && u.id !== client.user?.id
     );
 
     if (client) {
