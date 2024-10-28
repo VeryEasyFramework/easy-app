@@ -149,7 +149,7 @@ workerSettings.addHook("beforeSave", {
       }
       if (!enabled && pid) {
         try {
-          Deno.kill(pid, "SIGTERM");
+          Deno.kill(pid, "SIGINT");
         } catch (e) {
           if (e instanceof Deno.errors.NotFound) {
             // Worker already stopped

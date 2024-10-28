@@ -8,7 +8,7 @@ import { InputListener } from "@vef/easy-cli";
 import { getEnv } from "#/appConfig/configEnv.ts";
 
 export default async function appRunner(app: EasyApp, args: string[]) {
-  Deno.addSignalListener("SIGTERM", () => {
+  Deno.addSignalListener("SIGINT", () => {
     app.exit(0);
   });
   const argsRecord = processArgs(args);

@@ -534,7 +534,7 @@ export class EasyApp {
     this.server?.shutdown();
     this.processes.forEach((appProcess) => {
       try {
-        appProcess.process.kill("SIGTERM");
+        appProcess.process.kill("SIGINT");
         easyLog.info(
           `Stopped ${appProcess.name} (${appProcess.process.pid})`,
           "Shutdown",

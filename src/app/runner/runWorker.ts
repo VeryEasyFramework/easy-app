@@ -20,7 +20,7 @@ export default function runWorker(
     name: `${mode} worker`,
   });
 
-  Deno.addSignalListener("SIGTERM", async () => {
+  Deno.addSignalListener("SIGINT", async () => {
     await app.orm.updateSettings("workerSettings", {
       [`${mode}WorkerStatus`]: "stopped",
       [`${mode}WorkerPid`]: null,
