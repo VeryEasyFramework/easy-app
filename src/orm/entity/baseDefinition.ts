@@ -23,6 +23,9 @@ import type {
   EntityHookDefinition,
 } from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
 
+type EasyFieldDef = Omit<EasyField, "choices"> & {
+  choices?: Array<Choice<PropertyKey>> | Array<string>;
+};
 export interface BaseDefinitionConfig {
   label: string;
   description: string;
@@ -124,7 +127,7 @@ export class BaseDefinition<
     };
   }
 
-  addField(field: EasyField) {
+  addField(field: EasyFieldDef) {
     // check if the field is already in the list by the key
 
     if (this.fields.find((f) => f.key === field.key)) {
@@ -144,10 +147,27 @@ export class BaseDefinition<
     if (!field.label) {
       field.label = camelToTitleCase(field.key);
     }
-    this.fields.push(field);
+    const choices: Choice<PropertyKey>[] = [];
+    if (field.choices) {
+      field.choices.forEach((choice) => {
+        if (typeof choice === "string") {
+          choices.push({
+            key: choice,
+            label: choice,
+          });
+        } else {
+          choices.push(choice);
+        }
+      });
+    }
+    const newField: EasyField = {
+      ...field,
+      choices,
+    };
+    this.fields.push(newField);
   }
 
-  addFields(fields: Array<EasyField>) {
+  addFields(fields: Array<EasyFieldDef>) {
     fields.forEach((field) => {
       this.addField(field);
     });

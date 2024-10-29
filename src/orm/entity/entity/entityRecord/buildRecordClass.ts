@@ -31,6 +31,7 @@ export function buildRecordClass(orm: EasyOrm, entity: EntityDefinition) {
 
   // entityRecordClass = bindHooks(entityRecordClass, entity);
   setFields(entityRecordClass, entity);
+  buildMultiChoiceFields(entityRecordClass, entity, orm);
   buildChildren(entityRecordClass, entity, orm);
   return entityRecordClass;
 }
@@ -48,6 +49,9 @@ function setFields(
   entity: EntityDefinition,
 ) {
   entity.fields.forEach((field) => {
+    if (field.fieldType === "MultiChoiceField") {
+      return;
+    }
     Object.defineProperty(entityRecordClass.prototype, field.key, {
       get: function () {
         return this._data[field.key];
@@ -102,6 +106,26 @@ function buildChildren(
       },
       set: function (value) {
         childClass.records = value;
+      },
+    });
+  });
+}
+
+function buildMultiChoiceFields(
+  entityRecordClass: typeof EntityRecordClass,
+  entity: EntityDefinition,
+  orm: EasyOrm,
+) {
+  const fields = entity.fields.filter((field) =>
+    field.fieldType === "MultiChoiceField"
+  );
+  fields.forEach((field) => {
+    Object.defineProperty(entityRecordClass.prototype, field.key, {
+      get: function () {
+        return this._multiChoiceData[field.key] || [];
+      },
+      set: function (value) {
+        this._multiChoiceData[field.key] = value || [];
       },
     });
   });

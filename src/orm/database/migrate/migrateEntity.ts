@@ -45,18 +45,67 @@ export async function migrateEntity(options: {
   } else {
     onOutput(`Table ${tableName} already exists`);
   }
+  const fields = entity.fields.filter((f) =>
+    f.fieldType !== "MultiChoiceField"
+  );
+
+  const multiChoiceFields = entity.fields.filter((f) =>
+    f.fieldType === "MultiChoiceField"
+  );
 
   await syncFields(database, tableName, [
     ...baseFields,
     primaryField,
-    ...entity.fields,
+    ...fields,
   ], onOutput);
 
-  entity.children.forEach((child) => {
-    migrateChild(database, child, entity);
-  });
+  for (const field of multiChoiceFields) {
+    await migrateMultiChoiceField(database, entity, field, onOutput);
+  }
+
+  for (const child of entity.children) {
+    await migrateChild(database, child, entity, onOutput);
+  }
 }
 
+async function migrateMultiChoiceField(
+  database: Database<keyof DatabaseConfig>,
+  parent: EntityDefinition,
+  field: EasyField,
+  onOutput: (message: string) => void,
+) {
+  const valuesTableName = `${parent.entityId}_${field.key}_mc_values`;
+
+  const valuesTableExists = await database.adapter.tableExists(valuesTableName);
+
+  if (!valuesTableExists) {
+    await database.adapter.createTable(valuesTableName, {
+      key: "id",
+      fieldType: "IDField",
+      primaryKey: true,
+    }, {
+      type: "hash",
+      hashLength: 16,
+    });
+  }
+
+  await syncFields(database, valuesTableName, [
+    {
+      key: "parentId",
+      fieldType: parent.config.idMethod.type === "number"
+        ? "IntField"
+        : "DataField",
+    },
+    {
+      key: "value",
+      fieldType: "DataField",
+    },
+    {
+      key: "order",
+      fieldType: "IntField",
+    },
+  ], onOutput);
+}
 async function migrateChild(
   database: Database<keyof DatabaseConfig>,
   child: ChildListDefinition,

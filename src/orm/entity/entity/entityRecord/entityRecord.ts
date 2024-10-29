@@ -17,6 +17,8 @@ import type { ChildList } from "#orm/entity/child/childRecord.ts";
 export class EntityRecordClass {
   private _data: Record<string, any> = {};
 
+  private _multiChoiceData: Record<string, any> = {};
+
   private _prevData: Record<string, any> = {};
   private _isNew: boolean = true;
   private _primaryKey?: string;
@@ -69,8 +71,16 @@ export class EntityRecordClass {
       (child) => child.childName,
     );
 
+    const multiChoiceKeys = this.entityDefinition.fields.filter(
+      (field) => field.fieldType === "MultiChoiceField",
+    ).map((field) => field.key);
+
     for (const key of childrenKeys) {
       data[key] = (this[key as keyof this] as ChildList).records;
+    }
+
+    for (const key of multiChoiceKeys) {
+      data[key] = this[key as keyof this];
     }
 
     return data;
@@ -161,7 +171,7 @@ export class EntityRecordClass {
     );
     this._data = this.parseDatabaseRow(data);
     this._isNew = false;
-
+    await this.loadMultiChoiceFields();
     await this.loadChildren();
   }
 
@@ -169,6 +179,31 @@ export class EntityRecordClass {
     for (const child of this.entityDefinition.children) {
       const childClass = this[child.childName as keyof this] as ChildList;
       await childClass.load(this.id);
+    }
+  }
+
+  private async loadMultiChoiceFields() {
+    const fields = this.entityDefinition.fields.filter((field) =>
+      field.fieldType === "MultiChoiceField"
+    );
+
+    for (const field of fields) {
+      const values = await this.orm.database.getRows(
+        `${this.entityDefinition.entityId}_${field.key}_mc_values`,
+        {
+          filter: {
+            parentId: this.id,
+          },
+        },
+      );
+
+      const data = values.data.map((value) => {
+        return {
+          value: value.value as string,
+          order: value.order as number,
+        };
+      });
+      this[field.key as keyof this] = data as any;
     }
   }
 
@@ -189,6 +224,7 @@ export class EntityRecordClass {
       );
 
       await this.saveChildren();
+      await this.saveMultiChoiceFields();
       await this.afterInsert();
       await this.afterSave();
       this._isNew = false;
@@ -201,6 +237,7 @@ export class EntityRecordClass {
       return changed;
     }
     await this.beforeSave();
+    await this.saveMultiChoiceFields();
     await this.saveChildren();
     let changedData = this.getChangedData();
 
@@ -245,6 +282,31 @@ export class EntityRecordClass {
     return changed;
   }
 
+  private async saveMultiChoiceFields() {
+    const multiChoiceFields = this.entityDefinition.fields.filter(
+      (field) => field.fieldType === "MultiChoiceField",
+    );
+    for (const field of multiChoiceFields) {
+      const values = this[field.key as keyof this] as Record<string, any>[];
+      await this.orm.database.deleteRows(
+        `${this.entityDefinition.entityId}_${field.key}_mc_values`,
+        {
+          parentId: this.id,
+        },
+      );
+      for (const value of values) {
+        await this.orm.database.insertRow(
+          `${this.entityDefinition.entityId}_${field.key}_mc_values`,
+          {
+            id: generateId(16),
+            parentId: this.id,
+            value: value.value,
+            order: value.order,
+          },
+        );
+      }
+    }
+  }
   private async saveChildren() {
     const changedChildren = this.changedChildren();
     if (changedChildren.length === 0) {
