@@ -198,10 +198,7 @@ export class EntityRecordClass {
       );
 
       const data = values.data.map((value) => {
-        return {
-          value: value.value as string,
-          order: value.order as number,
-        };
+        return value.value;
       });
       this[field.key as keyof this] = data as any;
     }
@@ -300,8 +297,7 @@ export class EntityRecordClass {
           {
             id: generateId(16),
             parentId: this.id,
-            value: value.value,
-            order: value.order,
+            value,
           },
         );
       }
