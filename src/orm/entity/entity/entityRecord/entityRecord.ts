@@ -216,7 +216,6 @@ export class EntityRecordClass {
       await this.beforeInsert();
       await this.beforeSave();
       const changed = this.adaptChangedData(this._data);
-      easyLog.info(changed);
       await this.orm.database.insertRow(
         this.entityDefinition.config.tableName,
         changed,
