@@ -13,6 +13,7 @@ import type { EasyOrm } from "#orm/orm.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
 import { generateId, isEmpty } from "#orm/utils/misc.ts";
 import type { ChildList } from "#orm/entity/child/childRecord.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export class EntityRecordClass {
   private _data: Record<string, any> = {};
@@ -215,6 +216,7 @@ export class EntityRecordClass {
       await this.beforeInsert();
       await this.beforeSave();
       const changed = this.adaptChangedData(this._data);
+      easyLog.info(changed);
       await this.orm.database.insertRow(
         this.entityDefinition.config.tableName,
         changed,
@@ -646,6 +648,9 @@ export class EntityRecordClass {
 
   private setDefaultValues(data: Record<PropertyKey, any>) {
     for (const field of this.entityDefinition.fields) {
+      if (field.fieldType === "MultiChoiceField") {
+        continue;
+      }
       if (field.fieldType === "BooleanField" && isEmpty(data[field.key])) {
         data[field.key] = false;
         continue;
@@ -668,10 +673,10 @@ export class EntityRecordClass {
           data[field.key] = {};
           break;
         case "IntField":
-          data[field.key] = 0;
+          data[field.key] = null;
           break;
         case "BigIntField":
-          data[field.key] = 0;
+          data[field.key] = null;
           break;
         default:
           if (Object.keys(data).includes(field.key as string)) {
