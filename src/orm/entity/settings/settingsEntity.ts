@@ -8,16 +8,20 @@ import type {
 } from "@vef/types";
 import type {
   SettingsActionDefinition,
-  SettingsEntityHookDefinition,
   SettingsEntityHooks,
+  SettingsRecord,
 } from "#orm/entity/settings/settingsRecordTypes.ts";
 
 export class SettingsEntity
   extends BaseDefinition<SettingsEntityConfig, "settings"> {
   settingsId: string;
 
-  declare readonly hooks: SettingsEntityHooks;
-
+  hooks: SettingsEntityHooks = {
+    beforeSave: [],
+    afterSave: [],
+    validate: [],
+    beforeValidate: [],
+  };
   constructor(settingsName: string, options?: {
     label?: string;
     description?: string;
@@ -25,8 +29,12 @@ export class SettingsEntity
     super(settingsName, options);
     this.settingsId = this.key;
   }
-  addHook(hook: SettingsHook, definition: SettingsEntityHookDefinition) {
-    (this.hooks as any)[hook].push(definition);
+  addHook(hook: SettingsHook, definition: {
+    label?: string;
+    description?: string;
+    action(settings: SettingsRecord): Promise<void> | void;
+  }) {
+    this.hooks[hook].push(definition);
   }
 
   addAction<

@@ -88,7 +88,6 @@ export class BaseDefinition<
 
   readonly actions: Array<ActionsMap[T]>;
 
-  readonly hooks: EasyHooksMap[T];
   protected constructor(key: string, options?: {
     label?: string;
     description?: string;
@@ -102,17 +101,6 @@ export class BaseDefinition<
     this.fields = [];
     this.children = [];
     this.actions = [];
-
-    this.hooks = {
-      beforeSave: [],
-      afterSave: [],
-      beforeInsert: [],
-      afterInsert: [],
-      validate: [],
-      beforeValidate: [],
-      beforeDelete: [],
-      afterDelete: [],
-    };
 
     this.actions = [];
 
