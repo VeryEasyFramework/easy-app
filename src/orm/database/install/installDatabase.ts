@@ -25,18 +25,25 @@ async function createSettingsTable(database: Database<any>) {
     },
   ];
   const exists = await database.adapter.tableExists(tableName);
-  if (exists) {
-    return;
+  if (!exists) {
+    await database.adapter.createTable(tableName, {
+      key: "id",
+      fieldType: "DataField",
+      primaryKey: true,
+    }, {
+      type: "data",
+    });
   }
-  await database.adapter.createTable(tableName, {
-    key: "id",
-    fieldType: "DataField",
-    primaryKey: true,
-  }, {
-    type: "data",
-  });
-
+  const existingColumns = await database.adapter.getTableColumns(tableName);
   for (const field of fields) {
+    const existingColumn = existingColumns.find((column) =>
+      column.name === field.key
+    );
+
+    if (existingColumn) {
+      continue;
+    }
+
     await database.adapter.addColumn(tableName, field);
   }
 }
