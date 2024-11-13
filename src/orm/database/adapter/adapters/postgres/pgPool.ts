@@ -18,10 +18,14 @@ class PostgresPoolClient {
     this.locked = false;
     this.client = new PostgresClient(config);
   }
-  async connect() {
+  async connect(): Promise<void> {
     await this.client.connect();
   }
 
+  async reset(): Promise<void> {
+    await this.client.reset();
+    this.locked = false;
+  }
   async query<T>(query: string): Promise<QueryResponse<T>> {
     return await this.client.query<T>(query).catch((e) => {
       this.locked = false;
@@ -29,7 +33,7 @@ class PostgresPoolClient {
       throw e;
     });
   }
-  get connected() {
+  get connected(): boolean {
     return this.client.connected;
   }
 }
