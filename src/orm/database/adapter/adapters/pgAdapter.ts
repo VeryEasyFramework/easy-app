@@ -409,16 +409,24 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
             break;
 
           case "contains":
-            filterString = `${column} ILIKE '%${filter.value}%'`;
+            filterString = `${column} ILIKE '%${
+              formatValue(filter.value, false, true)
+            }%'`;
             break;
           case "notContains":
-            filterString = `${column} NOT ILIKE '%${filter.value}%'`;
+            filterString = `${column} NOT ILIKE '%${
+              formatValue(filter.value, false, true)
+            }%'`;
             break;
           case "startsWith":
-            filterString = `${column} ILIKE '${filter.value}%'`;
+            filterString = `${column} ILIKE '${
+              formatValue(filter.value, false, true)
+            }%'`;
             break;
           case "endsWith":
-            filterString = `${column} ILIKE '%${filter.value}'`;
+            filterString = `${column} ILIKE '%${
+              formatValue(filter.value, false, true)
+            }'`;
             break;
           case "isEmpty":
             filterString = `${column} IS NULL`;
@@ -661,6 +669,7 @@ type ValueType<Join> = Join extends false ? Array<string> : string | number;
 function formatValue<Join extends boolean>(
   value: any,
   joinList?: Join,
+  noQuotes?: boolean,
 ): ValueType<Join> | undefined {
   if (Array.isArray(value)) {
     if (value.length === 0) {
@@ -671,12 +680,19 @@ function formatValue<Join extends boolean>(
     }
     return value.map((v) => formatValue(v)) as ValueType<Join>;
   }
+  if (value === '"') {
+    return '""' as ValueType<Join>;
+  }
   if (typeof value === "string") {
     if (value === "") {
       return "''" as ValueType<Join>;
     }
     // escape single quotes
+
     value = value.replaceAll(/'/g, "''");
+    if (noQuotes) {
+      return value as ValueType<Join>;
+    }
     return `'${value}'` as ValueType<Join>;
   }
   if (value === false) {
