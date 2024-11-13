@@ -21,6 +21,7 @@ import {
 } from "#orm/database/adapter/adapters/postgres/maps/maps.ts";
 import { AUTH } from "#orm/database/adapter/adapters/postgres/pgAuth.ts";
 import { ScramClient } from "#orm/database/adapter/adapters/postgres/scram.ts";
+import { OrmException } from "../../../../../../mod.ts";
 
 export class PostgresClient {
   private conn!: Deno.Conn;
@@ -66,6 +67,7 @@ export class PostgresClient {
     let message = "";
     while (offset < data.length) {
       const chunk = data.subarray(offset, offset + chunkSize);
+
       message += this.decoder.decode(chunk);
       offset += chunkSize;
     }
@@ -213,10 +215,8 @@ export class PostgresClient {
           break;
         }
         case "E": {
-          await this.readError();
-          throw new PgError({
-            massage: "Error connecting to Postgres",
-          });
+          const error = this.readError();
+          throw new PgError(error);
         }
         case "K": {
           // const keyData = new DataView(this.reader.readAllBytes().buffer);
@@ -230,6 +230,14 @@ export class PostgresClient {
         }
       }
     }
+  }
+
+  async reset() {
+    this.writer.reset();
+    await this.reader.clearBuffer();
+    this.conn.close();
+    this.status = "notConnected";
+    await this.connect();
   }
 
   private readError() {
