@@ -1,5 +1,6 @@
 import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
+import { dateUtils } from "#orm/utils/dateUtils.ts";
 
 export const taskQueue = new EasyEntity("taskQueue");
 taskQueue.setConfig({
@@ -47,6 +48,11 @@ taskQueue.addFields([{
   fieldType: "DataField",
   readOnly: true,
 }, {
+  key: "fromSchedule",
+  label: "From Schedule",
+  fieldType: "ConnectionField",
+  connectionEntity: "scheduledTask",
+}, {
   key: "worker",
   fieldType: "ChoicesField",
   defaultValue: "medium",
@@ -65,6 +71,22 @@ taskQueue.addFields([{
 }, {
   key: "resultData",
   fieldType: "JSONField",
+  readOnly: true,
+}, {
+  key: "completedAt",
+  label: "Completed At",
+  fieldType: "TimeStampField",
+  readOnly: true,
+}, {
+  key: "startedAt",
+  label: "Started At",
+  fieldType: "TimeStampField",
+  readOnly: true,
+}, {
+  key: "duration",
+  fieldType: "DurationField",
+  label: "Duration",
+  description: "The time it took to complete the task in seconds",
   readOnly: true,
 }, {
   key: "status",
@@ -138,6 +160,8 @@ taskQueue.addHook("afterDelete", {
 
 taskQueue.addAction("runTask", {
   async action(task) {
+    task.startedAt = dateUtils.nowTimestamp();
+    await task.save();
     switch (task.taskType) {
       case "entity": {
         const entity = task.recordType as string;
@@ -162,6 +186,18 @@ taskQueue.addAction("runTask", {
       }
     }
     task.status = "completed";
+    task.completedAt = dateUtils.nowTimestamp();
+
+    task.duration = task.completedAt - task.startedAt;
+
     await task.save();
+    if (task.fromSchedule) {
+      const scheduledTask = await task.orm.getEntity(
+        "scheduledTask",
+        task.fromSchedule,
+      );
+      scheduledTask.lastRun = task.completedAt;
+      await scheduledTask.save();
+    }
   },
 });

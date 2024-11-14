@@ -19,7 +19,7 @@ export default function startProcess(name: string, options?: {
   if (
     !flags.includes("--unstable-kv")
   ) {
-    flags.push("--unstable-kv");
+    flags.push("--unstable-kv", "--unstable-temporal");
   }
   let prodBinary = "app";
   const platform = Deno.build.os;
