@@ -548,7 +548,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         return "VARCHAR(255)";
       case "URLField":
         return "TEXT";
-      case "TagField":
+      case "ListField":
         return "JSONB";
       default:
         return "TEXT";
@@ -660,7 +660,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       case "TimeStampField":
         value = new Date(value).toISOString();
         break;
-      case "TagField":
+      case "ListField":
         value = JSON.stringify(value || []);
       default:
         break;

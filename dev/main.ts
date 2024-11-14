@@ -10,7 +10,7 @@ const test = new EasyEntity("test", {
 test.addField({
   key: "tag",
   label: "Tag",
-  fieldType: "TagField",
+  fieldType: "ListField",
 });
 app.orm.addEntity(test);
 app.run();

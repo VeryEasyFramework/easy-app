@@ -678,7 +678,7 @@ export class EntityRecordClass {
         case "JSONField":
           data[field.key] = {};
           break;
-        case "TagField":
+        case "ListField":
           data[field.key] = [];
           break;
         case "IntField":

@@ -388,14 +388,14 @@ export function validatePhone(field: EasyField, value: any): string | null {
   return value;
 }
 
-export function validateTag(field: EasyField, value: any) {
+export function validateList(field: EasyField, value: any) {
   if (!value) {
     return [];
   }
   if (!Array.isArray(value)) {
     raiseOrmException(
       "InvalidValue",
-      `Invalid value for TagField ${
+      `Invalid value for ListField ${
         field.label ? field.label : field.key as string
       }: ${value}. Must be an array of strings`,
     );
@@ -461,8 +461,8 @@ export function validateField(
     case "URLField":
       value = validateTextField(field, value);
       break;
-    case "TagField":
-      value = validateTag(field, value);
+    case "ListField":
+      value = validateList(field, value);
       break;
     default:
       raiseOrmException(
