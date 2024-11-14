@@ -333,6 +333,7 @@ export function validateMultiChoices(field: EasyField, value: any): string[] {
       } must have choices`,
     );
   }
+
   const choices = field.choices.map((choice) => {
     return choice.key;
   });
@@ -382,6 +383,21 @@ export function validatePhone(field: EasyField, value: any): string | null {
       `Invalid value for PhoneField ${
         field.label ? field.label : field.key as string
       }: ${value}`,
+    );
+  }
+  return value;
+}
+
+export function validateTag(field: EasyField, value: any) {
+  if (!value) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    raiseOrmException(
+      "InvalidValue",
+      `Invalid value for TagField ${
+        field.label ? field.label : field.key as string
+      }: ${value}. Must be an array of strings`,
     );
   }
   return value;
@@ -445,7 +461,9 @@ export function validateField(
     case "URLField":
       value = validateTextField(field, value);
       break;
-
+    case "TagField":
+      value = validateTag(field, value);
+      break;
     default:
       raiseOrmException(
         "NotImplemented",

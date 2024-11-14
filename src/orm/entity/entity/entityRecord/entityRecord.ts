@@ -125,7 +125,7 @@ export class EntityRecordClass {
     }
   }
   async beforeSave() {
-    await this.getFetchedFields();
+    await this.refreshFetchedFields();
     for (const hook of this._beforeSave) {
       await hook(this);
     }
@@ -507,7 +507,11 @@ export class EntityRecordClass {
     });
     return data;
   }
-  private getChangedData(): Record<string, any> | undefined {
+
+  /**
+   * Get the values that have changed if any (values that have been updated and not saved yet)
+   */
+  getChangedData(): Record<string, any> | undefined {
     let hasChanged = false;
     const changedData: Record<string, any> = {};
     for (const key in this._prevData) {
@@ -618,7 +622,10 @@ export class EntityRecordClass {
     }
   }
 
-  private async getFetchedFields() {
+  /**
+   * Fetches the values of fields that have `fetchOptions` set
+   */
+  async refreshFetchedFields() {
     // const titleFields = this.entityDefinition.fields.filter(
     //   (field) => field.connectionTitleField,
     // ).map((field) => field.connectionTitleField);
@@ -670,6 +677,9 @@ export class EntityRecordClass {
           break;
         case "JSONField":
           data[field.key] = {};
+          break;
+        case "TagField":
+          data[field.key] = [];
           break;
         case "IntField":
           data[field.key] = null;
