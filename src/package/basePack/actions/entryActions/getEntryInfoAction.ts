@@ -1,5 +1,5 @@
 import { createAction } from "#/actions/createAction.ts";
-import { editLogEntity } from "#/package/basePack/entities/editLogEntity.ts";
+import { editLogEntry } from "#/package/basePack/entities/editLogEntry.ts";
 
 export const getRecordInfoAction = createAction("getRecordInfo", {
   description: "Get summary information about a record",
@@ -13,7 +13,7 @@ export const getRecordInfoAction = createAction("getRecordInfo", {
         "id",
         "createdAt",
         "updatedAt",
-        ...editLogEntity.fields.map((field) => field.key),
+        ...editLogEntry.fields.map((field) => field.key),
       ],
     }, request.user);
     return {

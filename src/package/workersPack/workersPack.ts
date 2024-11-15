@@ -4,5 +4,5 @@ import { workerSettings } from "#/package/workers/entities/workerSettings.ts";
 
 export const workersPack = new EasyPack("workersPack");
 
-workersPack.addEntity(taskQueue);
-workersPack.addSettingsEntity(workerSettings);
+workersPack.addEntryType(taskQueue);
+workersPack.addSettingsType(workerSettings);

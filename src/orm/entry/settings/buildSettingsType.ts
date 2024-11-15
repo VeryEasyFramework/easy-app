@@ -1,6 +1,6 @@
 import type { EasyOrm } from "#orm/orm.ts";
-import type { SettingsType } from "./settingsEntity.ts";
-import { buildFieldGroups } from "../field/buildFieldGroups.ts";
+import type { SettingsType } from "#orm/entry/settings/settingsType.ts";
+import { buildFieldGroups } from "#orm/entry/field/buildFieldGroups.ts";
 import type { FieldGroup, SettingsTypeDef } from "@vef/types";
 
 export function buildSettingsType(

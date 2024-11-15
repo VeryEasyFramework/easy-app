@@ -1,15 +1,15 @@
 import { SMTPClient } from "#/package/emailPack/smtp/smtpClient.ts";
 import type { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
-import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
+import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 
-export const emailEntity = new EntryType("email");
+export const emailEntry = new EntryType("email");
 
-emailEntity.setConfig({
+emailEntry.setConfig({
   label: "Email",
   description: "An email",
 });
 
-emailEntity.addFields([{
+emailEntry.addFields([{
   key: "senderEmail",
   fieldType: "EmailField",
   label: "Sender's Email",
@@ -68,16 +68,16 @@ emailEntity.addFields([{
   ],
 }]);
 
-emailEntity.addAction("send", {
+emailEntry.addAction("send", {
   description: "Send the email",
-  async action(entity) {
-    if (entity.status !== "pending") {
-      entity.status = "pending";
+  async action(email) {
+    if (email.status !== "pending") {
+      email.status = "pending";
       // raiseEasyException("Email has already been sent", 400);
-      await entity.save();
+      await email.save();
     }
-    const settings = await entity.orm.getSettings("emailSettings");
-    entity.senderEmail = settings.emailAccount as string;
+    const settings = await email.orm.getSettings("emailSettings");
+    email.senderEmail = settings.emailAccount as string;
     const config: SMTPOptions = {
       port: settings.smtpPort as number || 587,
       smtpServer: settings.smtpHost as string,
@@ -86,7 +86,7 @@ emailEntity.addAction("send", {
       domain: "localhost",
     };
     try {
-      const body = entity.body as string || "";
+      const body = email.body as string || "";
 
       const smtpClient = new SMTPClient(config);
       smtpClient.onError = (code, message) => {
@@ -99,24 +99,24 @@ emailEntity.addAction("send", {
         body,
         header: {
           from: {
-            email: entity.senderEmail as string,
-            name: entity.senderName as string,
+            email: email.senderEmail as string,
+            name: email.senderName as string,
           },
           to: {
-            email: entity.recipientEmail as string,
-            name: entity.recipientName as string,
+            email: email.recipientEmail as string,
+            name: email.recipientName as string,
           },
-          subject: entity.subject as string,
-          contentType: entity.contentType as "html" | "text",
+          subject: email.subject as string,
+          contentType: email.contentType as "html" | "text",
           date: new Date(),
         },
       });
       // Send the email
-      entity.status = "sent";
-      await entity.save();
+      email.status = "sent";
+      await email.save();
     } catch (_e) {
-      entity.status = "failed";
-      await entity.save();
+      email.status = "failed";
+      await email.save();
     }
   },
 });

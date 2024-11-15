@@ -1,9 +1,9 @@
-import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
+import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 import { toCamelCase } from "@vef/string-utils";
 
-export const userRoleEntity = new EntryType("userRole");
+export const userRoleEntry = new EntryType("userRole");
 
-userRoleEntity.setConfig({
+userRoleEntry.setConfig({
   label: "User Role",
   description: "A role that can be assigned to a user",
   titleField: "roleName",
@@ -14,7 +14,7 @@ userRoleEntity.setConfig({
   },
 });
 
-userRoleEntity.addFields([
+userRoleEntry.addFields([
   {
     key: "roleName",
     label: "Role Name",
@@ -37,20 +37,20 @@ userRoleEntity.addFields([
   },
 ]);
 
-userRoleEntity.addChild({
-  childName: "entityPermission",
-  label: "Entity Permission",
+userRoleEntry.addChild({
+  childName: "entryTypePermission",
+  label: "Entry Type Permission",
   fields: [{
-    key: "entity",
-    label: "Entity",
+    key: "entryType",
+    label: "Entry Type",
     fieldType: "DataField",
   }],
 });
 
-userRoleEntity.addHook("beforeValidate", {
+userRoleEntry.addHook("beforeValidate", {
   label: "Generate Role Key",
   description: "Generate a unique role key before inserting the role",
-  action(entity) {
-    entity.roleKey = toCamelCase(entity.roleName as string);
+  action(userRole) {
+    userRole.roleKey = toCamelCase(userRole.roleName as string);
   },
 });

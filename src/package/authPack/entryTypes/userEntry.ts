@@ -2,9 +2,9 @@ import { toTitleCase } from "@vef/string-utils";
 import { generateSalt, hashPassword } from "#/package/authPack/security.ts";
 import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 
-export const userEntity = new EntryType("user");
+export const userEntry = new EntryType("user");
 
-userEntity.setConfig({
+userEntry.setConfig({
   label: "User",
   description: "A user of the system",
   titleField: "fullName",
@@ -13,7 +13,7 @@ userEntity.setConfig({
   editLog: true,
 });
 
-userEntity.addFields([
+userEntry.addFields([
   {
     key: "firstName",
     label: "First Name",
@@ -81,37 +81,37 @@ userEntity.addFields([
   },
 ]);
 
-userEntity.addFieldGroup({
+userEntry.addFieldGroup({
   key: "personal",
   title: "Personal Information",
   description: "The user's personal information",
 });
 
-userEntity.addHook("beforeSave", {
+userEntry.addHook("beforeSave", {
   label: "Format Name",
   description:
     "Format first and last name to title case and generate the full name from the first and last name fields",
-  action(entity) {
-    if (entity.firstName) {
-      entity.firstName = toTitleCase(entity.firstName as string);
+  action(user) {
+    if (user.firstName) {
+      user.firstName = toTitleCase(user.firstName as string);
     }
-    if (entity.lastName) {
-      entity.lastName = toTitleCase(entity.lastName as string);
+    if (user.lastName) {
+      user.lastName = toTitleCase(user.lastName as string);
     }
-    entity.fullName = `${entity.firstName} ${entity.lastName}`;
+    user.fullName = `${user.firstName} ${user.lastName}`;
   },
 });
 
-userEntity.addAction("setPassword", {
+userEntry.addAction("setPassword", {
   label: "Set Password",
   description: "Set the user's password",
-  async action(entity, params) {
+  async action(user, params) {
     const password = params?.password as string;
     const salt = generateSalt();
     const hashed = await hashPassword(password, salt);
-    entity.password = `${salt}:${hashed}`;
-    entity.resetPasswordToken = null;
-    await entity.save();
+    user.password = `${salt}:${hashed}`;
+    user.resetPasswordToken = null;
+    await user.save();
   },
   params: [{
     key: "password",
@@ -120,13 +120,13 @@ userEntity.addAction("setPassword", {
   }],
 });
 
-userEntity.addAction("validatePassword", {
+userEntry.addAction("validatePassword", {
   label: "Validate Password",
   description: "Validate the user's password",
   private: true,
-  async action(entity, params) {
+  async action(user, params) {
     const password = params?.password as string;
-    const existingPassword = entity.password as string | null || "";
+    const existingPassword = user.password as string | null || "";
 
     const [salt, hashed] = existingPassword.split(":");
     const testHash = await hashPassword(password, salt);
@@ -139,44 +139,34 @@ userEntity.addAction("validatePassword", {
   }],
 });
 
-userEntity.addAction("generateResetToken", {
+userEntry.addAction("generateResetToken", {
   label: "Generate Reset Token",
   private: true,
   description: "Generate a reset token for the user",
-  async action(entity) {
+  async action(user) {
     const token = generateSalt();
-    entity.resetPasswordToken = token;
-    await entity.save();
+    user.resetPasswordToken = token;
+    await user.save();
     return { token };
   },
 });
 
-userEntity.addAction("generateApiToken", {
+userEntry.addAction("generateApiToken", {
   label: "Generate API Token",
   description: "Generate an API token for the user",
-  async action(entity) {
+  async action(user) {
     const token = generateSalt();
-    entity.apiToken = token;
+    user.apiToken = token;
 
-    await entity.save();
+    await user.save();
     return { token };
   },
 });
 
-userEntity.setPermission({
+userEntry.setPermission({
   role: "basicUser",
   read: true,
   write: false,
   create: false,
   delete: false,
 });
-// userEntity.addChild({
-//   childName: "roles",
-//   label: "Roles",
-//   fields: [{
-//     fieldType: "ConnectionField",
-//     key: "role",
-//     connectionEntity: "userRole",
-//     label: "Role",
-//   }],
-// });

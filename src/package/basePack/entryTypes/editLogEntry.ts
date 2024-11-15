@@ -1,34 +1,34 @@
-import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
+import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 
-export const editLogEntity = new EntryType("editLog");
+export const editLogEntry = new EntryType("editLog");
 
-editLogEntity.setConfig({
+editLogEntry.setConfig({
   label: "Edit Log",
   description: "Log of all edits made to the system",
   orderField: "createdAt",
   orderDirection: "desc",
 });
 
-editLogEntity.addFields([
+editLogEntry.addFields([
   {
-    key: "entity",
+    key: "entryType",
     fieldType: "DataField",
-    label: "Entity",
-    description: "The entity that was edited",
+    label: "Entry Type",
+    description: "The entry type that was edited",
     inList: true,
     readOnly: true,
   },
   {
-    key: "recordId",
+    key: "entryId",
     fieldType: "DataField",
-    label: "Record ID",
-    description: "The ID of the record that was edited",
+    label: "Entry ID",
+    description: "The ID of the entry that was edited",
     inList: true,
   },
   {
-    key: "recordTitle",
+    key: "entryTitle",
     fieldType: "DataField",
-    label: "Record Title",
+    label: "Entry Title",
     inList: true,
   },
   {
@@ -54,6 +54,6 @@ editLogEntity.addFields([
     fieldType: "ConnectionField",
     label: "User",
     description: "The user who made the edit",
-    connectionEntity: "user",
+    connectionEntryType: "user",
   },
 ]);

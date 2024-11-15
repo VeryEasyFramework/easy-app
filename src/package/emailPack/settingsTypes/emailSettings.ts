@@ -1,4 +1,4 @@
-import { SettingsType } from "../../../orm/entry/settings/settingsEntity.ts";
+import { SettingsType } from "#orm/entry/settings/settingsType.ts";
 
 export const emailSettings = new SettingsType("emailSettings");
 

@@ -1,4 +1,4 @@
-import { SettingsType } from "../../../orm/entry/settings/settingsEntity.ts";
+import { SettingsType } from "#orm/entry/settings/settingsType.ts";
 import type { EasyField } from "@vef/types";
 import startProcess from "#/app/runner/startProcess.ts";
 import { toTitleCase } from "@vef/string-utils";

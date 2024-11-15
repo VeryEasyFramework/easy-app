@@ -9,12 +9,12 @@ taskQueue.setConfig({
 taskQueue.addFields([{
   key: "taskType",
   fieldType: "ChoicesField",
-  defaultValue: "entity",
+  defaultValue: "entry",
   required: true,
   readOnly: true,
   choices: [{
-    key: "entity",
-    label: "Entity",
+    key: "entry",
+    label: "Entry",
   }, {
     key: "settings",
     label: "Settings",
@@ -23,15 +23,15 @@ taskQueue.addFields([{
     label: "App",
   }],
 }, {
-  key: "recordType",
+  key: "entryType",
   fieldType: "DataField",
   readOnly: true,
 }, {
-  key: "recordId",
+  key: "entryId",
   fieldType: "DataField",
   readOnly: true,
 }, {
-  key: "recordTitle",
+  key: "entryTitle",
   fieldType: "DataField",
   readOnly: true,
 }, {
@@ -96,27 +96,31 @@ taskQueue.addHook("validate", {
   action(task) {
     let title = "";
     switch (task.taskType) {
-      case "entity": {
-        const entity = task.recordType as string;
-        const def = task.orm.getEntryType(entity);
-        if (!def) {
-          raiseOrmException("EntryTypeNotFound", `Entity ${entity} not found`);
+      case "entry": {
+        const entryType = task.recordType as string;
+        const entryTypeDef = task.orm.getEntryType(entryType);
+        if (!entryTypeDef) {
+          raiseOrmException(
+            "EntryTypeNotFound",
+            `Entry Type ${entryType} not found`,
+          );
         }
-        title = `${def.config.label}: ${task.recordTitle} - ${task.action}`;
+        title =
+          `${entryTypeDef.config.label}: ${task.recordTitle} - ${task.action}`;
         break;
       }
       case "settings": {
-        const settings = task.recordType as string;
-        const def = task.orm.getSettingsEntity(settings);
+        const settingsType = task.recordType as string;
+        const settingsTypeDef = task.orm.getSettingsType(settingsType);
 
-        if (!def) {
+        if (!settingsTypeDef) {
           raiseOrmException(
             "EntryTypeNotFound",
-            `Settings ${settings} not found`,
+            `Settings ${settingsType} not found`,
           );
         }
 
-        title = `${def.config.label}: - ${task.action}`;
+        title = `${settingsTypeDef.config.label}: - ${task.action}`;
         break;
       }
     }
@@ -142,16 +146,16 @@ taskQueue.addHook("afterDelete", {
 taskQueue.addAction("runTask", {
   async action(task) {
     switch (task.taskType) {
-      case "entity": {
-        const entity = task.recordType as string;
-        const recordId = task.recordId as string;
+      case "entry": {
+        const entryType = task.entryType as string;
+        const entryId = task.entryId as string;
         const action = task.action as string;
         const data = task.taskData as Record<string, any>;
 
-        const record = await task.orm.getEntry(entity, recordId);
+        const entry = await task.orm.getEntry(entryType, entryId);
         task.status = "running";
         await task.save();
-        const result = await record.runAction(action, data);
+        const result = await entry.runAction(action, data);
         if (!result) {
           break;
         }
