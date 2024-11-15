@@ -2,66 +2,66 @@ import type { EntryTypeDef } from "@vef/types";
 import type { EasyOrm } from "#orm/orm.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 
-export function validateEntityDefinition(
+export function validateEntryType(
   orm: EasyOrm,
-  entityDefinition: EntryTypeDef,
+  entryType: EntryTypeDef,
 ) {
-  validateConnectionFields(orm, entityDefinition);
-  validateFetchFields(orm, entityDefinition);
+  validateConnectionFields(orm, entryType);
+  validateFetchFields(orm, entryType);
 }
 
-function validateConnectionFields(orm: EasyOrm, entity: EntryTypeDef) {
-  const fields = entity.fields.filter((field) =>
+function validateConnectionFields(orm: EasyOrm, entryType: EntryTypeDef) {
+  const fields = entryType.fields.filter((field) =>
     field.fieldType === "ConnectionField"
   );
   for (const field of fields) {
-    if (!field.connectionEntity) {
+    if (!field.connectionEntryType) {
       raiseOrmException(
         "InvalidConnection",
         `Connection field ${field
-          .key as string} in ${entity.entryType} is missing connectionEntity `,
+          .key as string} in ${entryType.entryType} is missing connectionEntryType `,
       );
     }
-    if (!orm.hasEntryType(field.connectionEntity)) {
+    if (!orm.hasEntryType(field.connectionEntryType)) {
       raiseOrmException(
         "InvalidConnection",
-        `Connection entity ${field.connectionEntity} in ${entity.entryType} does not exist`,
+        `Connection entry ${field.connectionEntryType} in ${entryType.entryType} does not exist`,
       );
     }
   }
 }
 
-function validateFetchFields(orm: EasyOrm, entity: EntryTypeDef) {
-  const fields = entity.fields.filter((field) => field.fetchOptions);
+function validateFetchFields(orm: EasyOrm, entryType: EntryTypeDef) {
+  const fields = entryType.fields.filter((field) => field.fetchOptions);
   for (const field of fields) {
     const fetchOptions = field.fetchOptions!;
-    if (!orm.hasEntryType(fetchOptions.fetchEntity)) {
+    if (!orm.hasEntryType(fetchOptions.fetchEntryType)) {
       raiseOrmException(
         "InvalidConnection",
-        `Connection entity ${fetchOptions.fetchEntity} does not exist`,
+        `Connection entry ${fetchOptions.fetchEntryType} does not exist`,
       );
     }
-    const connectionEntity = orm.getEntryType(
-      fetchOptions.fetchEntity,
+    const connectionEntryType = orm.getEntryType(
+      fetchOptions.fetchEntryType,
     );
 
-    const connectedField = connectionEntity.fields.filter((f) => {
+    const connectedField = connectionEntryType.fields.filter((f) => {
       return f.key === fetchOptions.thatFieldKey;
     });
 
     if (!connectedField) {
       raiseOrmException(
         "InvalidField",
-        `Connection field ${fetchOptions.thatFieldKey} does not exist on entity ${fetchOptions.fetchEntity}`,
+        `Connection field ${fetchOptions.thatFieldKey} does not exist on entry type ${fetchOptions.fetchEntryType}`,
       );
     }
     orm.registry.registerFetchField({
       source: {
-        entryType: entity.entryType,
+        entryType: entryType.entryType,
         field: fetchOptions.thisFieldKey,
       },
       target: {
-        entryType: fetchOptions.fetchEntity,
+        entryType: fetchOptions.fetchEntryType,
         idKey: fetchOptions.thisIdKey,
         field: fetchOptions.thatFieldKey,
       },

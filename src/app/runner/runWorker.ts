@@ -86,7 +86,7 @@ async function checkForTasks(app: EasyApp) {
 }
 
 interface Task extends EntryClass {
-  taskType: "entity" | "app";
+  taskType: "entry" | "app";
   recordType: string;
   recordId: string;
   action: string;

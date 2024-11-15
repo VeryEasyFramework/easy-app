@@ -1,6 +1,6 @@
 import { EasyPack } from "#/package/easyPack.ts";
-import { taskQueue } from "#/package/workers/entities/taskQueue.ts";
-import { workerSettings } from "#/package/workers/entities/workerSettings.ts";
+import { taskQueue } from "#/package/workersPack/entryTypes/taskQueue.ts";
+import { workerSettings } from "#/package/workersPack/entryTypes/workerSettings.ts";
 
 export const workersPack = new EasyPack("workersPack");
 

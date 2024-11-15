@@ -1,17 +1,6 @@
 import type { EasyOrm } from "#orm/orm.ts";
-import type {
-  Choice,
-  EasyField,
-  EasyFieldType,
-  EasyFieldTypeMap,
-  SafeType,
-  SettingsTypeDef,
-  User,
-} from "@vef/types";
-import type {
-  SettingsAction,
-  SettingsHookFunction,
-} from "./settingsRecordTypes.ts";
+import type { EasyFieldType, SafeType, SettingsTypeDef, User, } from "@vef/types";
+import type { SettingsAction, SettingsHookFunction } from "./settingsTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 
 export class SettingsClass {
@@ -176,7 +165,7 @@ export class SettingsClass {
     if (!action) {
       raiseOrmException(
         "InvalidAction",
-        `Action ${actionKey} not found in entity ${this.settingsDefinition.settingsType}`,
+        `Action ${actionKey} not found in settings ${this.settingsDefinition.settingsType}`,
       );
     }
     if (action.params) {

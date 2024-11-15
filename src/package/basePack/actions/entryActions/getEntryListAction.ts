@@ -2,8 +2,8 @@ import { createAction } from "#/actions/createAction.ts";
 import type { ListOptions } from "@vef/types";
 import { raiseEasyException } from "#/easyException.ts";
 
-export const getEntityListAction = createAction("getList", {
-  description: "Get a list of entities",
+export const getEntryListAction = createAction("getList", {
+  description: "Get a list of entries",
   action: async (app, data, request) => {
     const options = {} as ListOptions;
     if (data.filter) {
@@ -33,10 +33,10 @@ export const getEntityListAction = createAction("getList", {
     if (data.columns) {
       options.columns = data.columns as unknown as string[];
     }
-    return await app.orm.getEntryList(data.entity, options, request.user);
+    return await app.orm.getEntryList(data.entryType, options, request.user);
   },
   params: {
-    entity: {
+    entryType: {
       required: true,
       type: "DataField",
     },

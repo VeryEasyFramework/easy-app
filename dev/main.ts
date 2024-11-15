@@ -1,10 +1,10 @@
 import { EasyApp } from "#/app/easyApp.ts";
-import { EntryType } from "../src/orm/entry/entry/entryType/entryType.ts";
+import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 
 const app = new EasyApp();
 const test = new EntryType("test", {
   label: "Test",
-  description: "A test entity",
+  description: "A test entry",
 });
 
 test.addField({

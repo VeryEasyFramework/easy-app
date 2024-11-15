@@ -4,7 +4,7 @@ import { easyLog } from "#/log/logging.ts";
 import { OrmException } from "#orm/ormException.ts";
 
 export const runSettingsAction = createAction("runSettingsAction", {
-  description: "Run an action that is defined on the settings entity",
+  description: "Run an action that is defined on the settings type",
   async action(app, { settings, action, data }, request) {
     const settingsRecord = await app.orm.getSettings(settings, request.user);
     if (!settingsRecord) {

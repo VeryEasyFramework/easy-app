@@ -1,4 +1,4 @@
-import type { SessionData } from "#/package/authPack/entities/userSession.ts";
+import type { SessionData } from "#/package/authPack/entryTypes/userSession.ts";
 
 type RequestMethod =
   | "GET"

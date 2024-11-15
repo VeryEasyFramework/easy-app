@@ -5,7 +5,7 @@ export const resetPasswordAction = createAction("resetPassword", {
   description: "Reset user password",
   public: true,
   async action(app, { email }, request, response) {
-    const user = await app.orm.findEntity("user", {
+    const user = await app.orm.findEntry("user", {
       email: email,
     });
     if (!user) {

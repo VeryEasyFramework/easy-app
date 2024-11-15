@@ -1,5 +1,5 @@
 import type { EasyOrm } from "#orm/orm.ts";
-import { SettingsClass } from "./settingsRecord.ts";
+import { SettingsClass } from "./settings.ts";
 import { validateField } from "../field/validateField.ts";
 
 import type {
@@ -8,17 +8,17 @@ import type {
   SettingsTypeDef,
   SettingsTypeHookDefinition,
 } from "@vef/types";
-import type { SettingsHookFunction } from "./settingsRecordTypes.ts";
+import type { SettingsHookFunction } from "./settingsTypes.ts";
 
-export function buildSettingsRecordClass(
+export function buildSettingsClass(
   orm: EasyOrm,
-  settingsEntity: SettingsTypeDef,
+  settingsType: SettingsTypeDef,
 ) {
-  const hooks = extractHooks(settingsEntity);
-  const actions = extractActions(settingsEntity);
+  const hooks = extractHooks(settingsType);
+  const actions = extractActions(settingsType);
   const settingsRecordClass = class extends SettingsClass {
     override orm = orm;
-    override settingsDefinition = settingsEntity;
+    override settingsDefinition = settingsType;
     override _beforeSave = hooks.beforeSave;
     override _afterSave = hooks.afterSave;
     override _validate = hooks.validate;
@@ -27,16 +27,16 @@ export function buildSettingsRecordClass(
     override actions: Record<string, SettingsAction> = actions;
   };
 
-  setFields(settingsRecordClass, settingsEntity);
+  setFields(settingsRecordClass, settingsType);
   return settingsRecordClass;
 }
 
 function setFields(
-  settingsRecordClass: typeof SettingsClass,
-  settingsEntity: SettingsTypeDef,
+  settingsClass: typeof SettingsClass,
+  settingsType: SettingsTypeDef,
 ) {
-  settingsEntity.fields.forEach((field) => {
-    Object.defineProperty(settingsRecordClass.prototype, field.key, {
+  settingsType.fields.forEach((field) => {
+    Object.defineProperty(settingsClass.prototype, field.key, {
       get: function () {
         return this._data[field.key];
       },
@@ -54,14 +54,14 @@ function setFields(
   });
 }
 
-function extractActions(settingsEntity: SettingsTypeDef) {
+function extractActions(settingsType: SettingsTypeDef) {
   const actions: Record<string, SettingsAction> = {};
-  settingsEntity.actions.forEach((action) => {
+  settingsType.actions.forEach((action) => {
     actions[action.key] = action;
   });
   return actions;
 }
-function extractHooks(settingsEntity: SettingsTypeDef) {
+function extractHooks(settingsType: SettingsTypeDef) {
   const getHookActions = (hook: SettingsTypeHookDefinition[]) => {
     return hook.map((hookAction) => {
       return hookAction.action;
@@ -73,7 +73,7 @@ function extractHooks(settingsEntity: SettingsTypeDef) {
     validate: [],
     beforeValidate: [],
   };
-  Object.entries(settingsEntity.hooks).forEach(([key, value]) => {
+  Object.entries(settingsType.hooks).forEach(([key, value]) => {
     hooks[key as SettingsHook] = getHookActions(value);
   });
 

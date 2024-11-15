@@ -1,9 +1,4 @@
-import type {
-  Choice,
-  EasyField,
-  EasyFieldTypeMap,
-  SafeReturnType,
-} from "@vef/types";
+import type { Choice, EasyField, EasyFieldTypeMap, SafeReturnType, } from "@vef/types";
 import type { EntryClass } from "../entryClass/entryClass.ts";
 
 export interface Entry extends EntryClass {
@@ -30,11 +25,11 @@ export interface EntryActionDefinition<
   private?: boolean;
 
   /**
-   * If true, this action can be called without loading a specific entity first
+   * If true, this action can be called without loading a specific entry first
    */
   global?: boolean;
   action(
-    entity: Entry,
+    entry: Entry,
     params: D,
   ): SafeReturnType;
   params?: F;
@@ -44,7 +39,7 @@ export interface EntryHookDefinition {
   description?: string;
 
   action(
-    entity: Entry,
+    entry: Entry,
   ): Promise<void> | void;
 }
 

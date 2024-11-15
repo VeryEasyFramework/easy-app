@@ -2,29 +2,27 @@ import type { BootAction } from "#/types.ts";
 
 export const ormGlobalHooks: BootAction = {
   actionName: "addOrmGlobalHooks",
-  description: "Create realtime rooms for each entity",
+  description: "Create realtime rooms for each entry type",
   action(app) {
-    app.orm.addGlobalHook("afterInsert", async (entityId, entityRecord) => {
-      if (entityId === "editLog") {
+    app.orm.addGlobalHook("afterInsert", async (entryType, entry) => {
+      if (entryType === "editLog") {
         return;
       }
-      const { titleField } = entityRecord.entryType.config;
-      const titleValue = titleField
-        ? entityRecord[titleField]
-        : entityRecord.id;
-      await app.orm.createEntity("editLog", {
-        entity: entityId,
-        recordId: entityRecord.id,
+      const { titleField } = entry.entryType.config;
+      const titleValue = titleField ? entry[titleField] : entry.id;
+      await app.orm.createEntry("editLog", {
+        entryType,
+        entryId: entry.id,
         action: "create",
-        recordTitle: titleValue,
-        user: entityRecord._user?.id,
-        editData: entityRecord.data,
+        entryTitle: titleValue,
+        user: entry._user?.id,
+        editData: entry.data,
       });
 
-      const room = `entity:${entityId}`;
+      const room = `entryType:${entryType}`;
       const notifyData = {
-        entityId,
-        data: entityRecord.data,
+        entryType: entryType,
+        data: entry.data,
       };
       app.notify(room, "list", {
         action: "create",
@@ -34,34 +32,32 @@ export const ormGlobalHooks: BootAction = {
 
     app.orm.addGlobalHook(
       "afterChange",
-      async (entity, entityRecord, changedData) => {
-        if (entity === "editLog") {
+      async (entryType, entry, changedData) => {
+        if (entryType === "editLog") {
           return;
         }
         if (!changedData) {
           return;
         }
-        if (entityRecord.entryType.config.editLog) {
-          const { titleField } = entityRecord.entryType.config;
-          const titleValue = titleField
-            ? entityRecord[titleField]
-            : entityRecord.id;
+        if (entry.entryType.config.editLog) {
+          const { titleField } = entry.entryType.config;
+          const titleValue = titleField ? entry[titleField] : entry.id;
 
-          await app.orm.createEntity("editLog", {
-            entity,
-            recordId: entityRecord.id,
+          await app.orm.createEntry("editLog", {
+            entryType: entryType,
+            entryId: entry.id,
             action: "update",
-            recordTitle: titleValue,
-            user: entityRecord._user?.id,
+            entryTitle: titleValue,
+            user: entry._user?.id,
             editData: changedData,
-          }, entityRecord._user);
+          }, entry._user);
         }
-        const room = `entity:${entity}`;
+        const room = `entryType:${entryType}`;
         const notifyData = {
-          entity,
-          data: entityRecord.data,
+          entryType: entryType,
+          data: entry.data,
         };
-        app.notify(`${room}:${entityRecord.id}`, "update", notifyData);
+        app.notify(`${room}:${entry.id}`, "update", notifyData);
         app.notify(room, "list", {
           action: "update",
           ...notifyData,
@@ -71,49 +67,47 @@ export const ormGlobalHooks: BootAction = {
 
     app.orm.addGlobalSettingsHook(
       "afterChange",
-      async (settingsId, settingsRecord, changedData) => {
+      async (settingsType, settings, changedData) => {
         if (!changedData) {
           return;
         }
-        const room = `settings:${settingsId}`;
-        if (settingsRecord.settingsDefinition.config.editLog) {
-          await app.orm.createEntity("editLog", {
-            entity: "settings",
-            recordId: settingsId,
+        const room = `settings:${settingsType}`;
+        if (settings.settingsDefinition.config.editLog) {
+          await app.orm.createEntry("editLog", {
+            entryType: "settings",
+            entryId: settingsType,
             action: "update",
-            recordTitle: settingsId,
-            user: settingsRecord._user?.id,
+            entryTitle: settingsType,
+            user: settings._user?.id,
             editData: changedData,
-          }, settingsRecord._user);
+          }, settings._user);
         }
         app.notify(room, "update", {
-          settingsId,
-          data: settingsRecord.data,
+          settingsType,
+          data: settings.data,
         });
       },
     );
-    app.orm.addGlobalHook("afterDelete", async (entity, entityRecord) => {
-      if (entity === "editLog") {
+    app.orm.addGlobalHook("afterDelete", async (entryType, entry) => {
+      if (entryType === "editLog") {
         return;
       }
-      const { titleField } = entityRecord.entryType.config;
-      const titleValue = titleField
-        ? entityRecord[titleField]
-        : entityRecord.id;
-      await app.orm.createEntity("editLog", {
-        entity,
-        recordId: entityRecord.id,
+      const { titleField } = entry.entryType.config;
+      const titleValue = titleField ? entry[titleField] : entry.id;
+      await app.orm.createEntry("editLog", {
+        entryType,
+        entryId: entry.id,
         action: "delete",
-        recordTitle: titleValue,
-        user: entityRecord._user?.id,
+        entryTitle: titleValue,
+        user: entry._user?.id,
       });
 
-      const room = `entity:${entity}`;
+      const room = `entryType:${entryType}`;
       const notifyData = {
-        entity,
-        data: entityRecord.data,
+        entryType,
+        data: entry.data,
       };
-      app.notify(`${room}:${entityRecord.id}`, "delete", notifyData);
+      app.notify(`${room}:${entry.id}`, "delete", notifyData);
       app.notify(room, "list", {
         action: "delete",
         ...notifyData,

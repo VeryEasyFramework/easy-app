@@ -10,11 +10,7 @@ import type { EasyPack, EasyPackInfo } from "#/package/easyPack.ts";
 import { basePack } from "#/package/basePack/basePack.ts";
 import { RealtimeServer } from "#/realtime/realtimeServer.ts";
 
-import type {
-  DocsActionGroup,
-  DocsActionParam,
-  EasyAction,
-} from "#/actions/actionTypes.ts";
+import type { DocsActionGroup, DocsActionParam, EasyAction, } from "#/actions/actionTypes.ts";
 import type { BootAction, InitAction } from "#/types.ts";
 import { easyLog } from "#/log/logging.ts";
 
@@ -27,14 +23,13 @@ import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
 import { handleApi } from "#/api/apiHandler.ts";
 import type { DBType } from "#orm/database/database.ts";
 import { EasyOrm } from "#orm/orm.ts";
-import type { EntryTypeDef, SafeType } from "@vef/types";
+import type { EntryTypeDef, SafeType, SettingsTypeDef } from "@vef/types";
 import { OrmException } from "#orm/ormException.ts";
 import { PgError } from "#orm/database/adapter/adapters/postgres/pgError.ts";
 import { authPack } from "#/package/authPack/authPack.ts";
 import { emailPack } from "#/package/emailPack/emailPack.ts";
 import appRunner from "#/app/runner/mod.ts";
 import { workersPack } from "#/package/workers/workersPack.ts";
-import type { SettingsTypeDef } from "@vef/types";
 import type { AppProcess } from "#/app/runner/begin.ts";
 
 const config = await initAppConfig();
@@ -379,13 +374,13 @@ export class EasyApp {
   }
 
   /**
-   * Get a list of all the registered entities and their properties
+   * Get a list of all the registered entry types and their properties
    */
-  get entityInfo(): EntryTypeDef[] {
+  get entryTypeInfo(): EntryTypeDef[] {
     return Object.values(this.orm.entryTypes);
   }
 
-  get settingsInfo(): SettingsTypeDef[] {
+  get settingsTypeInfo(): SettingsTypeDef[] {
     return Object.values(this.orm.settingsTypes);
   }
 
@@ -403,11 +398,11 @@ export class EasyApp {
       for (const middleware of easyPack.middleware) {
         this.addMiddleware(middleware as any);
       }
-      for (const entity of easyPack.entities) {
-        this.orm.addEntryType(entity);
+      for (const entryType of easyPack.entryTypes) {
+        this.orm.addEntryType(entryType);
       }
-      for (const settingsEntity of easyPack.settingsEntities) {
-        this.orm.addSettingsType(settingsEntity);
+      for (const settingsType of easyPack.settingsTypes) {
+        this.orm.addSettingsType(settingsType);
       }
       for (const room of easyPack.realtimeRooms) {
         this.realtime.addRoom(room);

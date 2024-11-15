@@ -14,7 +14,7 @@ export type {
 
 export { OrmException, raiseOrmException } from "#orm/ormException.ts";
 
-export { SettingsType } from "./src/orm/entry/settings/settingsEntity.ts";
+export { SettingsType } from "#orm/entry/settings/settingsType.ts";
 
 export { EntryType } from "./src/orm/entry/entry/entryType/entryType.ts";
 
@@ -57,4 +57,4 @@ export type {
   SettingsHookDefinition,
   SettingsHookFunction,
   SettingsHooks,
-} from "./src/orm/entry/settings/settingsRecordTypes.ts";
+} from "#orm/entry/settings/settingsTypes.ts";

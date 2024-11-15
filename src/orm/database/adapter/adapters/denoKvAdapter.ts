@@ -1,14 +1,5 @@
-import {
-  type AdapterColumn,
-  DatabaseAdapter,
-} from "#orm/database/adapter/databaseAdapter.ts";
-import type {
-  EasyField,
-  EasyFieldType,
-  EntryTypeDef,
-  ListOptions,
-  RowsResult,
-} from "@vef/types";
+import { type AdapterColumn, DatabaseAdapter, } from "#orm/database/adapter/databaseAdapter.ts";
+import type { EasyField, EasyFieldType, EntryTypeDef, ListOptions, RowsResult, } from "@vef/types";
 import { raiseOrmException } from "#orm/ormException.ts";
 
 export interface DenoKvConfig {
@@ -127,13 +118,7 @@ export class DenoKvAdapter extends DatabaseAdapter<DenoKvConfig> {
         `Row not found: ${tableName}:${field}:${value}`,
       );
     }
-    // const record = await this.kv.get<T>([tableById, result.value]);
-    // if (!record.versionstamp) {
-    //   raiseOrmException(
-    //     "EntityNotFound",
-    //     `Row not found: ${tableName}:${field}:${value}`,
-    //   );
-    // }
+
     return result.value;
   }
   async batchUpdateField(
@@ -149,7 +134,7 @@ export class DenoKvAdapter extends DatabaseAdapter<DenoKvConfig> {
   }
   syncTable(
     tableName: string,
-    entity: EntryTypeDef,
+    entryType: EntryTypeDef,
   ): string {
     return "";
   }

@@ -1,11 +1,6 @@
-import type { SettingsClass } from "./settingsRecord.ts";
-import type {
-  Choice,
-  EasyField,
-  EasyFieldTypeMap,
-  SafeReturnType,
-  SafeType,
-} from "@vef/types";
+import type { SettingsClass } from "./settings.ts";
+import type { Choice, EasyField, EasyFieldTypeMap, SafeReturnType, SafeType, } from "@vef/types";
+
 export interface Settings extends SettingsClass {
   [key: string]: any;
 }

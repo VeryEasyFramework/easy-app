@@ -4,7 +4,7 @@ type OrmExceptionType =
   | "InvalidField"
   | "InvalidFieldType"
   | "InvalidConnection"
-  | "EntityAlreadyExists"
+  | "EntryAlreadyExists"
   | "PrimaryKeyAlreadySet"
   | "InvalidValue"
   | "InvalidChoices"

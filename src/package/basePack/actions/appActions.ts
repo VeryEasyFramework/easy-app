@@ -45,20 +45,20 @@ export const appActions = [
       return app.cache.getAll();
     },
   }),
-  createAction("entities", {
-    description: "Get the entities for the app",
+  createAction("entryTypes", {
+    description: "Get the entryTypes for the app",
     action: (app): EntryTypeDef[] => {
-      return app.entityInfo;
+      return app.entryTypeInfo;
     },
-    response: "EntityDefinition[]",
+    response: "EntryTypeDef[]",
   }),
 
-  createAction("settings", {
-    description: "Get the settings definitions for the app",
+  createAction("settingsTypes", {
+    description: "Get the settings types for the app",
     action(app) {
-      return app.settingsInfo;
+      return app.settingsTypeInfo;
     },
-    response: "SettingsEntityDefinition[]",
+    response: "SettingsType[]",
   }),
 
   createAction("notify", {

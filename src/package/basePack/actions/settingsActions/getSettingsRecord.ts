@@ -1,14 +1,17 @@
 import { createAction } from "#/actions/createAction.ts";
 
-export const getSettingsRecordAction = createAction("getSettingsRecord", {
-  description: "Get a Settings Entity Record",
+export const getSettingsAction = createAction("getSettings", {
+  description: "Get the settings for a settings type",
   async action(app, data, request) {
-    const { settingsId } = data;
-    const settingsRecord = await app.orm.getSettings(settingsId, request.user);
-    return settingsRecord.data;
+    const { settingsType } = data;
+    const settings = await app.orm.getSettings(
+      settingsType,
+      request.user,
+    );
+    return settings.data;
   },
   params: {
-    settingsId: {
+    settingsType: {
       type: "DataField",
       required: true,
     },

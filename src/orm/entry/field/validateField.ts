@@ -488,16 +488,16 @@ export async function validateConnection(
       `Field ${field.key as string} is not a ConnectionField`,
     );
   }
-  if (!field.connectionEntity) {
+  if (!field.connectionEntryType) {
     raiseOrmException(
       "InvalidField",
-      `ConnectionField ${field.key as string} must have a connectionEntity`,
+      `ConnectionField ${field.key as string} must have a connectionEntryType`,
     );
   }
-  if (!await orm.exists(field.connectionEntity, value)) {
+  if (!await orm.exists(field.connectionEntryType, value)) {
     raiseOrmException(
       "EntryTypeNotFound",
-      `Connection ${field.connectionEntity} with id ${value} does not exist`,
+      `Connection ${field.connectionEntryType} with id ${value} does not exist`,
     );
   }
   return value;

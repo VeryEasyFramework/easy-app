@@ -1,9 +1,10 @@
-import type { SettingsType } from "../settings/settingsEntity.ts";
+import type { SettingsType } from "../settings/settingsType.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { EntryType } from "../entry/entryType/entryType.ts";
 import type { FieldGroup } from "@vef/types";
+
 export function buildFieldGroups(
-  entity: EntryType | SettingsType,
+  entryType: EntryType | SettingsType,
 ): FieldGroup[] {
   const groups: Record<string, FieldGroup> = {
     default: {
@@ -12,20 +13,20 @@ export function buildFieldGroups(
       fields: [],
     },
   };
-  const groupKeys = entity.fieldGroups.map((group) => group.key);
-  entity.fieldGroups.forEach((group) => {
+  const groupKeys = entryType.fieldGroups.map((group) => group.key);
+  entryType.fieldGroups.forEach((group) => {
     groups[group.key] = {
       ...group,
       fields: [],
     };
   });
 
-  for (const field of entity.fields) {
+  for (const field of entryType.fields) {
     const groupKey = field.group || "default";
     if (!groupKeys.includes(groupKey)) {
       raiseOrmException(
         "InvalidFieldGroup",
-        `Field group ${groupKey} in field ${field.key} does not exist in ${entity.key} entity`,
+        `Field group ${groupKey} in field ${field.key} does not exist in ${entryType.key} entry type`,
       );
     }
     groups[groupKey].fields.push(field);

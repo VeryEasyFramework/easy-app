@@ -19,7 +19,7 @@ export function buildEntryType(
     entryType.statusField = entryType.config.statusField;
   }
   buildConnectionFields(orm, entryType);
-  buildChildEntities(orm, entryType);
+  buildChildred(orm, entryType);
   const groups: FieldGroup[] = buildFieldGroups(entryType);
   const listFields = buildListFields(entryType);
 
@@ -36,8 +36,8 @@ export function buildEntryType(
   };
 }
 
-function buildConnectionFields(orm: EasyOrm, easyEntity: EntryType) {
-  const fields = easyEntity.fields.filter((field) =>
+function buildConnectionFields(orm: EasyOrm, entryType: EntryType) {
+  const fields = entryType.fields.filter((field) =>
     field.fieldType === "ConnectionField"
   );
 
@@ -48,13 +48,16 @@ function buildConnectionFields(orm: EasyOrm, easyEntity: EntryType) {
     }
 
     field.connectionTitleField = titleField.key as string;
-    field.connectionIdType = getConnectionIdType(orm, field.connectionEntity!);
-    easyEntity.fields.push(titleField);
+    field.connectionIdType = getConnectionIdType(
+      orm,
+      field.connectionEntryType!,
+    );
+    entryType.fields.push(titleField);
   }
 }
 
-function buildChildEntities(orm: EasyOrm, easyEntity: EntryType) {
-  for (const child of easyEntity.children) {
+function buildChildred(orm: EasyOrm, entryType: EntryType) {
+  for (const child of entryType.children) {
     buildChild(orm, child);
   }
 }
@@ -70,7 +73,10 @@ function buildChild(orm: EasyOrm, child: ChildListDefinition) {
     }
 
     field.connectionTitleField = titleField.key as string;
-    field.connectionIdType = getConnectionIdType(orm, field.connectionEntity!);
+    field.connectionIdType = getConnectionIdType(
+      orm,
+      field.connectionEntryType!,
+    );
     child.fields.push(titleField);
   }
 }
@@ -99,7 +105,7 @@ function getConnectionIdType(
     default:
       raiseOrmException(
         "InvalidFieldType",
-        `Invalid id method type ${entryType.config.idMethod} for entity ${entryType.entryType}`,
+        `Invalid id method type ${entryType.config.idMethod} for entry type ${entryType.entryType}`,
       );
   }
 }
@@ -108,31 +114,31 @@ function buildConnectionTitleField(
   orm: EasyOrm,
   field: EasyField,
 ) {
-  if (!field.connectionEntity) {
+  if (!field.connectionEntryType) {
     return;
   }
-  const entity = orm.getEntryTypeSource(field.connectionEntity);
-  const titleFieldKey = entity.config.titleField;
+  const entryType = orm.getEntryTypeSource(field.connectionEntryType);
+  const titleFieldKey = entryType.config.titleField;
   if (!titleFieldKey) {
     return;
   }
 
-  const entityTitleField = entity.fields.find((field) =>
+  const entryTitleField = entryType.fields.find((field) =>
     field.key === titleFieldKey
   );
-  if (!entityTitleField) {
+  if (!entryTitleField) {
     return;
   }
   const newKey = `${field.key as string}${
     toPascalCase(camelToSnakeCase(titleFieldKey))
   }`;
 
-  const titleField = { ...entityTitleField };
+  const titleField = { ...entryTitleField };
   titleField.readOnly = true;
   titleField.inList = field.inList;
   titleField.group = field.group;
   titleField.fetchOptions = {
-    fetchEntity: field.connectionEntity,
+    fetchEntryType: field.connectionEntryType,
     thisIdKey: field.key,
     thisFieldKey: newKey,
     thatFieldKey: titleField.key,
@@ -142,18 +148,18 @@ function buildConnectionTitleField(
   return titleField;
 }
 
-function buildListFields(easyEntity: EntryType) {
+function buildListFields(entryType: EntryType) {
   const listFields: Array<string> = [];
 
-  if (easyEntity.config.titleField) {
-    const titleField = easyEntity.fields.find((field) =>
-      field.key === easyEntity.config.titleField
+  if (entryType.config.titleField) {
+    const titleField = entryType.fields.find((field) =>
+      field.key === entryType.config.titleField
     );
     if (titleField) {
       titleField.inList = true;
     }
   }
-  for (const field of easyEntity.fields) {
+  for (const field of entryType.fields) {
     if (field.inList) {
       listFields.push(field.key);
     }

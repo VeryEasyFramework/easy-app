@@ -3,7 +3,7 @@ import { createAction } from "#/actions/createAction.ts";
 export const sendEmailAction = createAction("sendEmail", {
   description: "Send an email",
   async action(app, { body, subject, recipientEmail, recipientName }, request) {
-    const email = await app.orm.createEntity("email", {
+    const email = await app.orm.createEntry("email", {
       senderName: app.config.appName,
       recipientEmail,
       recipientName,

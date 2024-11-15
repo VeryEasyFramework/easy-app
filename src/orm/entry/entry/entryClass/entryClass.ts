@@ -60,18 +60,18 @@ export class EntryClass {
     this._data.updatedAt = value;
   }
   get data(): Record<string, SafeType> {
-    const keys = this.entryType.fields.filter((field) => field.hidden)
+    const keys = this._entryType.fields.filter((field) => field.hidden)
       .map((field) => field.key);
     const data = { ...this._data };
     for (const key of keys) {
       delete data[key];
     }
 
-    const childrenKeys = this.entryType.children.map(
+    const childrenKeys = this._entryType.children.map(
       (child) => child.childName,
     );
 
-    const multiChoiceKeys = this.entryType.fields.filter(
+    const multiChoiceKeys = this._entryType.fields.filter(
       (field) => field.fieldType === "MultiChoiceField",
     ).map((field) => field.key);
 
@@ -86,7 +86,7 @@ export class EntryClass {
     return data;
   }
 
-  entryType!: EntryTypeDef;
+  _entryType!: EntryTypeDef;
 
   _beforeInsert!: Array<EntryHookFunction>;
 
@@ -107,7 +107,7 @@ export class EntryClass {
   actions!: Record<string, EntryAction>;
 
   get _title(): string {
-    const titleField = this.entryType.config.titleField || "id";
+    const titleField = this._entryType.config.titleField || "id";
 
     return this[titleField as keyof this] as string;
   }
@@ -165,7 +165,7 @@ export class EntryClass {
     this._prevData = {};
     const idKey = this.primaryKey || "id";
     const data = await this.orm.database.getRow(
-      this.entryType.config.tableName,
+      this._entryType.config.tableName,
       idKey,
       id,
     );
@@ -176,20 +176,20 @@ export class EntryClass {
   }
 
   private async loadChildren() {
-    for (const child of this.entryType.children) {
+    for (const child of this._entryType.children) {
       const childClass = this[child.childName as keyof this] as ChildList;
       await childClass.load(this.id);
     }
   }
 
   private async loadMultiChoiceFields() {
-    const fields = this.entryType.fields.filter((field) =>
+    const fields = this._entryType.fields.filter((field) =>
       field.fieldType === "MultiChoiceField"
     );
 
     for (const field of fields) {
       const values = await this.orm.database.getRows(
-        `${this.entryType.entryType}_${field.key}_mc_values`,
+        `${this._entryType.entryType}_${field.key}_mc_values`,
         {
           filter: {
             parentId: this.id,
@@ -216,7 +216,7 @@ export class EntryClass {
       await this.beforeSave();
       const changed = this.adaptChangedData(this._data);
       await this.orm.database.insertRow(
-        this.entryType.config.tableName,
+        this._entryType.config.tableName,
         changed,
       );
 
@@ -228,7 +228,7 @@ export class EntryClass {
       this._prevData = {};
       await this.orm.runGlobalHook(
         "afterInsert",
-        this.entryType.entryType,
+        this._entryType.entryType,
         this,
       );
       return changed;
@@ -244,21 +244,21 @@ export class EntryClass {
     changedData = this.adaptChangedData(changedData);
 
     await this.orm.database.updateRow(
-      this.entryType.config.tableName,
+      this._entryType.config.tableName,
       this.id,
       changedData,
     );
 
     await this.afterSave();
     this._prevData = {};
-    this.entryType.fields.forEach((field) => {
+    this._entryType.fields.forEach((field) => {
       if (field.hidden && field.key in changedData) {
         changedData[field.key] = "********";
       }
     });
     await this.orm.runGlobalHook(
       "afterChange",
-      this.entryType.entryType,
+      this._entryType.entryType,
       this,
       changedData,
     );
@@ -266,7 +266,7 @@ export class EntryClass {
   }
 
   private changedChildren() {
-    const childrenKeys = this.entryType.children.map((child) =>
+    const childrenKeys = this._entryType.children.map((child) =>
       child.childName
     );
     const changed: string[] = [];
@@ -280,20 +280,20 @@ export class EntryClass {
   }
 
   private async saveMultiChoiceFields() {
-    const multiChoiceFields = this.entryType.fields.filter(
+    const multiChoiceFields = this._entryType.fields.filter(
       (field) => field.fieldType === "MultiChoiceField",
     );
     for (const field of multiChoiceFields) {
       const values = this[field.key as keyof this] as Record<string, any>[];
       await this.orm.database.deleteRows(
-        `${this.entryType.entryType}_${field.key}_mc_values`,
+        `${this._entryType.entryType}_${field.key}_mc_values`,
         {
           parentId: this.id,
         },
       );
       for (const value of values) {
         await this.orm.database.insertRow(
-          `${this.entryType.entryType}_${field.key}_mc_values`,
+          `${this._entryType.entryType}_${field.key}_mc_values`,
           {
             id: generateId(16),
             parentId: this.id,
@@ -317,7 +317,7 @@ export class EntryClass {
   }
 
   private async deleteChildren() {
-    const childrenKeys = this.entryType.children.map((child) =>
+    const childrenKeys = this._entryType.children.map((child) =>
       child.childName
     );
     for (const key of childrenKeys) {
@@ -337,26 +337,26 @@ export class EntryClass {
     await this.deleteChildren();
     const idKey = this.primaryKey || "id";
     await this.orm.database.deleteRow(
-      this.entryType.config.tableName,
+      this._entryType.config.tableName,
       idKey,
       this.id,
     );
     await this.afterDelete();
     await this.orm.runGlobalHook(
       "afterDelete",
-      this.entryType.entryType,
+      this._entryType.entryType,
       this,
     );
   }
 
   update(data: Record<string, any>): void {
-    const childKeys = this.entryType.children.map((child) => child.childName);
+    const childKeys = this._entryType.children.map((child) => child.childName);
     for (const key in data) {
       if (childKeys.includes(key)) {
         this[key as keyof this] = data[key];
         continue;
       }
-      if (!this.entryType.fields.find((field) => field.key === key)) {
+      if (!this._entryType.fields.find((field) => field.key === key)) {
         continue;
       }
       this[key as keyof this] = data[key];
@@ -370,9 +370,9 @@ export class EntryClass {
     this.validateAction(actionKey, data);
     data = data || {};
 
-    const task = await this.orm.createEntity("taskQueue", {
+    const task = await this.orm.createEntry("taskQueue", {
       taskType: "entry",
-      recordType: this.entryType.entryType,
+      recordType: this._entryType.entryType,
       recordId: this.id,
       recordTitle: this._title,
       action: actionKey,
@@ -386,7 +386,7 @@ export class EntryClass {
     if (!action) {
       raiseOrmException(
         "InvalidAction",
-        `Action ${actionKey} not found in entry type ${this.entryType.entryType}`,
+        `Action ${actionKey} not found in entry type ${this._entryType.entryType}`,
       );
     }
     if (action.params) {
@@ -428,7 +428,7 @@ export class EntryClass {
     if (!this._isNew) {
       return;
     }
-    const method = this.entryType.config.idMethod;
+    const method = this._entryType.config.idMethod;
     let id: string | number | null;
     switch (method.type) {
       case "hash":
@@ -436,7 +436,7 @@ export class EntryClass {
         break;
       case "number": {
         const result = await this.orm.database.getRows(
-          this.entryType.config.tableName,
+          this._entryType.config.tableName,
           {
             orderBy: "id",
             order: "desc",
@@ -479,7 +479,7 @@ export class EntryClass {
 
     // set children ids
 
-    const childrenKeys = this.entryType.children.map((child) =>
+    const childrenKeys = this._entryType.children.map((child) =>
       child.childName
     );
 
@@ -494,7 +494,7 @@ export class EntryClass {
         data[key] = row[key];
       }
     });
-    this.entryType.fields.forEach((field) => {
+    this._entryType.fields.forEach((field) => {
       if (field.key in row) {
         data[field.key] = this.orm.database.adaptLoadValue(
           field,
@@ -533,7 +533,7 @@ export class EntryClass {
         continue;
       }
       if (key === "id") {
-        const type = this.entryType.config.idMethod.type;
+        const type = this._entryType.config.idMethod.type;
         let fieldType: EasyFieldType = "DataField";
         switch (type) {
           case "number":
@@ -547,10 +547,10 @@ export class EntryClass {
           case "uuid":
             break;
           case "field":
-            fieldType = this.entryType.fields.find(
+            fieldType = this._entryType.fields.find(
               (field) =>
                 field.key ===
-                  (this.entryType.config.idMethod as FieldMethod).field,
+                  (this._entryType.config.idMethod as FieldMethod).field,
             )?.fieldType || "DataField";
             break;
           case "data":
@@ -566,7 +566,7 @@ export class EntryClass {
         continue;
       }
       let fieldType: EasyFieldType | undefined;
-      this.entryType.fields.forEach((field) => {
+      this._entryType.fields.forEach((field) => {
         if (field.key === key) {
           fieldType = field.fieldType;
         }
@@ -575,7 +575,7 @@ export class EntryClass {
       if (!fieldType) {
         raiseOrmException(
           "InvalidField",
-          `Field ${key} not found in Entry Type ${this.entryType.entryType}`,
+          `Field ${key} not found in Entry Type ${this._entryType.entryType}`,
         );
       }
 
@@ -593,7 +593,7 @@ export class EntryClass {
   async syncFetchFields(force?: boolean) {
     // return;
     const entry = this.orm.registry.findInRegistry(
-      this.entryType.entryType,
+      this._entryType.entryType,
     );
     if (!entry) {
       return;
@@ -623,9 +623,9 @@ export class EntryClass {
    * Fetches the values of fields that have `fetchOptions` set
    */
   async refreshFetchedFields() {
-    const fields = this.entryType.fields.filter((field) => field.fetchOptions);
+    const fields = this._entryType.fields.filter((field) => field.fetchOptions);
     for (const field of fields) {
-      const { fetchEntity, thatFieldKey, thisFieldKey, thisIdKey } = field
+      const { fetchEntryType, thatFieldKey, thisFieldKey, thisIdKey } = field
         .fetchOptions!;
 
       const id = this[thisIdKey as keyof this] as string | undefined;
@@ -635,7 +635,7 @@ export class EntryClass {
         continue;
       }
       this[thisFieldKey as keyof this] = await this.orm.getValue(
-        fetchEntity,
+        fetchEntryType,
         id,
         thatFieldKey,
       );
@@ -643,7 +643,7 @@ export class EntryClass {
   }
 
   private setDefaultValues(data: Record<PropertyKey, any>) {
-    for (const field of this.entryType.fields) {
+    for (const field of this._entryType.fields) {
       if (field.fieldType === "MultiChoiceField") {
         continue;
       }
@@ -693,17 +693,20 @@ export class EntryClass {
     }
     const keys = Object.keys(changedData);
 
-    const fields = this.entryType.fields.filter((field) =>
+    const fields = this._entryType.fields.filter((field) =>
       field.fieldType === "ConnectionField" && keys.includes(field.key)
     );
 
     for (const field of fields) {
       if (
-        !await this.orm.exists(field.connectionEntity!, changedData[field.key])
+        !await this.orm.exists(
+          field.connectionEntryType!,
+          changedData[field.key],
+        )
       ) {
         raiseOrmException(
           "InvalidConnection",
-          `Invalid connection for field ${field.label} in entry type ${this.entryType.entryType}`,
+          `Invalid connection for field ${field.label} in entry type ${this._entryType.entryType}`,
         );
       }
     }

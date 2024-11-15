@@ -3,21 +3,21 @@ import { raiseEasyException } from "#/easyException.ts";
 import { easyLog } from "#/log/logging.ts";
 import { OrmException } from "#orm/ormException.ts";
 
-export const runEntityActionAction = createAction("runEntityAction", {
-  description: "Run an action that is defined on the entity",
-  async action(app, { entity, id, action, data, enqueue }, request) {
-    const entityRecord = await app.orm.getEntry(entity, id, request.user);
-    if (!entityRecord) {
-      raiseEasyException(`${entity} doesn't exist`, 404);
+export const runEntryActionAction = createAction("runEntryAction", {
+  description: "Run an action that is defined on the entry",
+  async action(app, { entryType, id, action, data, enqueue }, request) {
+    const entry = await app.orm.getEntry(entryType, id, request.user);
+    if (!entry) {
+      raiseEasyException(`${entryType} doesn't exist`, 404);
     }
 
     try {
       if (enqueue) {
-        return await entityRecord.enqueueAction(action, data);
+        return await entry.enqueueAction(action, data);
       }
-      return await entityRecord.runAction(action, data);
+      return await entry.runAction(action, data);
     } catch (e: unknown) {
-      let message = `Error running action ${action} on entity ${entity}: `;
+      let message = `Error running action ${action} on entry ${entryType}: `;
       if (e instanceof OrmException) {
         switch (e.type) {
           case "MissingActionParam":
@@ -37,7 +37,7 @@ export const runEntityActionAction = createAction("runEntityAction", {
     }
   },
   params: {
-    entity: {
+    entryType: {
       required: true,
       type: "DataField",
     },

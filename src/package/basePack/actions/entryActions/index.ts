@@ -1,25 +1,20 @@
-import { createEntryAction } from "#/package/basePack/actions/entityActions/createEntryAction.ts";
-import { updateEntityAction } from "#/package/basePack/actions/entityActions/updateEntityAction.ts";
-import { getEntityAction } from "#/package/basePack/actions/entityActions/getEntityAction.ts";
-import { deleteEntryAction } from "#/package/basePack/actions/entityActions/deleteEntryAction.ts";
-import { getEntryInfoAction } from "#/package/basePack/actions/entityActions/entryInfoAction.ts";
+import { createEntryAction } from "#/package/basePack/actions/entryActions/createEntryAction.ts";
+import { updateEntryAction } from "#/package/basePack/actions/entryActions/updateEntryAction.ts";
+import { getEntryAction } from "#/package/basePack/actions/entryActions/getEntryAction.ts";
+import { deleteEntryAction } from "#/package/basePack/actions/entryActions/deleteEntryAction.ts";
 import {
-  runEntityActionAction,
-} from "#/package/basePack/actions/entityActions/runEntityActionAction.ts";
-import {
-  getEntityListAction,
-} from "#/package/basePack/actions/entityActions/getEntityListAction.ts";
-import {
-  getRecordInfoAction,
-} from "#/package/basePack/actions/entityActions/getRecordInfoAction.ts";
+  runEntryActionAction,
+} from "#/package/basePack/actions/entryActions/runEntryActionAction.ts";
+import { getEntryListAction, } from "#/package/basePack/actions/entryActions/getEntryListAction.ts";
+import { getEntryInfoAction, } from "#/package/basePack/actions/entryActions/getEntryInfoAction.ts";
 
 export const entryActions = [
-  getEntityListAction,
+  getEntryListAction,
   createEntryAction,
-  updateEntityAction,
-  getEntityAction,
+  updateEntryAction,
+  getEntryAction,
   deleteEntryAction,
   getEntryInfoAction,
-  runEntityActionAction,
-  getRecordInfoAction,
+  runEntryActionAction,
+  getEntryInfoAction,
 ];

@@ -1,9 +1,4 @@
-import type {
-  EntryAction,
-  EntryHook,
-  EntryHookDefinition,
-  EntryTypeDef,
-} from "@vef/types";
+import type { EntryAction, EntryHook, EntryHookDefinition, EntryTypeDef, } from "@vef/types";
 import { EntryClass } from "#orm/entry/entry/entryClass/entryClass.ts";
 import type { EntryHookFunction } from "#orm/entry/entry/entryClass/entryClassTypes.ts";
 import type { EasyOrm } from "#orm/orm.ts";
@@ -14,7 +9,7 @@ export function buildEntryClass(orm: EasyOrm, entryType: EntryTypeDef) {
   const hooks = extractHooks(entryType);
   const actions = extractActions(entryType);
   const entryClass = class extends EntryClass {
-    override entryType = entryType;
+    override _entryType = entryType;
 
     override actions: Record<string, EntryAction> = actions;
     override _beforeInsert: EntryHookFunction[] = hooks.beforeInsert;

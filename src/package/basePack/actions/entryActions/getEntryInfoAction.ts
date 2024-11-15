@@ -1,12 +1,12 @@
 import { createAction } from "#/actions/createAction.ts";
-import { editLogEntry } from "#/package/basePack/entities/editLogEntry.ts";
+import { editLogEntry } from "#/package/basePack/entryTypes/editLogEntry.ts";
 
-export const getRecordInfoAction = createAction("getRecordInfo", {
+export const getEntryInfoAction = createAction("getEntryInfo", {
   description: "Get summary information about a record",
-  async action(app, { entity, id }, request) {
+  async action(app, { entryType, id }, request) {
     const editLog = await app.orm.getEntryList("editLog", {
       filter: {
-        entity,
+        entryType,
         recordId: id,
       },
       columns: [
@@ -21,7 +21,7 @@ export const getRecordInfoAction = createAction("getRecordInfo", {
     };
   },
   params: {
-    entity: {
+    entryType: {
       required: true,
       type: "DataField",
     },

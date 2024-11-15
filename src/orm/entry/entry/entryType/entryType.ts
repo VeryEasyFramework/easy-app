@@ -4,7 +4,6 @@ import type {
   Entry,
   EntryActionDefinition,
   EntryHook,
-  EntryHookDefinition,
   EntryHooks,
 } from "#orm/entry/entry/entryType/entry.ts";
 import type { Permission } from "#orm/entry/permission/permissionTypes.ts";
@@ -17,11 +16,11 @@ export class EntryType extends BaseDefinition<EntryTypeConfig, "entry"> {
   roles: Map<string, Permission> = new Map();
 
   hooks: EntryHooks;
-  constructor(entityId: string, options?: {
+  constructor(entryType: string, options?: {
     label?: string;
     description?: string;
   }) {
-    super(entityId, options);
+    super(entryType, options);
     this.setPermission({
       role: "systemAdmin",
       read: true,
@@ -53,7 +52,7 @@ export class EntryType extends BaseDefinition<EntryTypeConfig, "entry"> {
     description?: string;
 
     action(
-      entity: Entry,
+      entry: Entry,
     ): Promise<void> | void;
   }) {
     this.hooks[hook].push(definition);
@@ -82,7 +81,7 @@ export class EntryType extends BaseDefinition<EntryTypeConfig, "entry"> {
     permission.role = roleName;
     if (this.roles.has(roleId)) {
       raiseEasyException(
-        `Role ${roleName} already exists in entity ${this.entryType}`,
+        `Role ${roleName} already exists in entry type ${this.entryType}`,
         400,
       );
     }

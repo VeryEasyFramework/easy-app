@@ -1,16 +1,10 @@
-import { BaseDefinition } from "../baseDefinition.ts";
-import type {
-  Choice,
-  EasyField,
-  SettingsAction,
-  SettingsHook,
-  SettingsTypeConfig,
-} from "@vef/types";
+import { BaseDefinition } from "#orm/entry/baseDefinition.ts";
+import type { Choice, EasyField, SettingsHook, SettingsTypeConfig, } from "@vef/types";
 import type {
   Settings,
   SettingsActionDefinition,
   SettingsHooks,
-} from "./settingsRecordTypes.ts";
+} from "#orm/entry/settings/settingsTypes.ts";
 
 export class SettingsType
   extends BaseDefinition<SettingsTypeConfig, "settings"> {

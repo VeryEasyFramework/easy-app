@@ -1,19 +1,19 @@
 import { createAction } from "#/actions/createAction.ts";
 
-export const updateEntityAction = createAction("updateEntity", {
-  description: "Update an entity",
-  action: async (app, { entity, id, data }, request) => {
-    const updatedEntity = await app.orm.updateEntry(
-      entity,
+export const updateEntryAction = createAction("updateEntry", {
+  description: "Update an entry",
+  action: async (app, { entryType, id, data }, request) => {
+    const updatedEntry = await app.orm.updateEntry(
+      entryType,
       id,
       data,
       request.user,
     );
 
-    return updatedEntity.data;
+    return updatedEntry.data;
   },
   params: {
-    entity: {
+    entryType: {
       required: true,
       type: "DataField",
     },

@@ -2,7 +2,6 @@ import { Database, type DatabaseConfig } from "#orm/database/database.ts";
 import { type BasicFgColor, ColorMe } from "@vef/easy-cli";
 
 import type {
-  CountGroupedResult,
   CountOptions,
   EasyFieldType,
   EasyFieldTypeMap,
@@ -11,27 +10,28 @@ import type {
   ReportOptions,
   RowsResult,
   SafeType,
+  SettingsTypeDef,
+  User,
 } from "@vef/types";
 
 import { raiseOrmException } from "#orm/ormException.ts";
-import { migrateEntryType } from "#orm/database/migrate/migrateEntity.ts";
+import { migrateEntryType } from "#orm/database/migrate/migrateEntryType.ts";
 
 import { installDatabase } from "#orm/database/install/installDatabase.ts";
 import type { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
-import { buildEntryType } from "#orm/entry/entry/entryType/buildEasyEntity.ts";
-import { validateEntityDefinition } from "#orm/entry/entry/entryType/validateEntryType.ts";
+import { buildEntryType } from "#orm/entry/entry/entryType/buildEntryType.ts";
+import { validateEntryType } from "#orm/entry/entry/entryType/validateEntryType.ts";
 import { FetchRegistry } from "#orm/entry/registry.ts";
 import { buildEntryClass } from "#orm/entry/entry/entryClass/buildEntryClass.ts";
 import type { EntryClass } from "#orm/entry/entry/entryClass/entryClass.ts";
-import type { SettingsTypeDef, User } from "@vef/types";
 
-import { migrateSettingsEntity } from "#orm/database/migrate/migrateSettingsEntity.ts";
-import type { SettingsClass } from "#orm/entry/settings/settingsRecord.ts";
-import { buildSettingsType } from "#orm/entry/settings/buildSettingsEntity.ts";
-import { buildSettingsRecordClass } from "#orm/entry/settings/buildSettingsRecordClass.ts";
-import type { SettingsType } from "#orm/entry/settings/settingsEntity.ts";
+import { migrateSettingsType } from "#orm/database/migrate/migrateSettingsType.ts";
+import type { SettingsClass } from "#orm/entry/settings/settings.ts";
+import { buildSettingsType } from "#orm/entry/settings/buildSettingsType.ts";
+import { buildSettingsClass } from "#orm/entry/settings/buildSettingsClass.ts";
+import type { SettingsType } from "#orm/entry/settings/settingsType.ts";
 import type { EasyApp } from "#/app/easyApp.ts";
-import type { Settings } from "#orm/entry/settings/settingsRecordTypes.ts";
+import type { Settings } from "#orm/entry/settings/settingsTypes.ts";
 import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
 
 type GlobalHook = (
@@ -251,7 +251,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   }
   private validateEntryTypes() {
     for (const entryType of Object.values(this.entryTypes)) {
-      validateEntityDefinition(this, entryType);
+      validateEntryType(this, entryType);
     }
   }
 
@@ -268,7 +268,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         this.settingsTypes,
       )
     ) {
-      const settingsClass = buildSettingsRecordClass(
+      const settingsClass = buildSettingsClass(
         this,
         settingsType,
       );
@@ -316,10 +316,10 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         message(`Migrated ${entryType.entryType}`, "brightGreen"),
       );
     }
-    for (const settingsEntity of this.settingsTypesList) {
-      await migrateSettingsEntity({
+    for (const settingsType of this.settingsTypesList) {
+      await migrateSettingsType({
         database: this.database,
-        settingsEntity,
+        settingsType,
         onOutput: (message) => {
           progress(count, total, message);
         },
@@ -347,7 +347,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Create an new entry
    */
-  async createEntity(
+  async createEntry(
     entryType: string,
     data: Record<string, SafeType | undefined>,
     user?: User,
@@ -379,7 +379,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Delete an entry
    */
-  async deleteEntity(
+  async deleteEntry(
     entryType: string,
     id: string | number,
     user?: User,
@@ -390,7 +390,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   }
 
   /**
-   * Get a list of entities
+   * Get a list of entries
    */
   async getEntryList<E extends Record<string, any> = Record<string, any>>(
     entryType: string,
@@ -424,7 +424,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Find an entry by a filter. Returns the first entry that matches the filter
    */
-  async findEntity(
+  async findEntry(
     entryType: string,
     filter: Required<ListOptions["filter"]>,
   ): Promise<Entry | null> {
@@ -625,14 +625,14 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return settingsClass;
   }
 
-  getSettingsEntity(settingsId: string): SettingsTypeDef {
-    const settingsEntity = this.settingsTypes[settingsId];
-    if (!settingsEntity) {
+  getSettingsType(settingsType: string): SettingsTypeDef {
+    const settingsTypeDef = this.settingsTypes[settingsType];
+    if (!settingsTypeDef) {
       raiseOrmException(
         "EntryTypeNotFound",
-        `Settings Type '${settingsId}' is not a registered settings type!`,
+        `Settings Type '${settingsType}' is not a registered settings type!`,
       );
     }
-    return settingsEntity;
+    return settingsTypeDef;
   }
 }

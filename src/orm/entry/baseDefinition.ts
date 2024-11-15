@@ -3,19 +3,15 @@ import type {
   Choice,
   EasyField,
   FieldGroupDefinition,
+  SettingsHook,
 } from "@vef/types";
-import {
-  camelToSnakeCase,
-  camelToTitleCase,
-  toCamelCase,
-} from "@vef/string-utils";
+import { camelToSnakeCase, camelToTitleCase, toCamelCase, } from "@vef/string-utils";
 import { raiseOrmException } from "#orm/ormException.ts";
-import type { SettingsHook } from "@vef/types";
-import type { SettingsActionDefinition } from "./settings/settingsRecordTypes.ts";
 import type {
+  SettingsActionDefinition,
   SettingsHookDefinition,
-  SettingsHooks,
-} from "./settings/settingsRecordTypes.ts";
+  SettingsHooks
+} from "./settings/settingsTypes.ts";
 import type {
   EntryActionDefinition,
   EntryHook,
@@ -35,17 +31,17 @@ export interface BaseDefinitionConfig {
 type DefType = "entry" | "settings";
 
 export interface HooksDefMap {
-  entity: EntryHookDefinition;
+  entry: EntryHookDefinition;
   settings: SettingsHookDefinition;
 }
 
 export interface EasyHooksMap {
-  entity: EntryHooks;
+  entry: EntryHooks;
   settings: SettingsHooks;
 }
 
 export interface ActionsDefMap<F extends Array<EasyField>> {
-  entity: EntryActionDefinition<F>;
+  entry: EntryActionDefinition<F>;
   settings: SettingsActionDefinition<F>;
 }
 export interface ActionsMap {
@@ -53,7 +49,7 @@ export interface ActionsMap {
   settings: SettingsActionDefinition & { key: string };
 }
 export interface HooksMap {
-  entity: EntryHook;
+  entry: EntryHook;
   settings: SettingsHook;
 }
 export class BaseDefinition<
@@ -75,7 +71,7 @@ export class BaseDefinition<
     if (!field) {
       raiseOrmException(
         "InvalidField",
-        `Field with key ${fieldKey} not found in entity ${this.key}`,
+        `Field with key ${fieldKey} not found in Entry Type ${this.key}`,
       );
     }
 
@@ -121,7 +117,7 @@ export class BaseDefinition<
     if (this.fields.find((f) => f.key === field.key)) {
       raiseOrmException(
         "InvalidField",
-        `Field with key ${field.key} already exists in entity ${this.key}`,
+        `Field with key ${field.key} already exists in entry type ${this.key}`,
       );
     }
 
@@ -129,7 +125,7 @@ export class BaseDefinition<
     if (["id", "data"].includes(field.key)) {
       raiseOrmException(
         "InvalidField",
-        `Field with key ${field.key} is a protected keyword in entity ${this.key}`,
+        `Field with key ${field.key} is a protected keyword in entry type ${this.key}`,
       );
     }
     if (!field.label) {
@@ -166,7 +162,7 @@ export class BaseDefinition<
     if (this.fieldGroups.find((g) => g.key === group.key)) {
       raiseOrmException(
         "InvalidFieldGroup",
-        `Field group with key ${group.key} already exists in entity ${this.key}`,
+        `Field group with key ${group.key} already exists in entry type ${this.key}`,
       );
     }
 
@@ -184,7 +180,7 @@ export class BaseDefinition<
     if (this.children.find((c) => c.childName === child.childName)) {
       raiseOrmException(
         "InvalidChild",
-        `Child with key ${child.childName} already exists in entity ${this.key}`,
+        `Child with key ${child.childName} already exists in entry type ${this.key}`,
       );
     }
 

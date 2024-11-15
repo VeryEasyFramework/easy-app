@@ -3,8 +3,8 @@ import { createMiddleware } from "#/middleware/middleware.ts";
 import type { EasyRequest } from "#/app/easyRequest.ts";
 import type { EasyApp } from "#/app/easyApp.ts";
 
-import type { SessionData } from "#/package/authPack/entities/userSession.ts";
-import type { SafeType, User } from "@vef/types";
+import type { SessionData } from "#/package/authPack/entryTypes/userSession.ts";
+import type { User } from "@vef/types";
 import { OrmException } from "#orm/ormException.ts";
 
 export const authMiddleware = createMiddleware(async (
@@ -51,7 +51,7 @@ async function processAuthToken(
     return true;
   }
 
-  const user = await app.orm.findEntity("user", {
+  const user = await app.orm.findEntry("user", {
     apiToken: token,
   });
   if (user) {
@@ -104,8 +104,8 @@ async function loadSessionData(
   let sessionData = app.cacheGet("userSession", sessionId) as SessionData;
   if (!sessionData) {
     try {
-      const entity = await app.orm.getEntry("userSession", sessionId);
-      sessionData = entity.sessionData as SessionData;
+      const entry = await app.orm.getEntry("userSession", sessionId);
+      sessionData = entry.sessionData as SessionData;
       app.cacheSet("userSession", sessionId, sessionData);
     } catch (e) {
       if (e instanceof OrmException && e.type === "EntryTypeNotFound") {
