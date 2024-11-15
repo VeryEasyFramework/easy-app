@@ -1,8 +1,8 @@
 import { SMTPClient } from "#/package/emailPack/smtp/smtpClient.ts";
 import type { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
-import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
 
-export const emailEntity = new EasyEntity("email");
+export const emailEntity = new EntryType("email");
 
 emailEntity.setConfig({
   label: "Email",

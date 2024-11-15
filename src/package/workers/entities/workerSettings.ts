@@ -1,10 +1,9 @@
-import { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
-import type { Choice, EasyField } from "@vef/types";
+import { SettingsType } from "../../../orm/entry/settings/settingsEntity.ts";
+import type { EasyField } from "@vef/types";
 import startProcess from "#/app/runner/startProcess.ts";
 import { toTitleCase } from "@vef/string-utils";
-import { easyLog } from "#/log/logging.ts";
 
-export const workerSettings = new SettingsEntity("workerSettings");
+export const workerSettings = new SettingsType("workerSettings");
 
 workerSettings.setConfig({
   label: "Worker Settings",

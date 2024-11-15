@@ -3,8 +3,8 @@ import { raiseEasyException } from "#/easyException.ts";
 
 import type { EasyApp } from "#/app/easyApp.ts";
 import type { EasyResponse } from "#/app/easyResponse.ts";
-import type { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
-import type { EntityRecord } from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
+import type { EntryClass } from "../../../orm/entry/entry/entryClass/entryClass.ts";
+import type { Entry } from "../../../orm/entry/entry/entryType/entry.ts";
 
 export const loginAction = createAction("login", {
   description: "Login user",
@@ -39,7 +39,7 @@ export const loginAction = createAction("login", {
 
 async function createUserSession(
   app: EasyApp,
-  user: EntityRecord,
+  user: Entry,
   response: EasyResponse,
 ) {
   const sessionData = {

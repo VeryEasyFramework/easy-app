@@ -496,7 +496,7 @@ export async function validateConnection(
   }
   if (!await orm.exists(field.connectionEntity, value)) {
     raiseOrmException(
-      "EntityNotFound",
+      "EntryTypeNotFound",
       `Connection ${field.connectionEntity} with id ${value} does not exist`,
     );
   }

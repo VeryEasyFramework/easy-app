@@ -1,7 +1,7 @@
-import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 
-export const taskQueue = new EasyEntity("taskQueue");
+export const taskQueue = new EntryType("taskQueue");
 taskQueue.setConfig({
   statusField: "status",
   titleField: "title",
@@ -98,9 +98,9 @@ taskQueue.addHook("validate", {
     switch (task.taskType) {
       case "entity": {
         const entity = task.recordType as string;
-        const def = task.orm.getEntityDef(entity);
+        const def = task.orm.getEntryType(entity);
         if (!def) {
-          raiseOrmException("EntityNotFound", `Entity ${entity} not found`);
+          raiseOrmException("EntryTypeNotFound", `Entity ${entity} not found`);
         }
         title = `${def.config.label}: ${task.recordTitle} - ${task.action}`;
         break;
@@ -110,7 +110,10 @@ taskQueue.addHook("validate", {
         const def = task.orm.getSettingsEntity(settings);
 
         if (!def) {
-          raiseOrmException("EntityNotFound", `Settings ${settings} not found`);
+          raiseOrmException(
+            "EntryTypeNotFound",
+            `Settings ${settings} not found`,
+          );
         }
 
         title = `${def.config.label}: - ${task.action}`;
@@ -145,7 +148,7 @@ taskQueue.addAction("runTask", {
         const action = task.action as string;
         const data = task.taskData as Record<string, any>;
 
-        const record = await task.orm.getEntity(entity, recordId);
+        const record = await task.orm.getEntry(entity, recordId);
         task.status = "running";
         await task.save();
         const result = await record.runAction(action, data);

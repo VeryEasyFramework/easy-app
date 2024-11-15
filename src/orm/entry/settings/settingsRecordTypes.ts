@@ -1,4 +1,4 @@
-import type { SettingsRecordClass } from "#orm/entity/settings/settingsRecord.ts";
+import type { SettingsClass } from "./settingsRecord.ts";
 import type {
   Choice,
   EasyField,
@@ -6,15 +6,15 @@ import type {
   SafeReturnType,
   SafeType,
 } from "@vef/types";
-export interface SettingsRecord extends SettingsRecordClass {
+export interface Settings extends SettingsClass {
   [key: string]: any;
 }
 export type SettingsHookFunction = (
-  settingsRecord: SettingsRecord,
+  settings: Settings,
 ) => Promise<void> | void;
 
 export type SettingsActionFunction = (
-  settingsRecord: SettingsRecord,
+  settingsRecord: Settings,
   params?: Record<string, SafeType>,
 ) => SafeReturnType;
 
@@ -23,7 +23,7 @@ export interface SettingsAction {
   label: string;
   description: string;
   action(
-    settingsRecord: SettingsRecord,
+    settingsRecord: Settings,
     params: Record<string, any>,
   ): Promise<void> | void;
   params: Array<EasyField>;
@@ -47,7 +47,7 @@ export interface SettingsActionDefinition<
   label?: string;
   description?: string;
   action(
-    settingsRecord: SettingsRecord,
+    settingsRecord: Settings,
     params: D,
   ): Promise<any> | any;
 
@@ -56,15 +56,15 @@ export interface SettingsActionDefinition<
   params?: F;
 }
 
-export interface SettingsEntityHookDefinition {
+export interface SettingsHookDefinition {
   label?: string;
   description?: string;
-  action(settings: SettingsRecord): Promise<void> | void;
+  action(settings: Settings): Promise<void> | void;
 }
 
-export type SettingsEntityHooks = {
-  beforeSave: Array<SettingsEntityHookDefinition>;
-  afterSave: Array<SettingsEntityHookDefinition>;
-  validate: Array<SettingsEntityHookDefinition>;
-  beforeValidate: Array<SettingsEntityHookDefinition>;
+export type SettingsHooks = {
+  beforeSave: Array<SettingsHookDefinition>;
+  afterSave: Array<SettingsHookDefinition>;
+  validate: Array<SettingsHookDefinition>;
+  beforeValidate: Array<SettingsHookDefinition>;
 };

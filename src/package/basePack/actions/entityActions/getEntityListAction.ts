@@ -33,7 +33,7 @@ export const getEntityListAction = createAction("getList", {
     if (data.columns) {
       options.columns = data.columns as unknown as string[];
     }
-    return await app.orm.getEntityList(data.entity, options, request.user);
+    return await app.orm.getEntryList(data.entity, options, request.user);
   },
   params: {
     entity: {

@@ -11,17 +11,17 @@ import {
 } from "@vef/string-utils";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { SettingsHook } from "@vef/types";
-import type { SettingsActionDefinition } from "#orm/entity/settings/settingsRecordTypes.ts";
+import type { SettingsActionDefinition } from "./settings/settingsRecordTypes.ts";
 import type {
-  SettingsEntityHookDefinition,
-  SettingsEntityHooks,
-} from "#orm/entity/settings/settingsRecordTypes.ts";
+  SettingsHookDefinition,
+  SettingsHooks,
+} from "./settings/settingsRecordTypes.ts";
 import type {
-  EasyEntityHooks,
-  EntityActionDefinition,
-  EntityHook,
-  EntityHookDefinition,
-} from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
+  EntryActionDefinition,
+  EntryHook,
+  EntryHookDefinition,
+  EntryHooks,
+} from "./entry/entryType/entry.ts";
 
 type EasyFieldDef = Omit<EasyField, "choices"> & {
   choices?: Array<Choice<PropertyKey>> | Array<string>;
@@ -32,28 +32,28 @@ export interface BaseDefinitionConfig {
   statusField?: string;
 }
 
-type DefType = "entity" | "settings";
+type DefType = "entry" | "settings";
 
 export interface HooksDefMap {
-  entity: EntityHookDefinition;
-  settings: SettingsEntityHookDefinition;
+  entity: EntryHookDefinition;
+  settings: SettingsHookDefinition;
 }
 
 export interface EasyHooksMap {
-  entity: EasyEntityHooks;
-  settings: SettingsEntityHooks;
+  entity: EntryHooks;
+  settings: SettingsHooks;
 }
 
 export interface ActionsDefMap<F extends Array<EasyField>> {
-  entity: EntityActionDefinition<F>;
+  entity: EntryActionDefinition<F>;
   settings: SettingsActionDefinition<F>;
 }
 export interface ActionsMap {
-  entity: EntityActionDefinition & { key: string };
+  entry: EntryActionDefinition & { key: string };
   settings: SettingsActionDefinition & { key: string };
 }
 export interface HooksMap {
-  entity: EntityHook;
+  entity: EntryHook;
   settings: SettingsHook;
 }
 export class BaseDefinition<

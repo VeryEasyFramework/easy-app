@@ -1,9 +1,5 @@
 import type { Database, DatabaseConfig } from "#orm/database/database.ts";
-import type {
-  ChildListDefinition,
-  EasyField,
-  EntityDefinition,
-} from "@vef/types";
+import type { ChildListDefinition, EasyField, EntryTypeDef } from "@vef/types";
 
 const idField: EasyField = {
   key: "id",
@@ -20,36 +16,36 @@ const baseFields: EasyField[] = [
     fieldType: "TimeStampField",
   },
 ];
-export async function migrateEntity(options: {
+export async function migrateEntryType(options: {
   database: Database<keyof DatabaseConfig>;
-  entity: EntityDefinition;
+  entryType: EntryTypeDef;
   onOutput?: (message: string) => void;
 }) {
-  const { database, entity } = options;
+  const { database, entryType } = options;
 
   const onOutput = options.onOutput || console.log;
-  const tableName = entity.config.tableName;
+  const tableName = entryType.config.tableName;
   // Check if the table exists
   const tableExists = await database.adapter.tableExists(tableName);
 
   // If the table does not exist, create it
 
-  const primaryField = entity.fields.find((f) => f.primaryKey) || idField;
+  const primaryField = entryType.fields.find((f) => f.primaryKey) || idField;
   if (!tableExists) {
     await database.adapter.createTable(
       tableName,
       primaryField,
-      entity.config.idMethod,
+      entryType.config.idMethod,
     );
     onOutput(`Created table: ${tableName}`);
   } else {
     onOutput(`Table ${tableName} already exists`);
   }
-  const fields = entity.fields.filter((f) =>
+  const fields = entryType.fields.filter((f) =>
     f.fieldType !== "MultiChoiceField"
   );
 
-  const multiChoiceFields = entity.fields.filter((f) =>
+  const multiChoiceFields = entryType.fields.filter((f) =>
     f.fieldType === "MultiChoiceField"
   );
 
@@ -60,21 +56,21 @@ export async function migrateEntity(options: {
   ], onOutput);
 
   for (const field of multiChoiceFields) {
-    await migrateMultiChoiceField(database, entity, field, onOutput);
+    await migrateMultiChoiceField(database, entryType, field, onOutput);
   }
 
-  for (const child of entity.children) {
-    await migrateChild(database, child, entity, onOutput);
+  for (const child of entryType.children) {
+    await migrateChild(database, child, entryType, onOutput);
   }
 }
 
 async function migrateMultiChoiceField(
   database: Database<keyof DatabaseConfig>,
-  parent: EntityDefinition,
+  parent: EntryTypeDef,
   field: EasyField,
   onOutput: (message: string) => void,
 ) {
-  const valuesTableName = `${parent.entityId}_${field.key}_mc_values`;
+  const valuesTableName = `${parent.entryType}_${field.key}_mc_values`;
 
   const valuesTableExists = await database.adapter.tableExists(valuesTableName);
 
@@ -109,7 +105,7 @@ async function migrateMultiChoiceField(
 async function migrateChild(
   database: Database<keyof DatabaseConfig>,
   child: ChildListDefinition,
-  parent: EntityDefinition,
+  parent: EntryTypeDef,
   onOutput?: (message: string) => void,
 ) {
   onOutput = onOutput || console.log;

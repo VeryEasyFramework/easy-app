@@ -5,7 +5,7 @@ import {
 import type {
   EasyField,
   EasyFieldType,
-  EntityDefinition,
+  EntryTypeDef,
   ListOptions,
   RowsResult,
 } from "@vef/types";
@@ -123,7 +123,7 @@ export class DenoKvAdapter extends DatabaseAdapter<DenoKvConfig> {
     const result = await this.kv.get<T>([`${tableName}:id`, value]);
     if (!result.versionstamp) {
       raiseOrmException(
-        "EntityNotFound",
+        "EntryTypeNotFound",
         `Row not found: ${tableName}:${field}:${value}`,
       );
     }
@@ -149,7 +149,7 @@ export class DenoKvAdapter extends DatabaseAdapter<DenoKvConfig> {
   }
   syncTable(
     tableName: string,
-    entity: EntityDefinition,
+    entity: EntryTypeDef,
   ): string {
     return "";
   }

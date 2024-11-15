@@ -1,6 +1,6 @@
-import { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
+import { SettingsType } from "../../../orm/entry/settings/settingsEntity.ts";
 
-export const emailSettings = new SettingsEntity("emailSettings");
+export const emailSettings = new SettingsType("emailSettings");
 
 emailSettings.setConfig({
   label: "Email Settings",

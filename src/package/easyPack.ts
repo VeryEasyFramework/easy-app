@@ -9,8 +9,8 @@ import type {
   EasyAction,
 } from "#/actions/actionTypes.ts";
 import type { BootAction, InitAction } from "#/types.ts";
-import type { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
-import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
+import type { EntryType } from "../orm/entry/entry/entryType/entryType.ts";
+import type { SettingsType } from "../orm/entry/settings/settingsEntity.ts";
 
 export interface EasyPackInfo {
   EasyPackName: string;
@@ -73,9 +73,9 @@ function validateSemverString(version: string): boolean {
 export class EasyPack {
   middleware: Array<MiddleWare> = [];
   actionGroups: Record<string, Array<EasyAction>> = {};
-  entities: Array<EasyEntity> = [];
+  entities: Array<EntryType> = [];
 
-  settingsEntities: Array<SettingsEntity> = [];
+  settingsEntities: Array<SettingsType> = [];
   bootActions: Array<BootAction> = [];
   initActions: Array<InitAction> = [];
   description: string;
@@ -111,7 +111,7 @@ export class EasyPack {
       EasyPackName: this.easyPackName,
       description: this.description,
       version: this.version,
-      entities: this.entities.map((entity) => entity.entityId),
+      entities: this.entities.map((entity) => entity.entryType),
 
       settingsEntities: this.settingsEntities.map((settingsEntity) =>
         settingsEntity.key
@@ -391,11 +391,11 @@ export class EasyPack {
    * easyPack.addEntity(userEntity);
    */
 
-  addEntity(entity: EasyEntity) {
+  addEntity(entity: EntryType) {
     this.entities.push(entity);
   }
 
-  addSettingsEntity(settingsEntity: SettingsEntity) {
+  addSettingsEntity(settingsEntity: SettingsType) {
     this.settingsEntities.push(settingsEntity);
   }
 }

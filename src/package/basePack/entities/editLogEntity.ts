@@ -1,6 +1,6 @@
-import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
 
-export const editLogEntity = new EasyEntity("editLog");
+export const editLogEntity = new EntryType("editLog");
 
 editLogEntity.setConfig({
   label: "Edit Log",

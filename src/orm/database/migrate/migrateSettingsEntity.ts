@@ -1,22 +1,22 @@
 import type { Database } from "#orm/database/database.ts";
-import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
+import type { SettingsType } from "../../entry/settings/settingsEntity.ts";
 import { OrmException } from "#orm/ormException.ts";
 import type { EasyField } from "@vef/types";
-import { validateField } from "#orm/entity/field/validateField.ts";
+import { validateField } from "../../entry/field/validateField.ts";
 
 export async function migrateSettingsEntity(options: {
   database: Database<any>;
-  settingsEntity: SettingsEntity;
+  settingsEntity: SettingsType;
   onOutput?: (message: string) => void;
 }) {
   const { database, settingsEntity } = options;
-  const settingsId = settingsEntity.settingsId;
+  const settingsId = settingsEntity.settingsType;
   for (const field of settingsEntity.fields) {
     const id = `${settingsId}:${field.key}`;
     try {
       await database.getRow("easy_settings", "id", id);
     } catch (e) {
-      if (e instanceof OrmException && e.type == "EntityNotFound") {
+      if (e instanceof OrmException && e.type == "EntryTypeNotFound") {
         options.onOutput?.(`Creating setting: ${field.key}`);
         await addSetting({
           database,

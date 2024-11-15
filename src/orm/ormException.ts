@@ -1,5 +1,5 @@
 type OrmExceptionType =
-  | "EntityNotFound"
+  | "EntryTypeNotFound"
   | "RequiredFieldMissing"
   | "InvalidField"
   | "InvalidFieldType"

@@ -4,7 +4,7 @@ import { raiseEasyException } from "#/easyException.ts";
 export const getEntityInfoAction = createAction("getEntityInfo", {
   description: "Get the entity info",
   action: (app, { entity }) => {
-    const entityDef = app.orm.entities[entity];
+    const entityDef = app.orm.entryTypes[entity];
     if (!entityDef) {
       raiseEasyException("Entity not found", 404);
     }

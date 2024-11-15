@@ -1,6 +1,6 @@
 export { generateId, isEmpty } from "#orm/utils/misc.ts";
 
-export { ChildList } from "#orm/entity/child/childRecord.ts";
+export { ChildList } from "./src/orm/entry/child/childRecord.ts";
 
 export type {
   ActionsDefMap,
@@ -10,13 +10,13 @@ export type {
   EasyHooksMap,
   HooksDefMap,
   HooksMap,
-} from "#orm/entity/baseDefinition.ts";
+} from "./src/orm/entry/baseDefinition.ts";
 
 export { OrmException, raiseOrmException } from "#orm/ormException.ts";
 
-export { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
+export { SettingsType } from "./src/orm/entry/settings/settingsEntity.ts";
 
-export { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+export { EntryType } from "./src/orm/entry/entry/entryType/entryType.ts";
 
 export { createMiddleware } from "#/middleware/middleware.ts";
 
@@ -42,19 +42,19 @@ export type {
 } from "#/actions/actionTypes.ts";
 
 export type {
-  EasyEntityHooks,
-  EntityActionDefinition,
-  EntityHook,
-  EntityHookDefinition,
-  EntityRecord,
-} from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
+  Entry,
+  EntryActionDefinition,
+  EntryHook,
+  EntryHookDefinition,
+  EntryHooks,
+} from "./src/orm/entry/entry/entryType/entry.ts";
 
 export type {
+  Settings,
   SettingsAction,
   SettingsActionDefinition,
   SettingsActionFunction,
-  SettingsEntityHookDefinition,
-  SettingsEntityHooks,
+  SettingsHookDefinition,
   SettingsHookFunction,
-  SettingsRecord,
-} from "#orm/entity/settings/settingsRecordTypes.ts";
+  SettingsHooks,
+} from "./src/orm/entry/settings/settingsRecordTypes.ts";

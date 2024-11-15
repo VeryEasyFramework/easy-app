@@ -1,6 +1,5 @@
 import { raiseEasyException } from "#/easyException.ts";
 import type { AppProcess } from "#/app/runner/begin.ts";
-import { easyLog } from "#/log/logging.ts";
 import { checkForFile } from "#/utils.ts";
 
 /**

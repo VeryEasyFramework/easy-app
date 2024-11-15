@@ -2,7 +2,7 @@ import { createAction } from "#/actions/createAction.ts";
 import type { EasyPackInfo } from "#/package/easyPack.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import type { DocsActionGroup } from "#/actions/actionTypes.ts";
-import type { EntityDefinition } from "@vef/types";
+import type { EntryTypeDef } from "@vef/types";
 
 export const appActions = [
   createAction("apiDocs", {
@@ -47,7 +47,7 @@ export const appActions = [
   }),
   createAction("entities", {
     description: "Get the entities for the app",
-    action: (app): EntityDefinition[] => {
+    action: (app): EntryTypeDef[] => {
       return app.entityInfo;
     },
     response: "EntityDefinition[]",

@@ -1,7 +1,6 @@
 import type { EasyApp } from "#/app/easyApp.ts";
 import { easyLog } from "#/log/logging.ts";
-import { PgError } from "#orm/database/adapter/adapters/postgres/pgError.ts";
-import type { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
+import type { EntryClass } from "#orm/entry/entry/entryClass/entryClass.ts";
 import { asyncPause } from "#/utils.ts";
 
 export default function runWorker(
@@ -41,7 +40,7 @@ async function checkForTasks(app: EasyApp) {
   }
   const workerSettings = await app.orm.getSettings("workerSettings");
   const maxTasks = workerSettings.maxTaskCount as number;
-  const tasks = await app.orm.getEntityList("taskQueue", {
+  const tasks = await app.orm.getEntryList("taskQueue", {
     filter: {
       status: "queued",
       worker,
@@ -59,7 +58,7 @@ async function checkForTasks(app: EasyApp) {
     workerSettings[`${worker}WorkerStatus`] = "running";
     workerSettings.save().then(() => {
       for (const item of tasks.data) {
-        app.orm.getEntity<Task>("taskQueue", item.id).then(async (task) => {
+        app.orm.getEntry<Task>("taskQueue", item.id).then(async (task) => {
           await task.runAction("runTask");
           count--;
           if (count === 0) {
@@ -86,7 +85,7 @@ async function checkForTasks(app: EasyApp) {
   checkForTasks(app);
 }
 
-interface Task extends EntityRecordClass {
+interface Task extends EntryClass {
   taskType: "entity" | "app";
   recordType: string;
   recordId: string;

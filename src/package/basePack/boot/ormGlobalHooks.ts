@@ -8,7 +8,7 @@ export const ormGlobalHooks: BootAction = {
       if (entityId === "editLog") {
         return;
       }
-      const { titleField } = entityRecord.entityDefinition.config;
+      const { titleField } = entityRecord.entryType.config;
       const titleValue = titleField
         ? entityRecord[titleField]
         : entityRecord.id;
@@ -41,8 +41,8 @@ export const ormGlobalHooks: BootAction = {
         if (!changedData) {
           return;
         }
-        if (entityRecord.entityDefinition.config.editLog) {
-          const { titleField } = entityRecord.entityDefinition.config;
+        if (entityRecord.entryType.config.editLog) {
+          const { titleField } = entityRecord.entryType.config;
           const titleValue = titleField
             ? entityRecord[titleField]
             : entityRecord.id;
@@ -96,7 +96,7 @@ export const ormGlobalHooks: BootAction = {
       if (entity === "editLog") {
         return;
       }
-      const { titleField } = entityRecord.entityDefinition.config;
+      const { titleField } = entityRecord.entryType.config;
       const titleValue = titleField
         ? entityRecord[titleField]
         : entityRecord.id;

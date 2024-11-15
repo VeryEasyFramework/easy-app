@@ -329,7 +329,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const result = await this.query<T>(query);
     if (result.rowCount === 0) {
       raiseOrmException(
-        "EntityNotFound",
+        "EntryTypeNotFound",
         `No row found with ${field} = ${value} for table ${tableName}`,
       );
     }
@@ -347,17 +347,17 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const result = await this.query<Record<string, T>>(query);
     if (result.rowCount === 0) {
       raiseOrmException(
-        "EntityNotFound",
+        "EntryTypeNotFound",
         `No row found with id = ${id} for table ${tableName}`,
       );
     }
     return result.data[0][field];
   }
 
-  async getReport<T>(
+  getReport<T>(
     tableName: string,
     options: ReportOptions,
-  ): Promise<ReportResult<T>> {
+  ): ReportResult<T> {
     tableName = this.toSnake(tableName);
     return {} as ReportResult<T>;
   }
@@ -662,6 +662,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         break;
       case "ListField":
         value = JSON.stringify(value || []);
+        break;
       default:
         break;
     }

@@ -5,23 +5,23 @@ import type {
   EasyFieldType,
   EasyFieldTypeMap,
   SafeType,
-  SettingsEntityDefinition,
+  SettingsTypeDef,
   User,
 } from "@vef/types";
 import type {
   SettingsAction,
   SettingsHookFunction,
-} from "#orm/entity/settings/settingsRecordTypes.ts";
+} from "./settingsRecordTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 
-export class SettingsRecordClass {
+export class SettingsClass {
   private _data: Record<string, any> = {};
   private _prevData: Record<string, any> = {};
   _user?: User;
 
   orm!: EasyOrm;
 
-  settingsDefinition!: SettingsEntityDefinition;
+  settingsDefinition!: SettingsTypeDef;
 
   _beforeSave!: Array<SettingsHookFunction>;
 
@@ -86,7 +86,7 @@ export class SettingsRecordClass {
         continue;
       }
       const value = this.orm.database.adaptSaveValue(field, changedData[key]);
-      const id = `${this.settingsDefinition.settingsId}:${key}`;
+      const id = `${this.settingsDefinition.settingsType}:${key}`;
       await this.orm.database.updateRow("easy_settings", id, {
         value: JSON.stringify({
           fieldType: field.fieldType,
@@ -100,7 +100,7 @@ export class SettingsRecordClass {
 
     await this.orm.runGlobalSettingsHook(
       "afterChange",
-      this.settingsDefinition.settingsId,
+      this.settingsDefinition.settingsType,
       this,
       changedData,
     );
@@ -110,7 +110,7 @@ export class SettingsRecordClass {
   async load(): Promise<void> {
     const data = this.orm.app.cacheGet<typeof this._data>(
       "settings",
-      this.settingsDefinition.settingsId,
+      this.settingsDefinition.settingsType,
     );
     if (data) {
       this._data = data;
@@ -129,7 +129,7 @@ export class SettingsRecordClass {
       };
     }>("easy_settings", {
       filter: {
-        settingsId: this.settingsDefinition.settingsId,
+        settingsId: this.settingsDefinition.settingsType,
       },
       columns: ["key", "value"],
     });
@@ -149,7 +149,7 @@ export class SettingsRecordClass {
 
     this.orm.app.cacheSet(
       "settings",
-      this.settingsDefinition.settingsId,
+      this.settingsDefinition.settingsType,
       this._data,
     );
   }
@@ -176,7 +176,7 @@ export class SettingsRecordClass {
     if (!action) {
       raiseOrmException(
         "InvalidAction",
-        `Action ${actionKey} not found in entity ${this.settingsDefinition.settingsId}`,
+        `Action ${actionKey} not found in entity ${this.settingsDefinition.settingsType}`,
       );
     }
     if (action.params) {

@@ -4,12 +4,12 @@ import type {
   EasyFieldTypeMap,
   SafeReturnType,
 } from "@vef/types";
-import type { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
+import type { EntryClass } from "../entryClass/entryClass.ts";
 
-export interface EntityRecord extends EntityRecordClass {
+export interface Entry extends EntryClass {
   [key: string]: any;
 }
-export interface EntityActionDefinition<
+export interface EntryActionDefinition<
   F extends Array<EasyField> = Array<EasyField>,
   D extends {
     [key in F[number]["key"]]: F[number]["choices"] extends Choice<infer T>[]
@@ -34,29 +34,29 @@ export interface EntityActionDefinition<
    */
   global?: boolean;
   action(
-    entity: EntityRecord,
+    entity: Entry,
     params: D,
   ): SafeReturnType;
   params?: F;
 }
-export interface EntityHookDefinition {
+export interface EntryHookDefinition {
   label?: string;
   description?: string;
 
   action(
-    entity: EntityRecord,
+    entity: Entry,
   ): Promise<void> | void;
 }
 
-export type EntityHook = keyof EasyEntityHooks;
-export interface EasyEntityHooks {
-  beforeSave: Array<EntityHookDefinition>;
-  afterSave: Array<EntityHookDefinition>;
-  beforeInsert: Array<EntityHookDefinition>;
-  afterInsert: Array<EntityHookDefinition>;
-  validate: Array<EntityHookDefinition>;
-  beforeValidate: Array<EntityHookDefinition>;
+export type EntryHook = keyof EntryHooks;
+export interface EntryHooks {
+  beforeSave: Array<EntryHookDefinition>;
+  afterSave: Array<EntryHookDefinition>;
+  beforeInsert: Array<EntryHookDefinition>;
+  afterInsert: Array<EntryHookDefinition>;
+  validate: Array<EntryHookDefinition>;
+  beforeValidate: Array<EntryHookDefinition>;
 
-  beforeDelete: Array<EntityHookDefinition>;
-  afterDelete: Array<EntityHookDefinition>;
+  beforeDelete: Array<EntryHookDefinition>;
+  afterDelete: Array<EntryHookDefinition>;
 }

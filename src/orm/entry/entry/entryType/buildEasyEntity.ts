@@ -2,41 +2,41 @@ import type {
   ChildListDefinition,
   EasyField,
   EasyFieldType,
-  EntityDefinition,
+  EntryTypeDef,
   FieldGroup,
 } from "@vef/types";
 import { camelToSnakeCase, toPascalCase } from "@vef/string-utils";
 import type { EasyOrm } from "#orm/orm.ts";
-import { buildFieldGroups } from "#orm/entity/field/buildFieldGroups.ts";
-import type { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { buildFieldGroups } from "#orm/entry/field/buildFieldGroups.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
+import type { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 
-export function buildEasyEntity(
+export function buildEntryType(
   orm: EasyOrm,
-  easyEntity: EasyEntity,
-): EntityDefinition {
-  if (easyEntity.config.statusField) {
-    easyEntity.statusField = easyEntity.config.statusField;
+  entryType: EntryType,
+): EntryTypeDef {
+  if (entryType.config.statusField) {
+    entryType.statusField = entryType.config.statusField;
   }
-  buildConnectionFields(orm, easyEntity);
-  buildChildEntities(orm, easyEntity);
-  const groups: FieldGroup[] = buildFieldGroups(easyEntity);
-  const listFields = buildListFields(easyEntity);
+  buildConnectionFields(orm, entryType);
+  buildChildEntities(orm, entryType);
+  const groups: FieldGroup[] = buildFieldGroups(entryType);
+  const listFields = buildListFields(entryType);
 
   return {
-    entityId: easyEntity.entityId,
-    statusField: easyEntity.statusField,
-    fields: easyEntity.fields,
+    entryType: entryType.entryType,
+    statusField: entryType.statusField,
+    fields: entryType.fields,
     fieldGroups: groups,
-    children: easyEntity.children,
+    children: entryType.children,
     listFields: listFields,
-    config: easyEntity.config,
-    hooks: easyEntity.hooks,
-    actions: easyEntity.actions,
+    config: entryType.config,
+    hooks: entryType.hooks,
+    actions: entryType.actions,
   };
 }
 
-function buildConnectionFields(orm: EasyOrm, easyEntity: EasyEntity) {
+function buildConnectionFields(orm: EasyOrm, easyEntity: EntryType) {
   const fields = easyEntity.fields.filter((field) =>
     field.fieldType === "ConnectionField"
   );
@@ -53,7 +53,7 @@ function buildConnectionFields(orm: EasyOrm, easyEntity: EasyEntity) {
   }
 }
 
-function buildChildEntities(orm: EasyOrm, easyEntity: EasyEntity) {
+function buildChildEntities(orm: EasyOrm, easyEntity: EntryType) {
   for (const child of easyEntity.children) {
     buildChild(orm, child);
   }
@@ -76,10 +76,10 @@ function buildChild(orm: EasyOrm, child: ChildListDefinition) {
 }
 function getConnectionIdType(
   orm: EasyOrm,
-  connectionEntity: string,
+  connectionEntry: string,
 ): EasyFieldType {
-  const entity = orm.getEasyEntityDef(connectionEntity);
-  switch (entity.config.idMethod.type) {
+  const entryType = orm.getEntryTypeSource(connectionEntry);
+  switch (entryType.config.idMethod.type) {
     case "hash":
       return "DataField";
     case "number":
@@ -91,14 +91,15 @@ function getConnectionIdType(
     case "data":
       return "DataField";
     case "field": {
-      const fieldKey = entity.config.idMethod.field;
-      return entity.fields.find((field) => field.key === fieldKey)!.fieldType;
+      const fieldKey = entryType.config.idMethod.field;
+      return entryType.fields.find((field) => field.key === fieldKey)!
+        .fieldType;
     }
 
     default:
       raiseOrmException(
         "InvalidFieldType",
-        `Invalid id method type ${entity.config.idMethod} for entity ${entity.key}`,
+        `Invalid id method type ${entryType.config.idMethod} for entity ${entryType.entryType}`,
       );
   }
 }
@@ -110,7 +111,7 @@ function buildConnectionTitleField(
   if (!field.connectionEntity) {
     return;
   }
-  const entity = orm.getEasyEntityDef(field.connectionEntity);
+  const entity = orm.getEntryTypeSource(field.connectionEntity);
   const titleFieldKey = entity.config.titleField;
   if (!titleFieldKey) {
     return;
@@ -141,7 +142,7 @@ function buildConnectionTitleField(
   return titleField;
 }
 
-function buildListFields(easyEntity: EasyEntity) {
+function buildListFields(easyEntity: EntryType) {
   const listFields: Array<string> = [];
 
   if (easyEntity.config.titleField) {

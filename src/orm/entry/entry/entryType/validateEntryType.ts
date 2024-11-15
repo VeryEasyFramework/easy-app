@@ -1,16 +1,16 @@
-import type { EntityDefinition } from "@vef/types";
+import type { EntryTypeDef } from "@vef/types";
 import type { EasyOrm } from "#orm/orm.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 
 export function validateEntityDefinition(
   orm: EasyOrm,
-  entityDefinition: EntityDefinition,
+  entityDefinition: EntryTypeDef,
 ) {
   validateConnectionFields(orm, entityDefinition);
   validateFetchFields(orm, entityDefinition);
 }
 
-function validateConnectionFields(orm: EasyOrm, entity: EntityDefinition) {
+function validateConnectionFields(orm: EasyOrm, entity: EntryTypeDef) {
   const fields = entity.fields.filter((field) =>
     field.fieldType === "ConnectionField"
   );
@@ -19,29 +19,29 @@ function validateConnectionFields(orm: EasyOrm, entity: EntityDefinition) {
       raiseOrmException(
         "InvalidConnection",
         `Connection field ${field
-          .key as string} in ${entity.entityId} is missing connectionEntity `,
+          .key as string} in ${entity.entryType} is missing connectionEntity `,
       );
     }
-    if (!orm.hasEntity(field.connectionEntity)) {
+    if (!orm.hasEntryType(field.connectionEntity)) {
       raiseOrmException(
         "InvalidConnection",
-        `Connection entity ${field.connectionEntity} in ${entity.entityId} does not exist`,
+        `Connection entity ${field.connectionEntity} in ${entity.entryType} does not exist`,
       );
     }
   }
 }
 
-function validateFetchFields(orm: EasyOrm, entity: EntityDefinition) {
+function validateFetchFields(orm: EasyOrm, entity: EntryTypeDef) {
   const fields = entity.fields.filter((field) => field.fetchOptions);
   for (const field of fields) {
     const fetchOptions = field.fetchOptions!;
-    if (!orm.hasEntity(fetchOptions.fetchEntity)) {
+    if (!orm.hasEntryType(fetchOptions.fetchEntity)) {
       raiseOrmException(
         "InvalidConnection",
         `Connection entity ${fetchOptions.fetchEntity} does not exist`,
       );
     }
-    const connectionEntity = orm.getEntityDef(
+    const connectionEntity = orm.getEntryType(
       fetchOptions.fetchEntity,
     );
 
@@ -57,11 +57,11 @@ function validateFetchFields(orm: EasyOrm, entity: EntityDefinition) {
     }
     orm.registry.registerFetchField({
       source: {
-        entity: entity.entityId,
+        entryType: entity.entryType,
         field: fetchOptions.thisFieldKey,
       },
       target: {
-        entity: fetchOptions.fetchEntity,
+        entryType: fetchOptions.fetchEntity,
         idKey: fetchOptions.thisIdKey,
         field: fetchOptions.thatFieldKey,
       },

@@ -1,11 +1,11 @@
-import type { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
+import type { EntryClass } from "./entryClass.ts";
 import type { SafeReturnType, SafeType } from "@vef/types";
 
-export type EntityHookFunction = (
-  entity: EntityRecordClass,
+export type EntryHookFunction = (
+  entity: EntryClass,
 ) => Promise<void> | void;
 
 export type EntityActionFunction = (
-  entity: EntityRecordClass,
+  entity: EntryClass,
   params?: Record<string, SafeType>,
 ) => SafeReturnType;

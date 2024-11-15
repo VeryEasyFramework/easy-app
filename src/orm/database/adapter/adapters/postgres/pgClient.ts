@@ -1,7 +1,10 @@
 //https://www.postgresql.org/docs/16/protocol-flow.html
 //https://www.postgresql.org/docs/16/protocol-message-formats.html
 
-import { errorCodeMap, pgErrorMap } from "./maps/errorMap.ts";
+import {
+  errorCodeMap,
+  pgErrorMap,
+} from "#orm/database/adapter/adapters/postgres/maps/errorMap.ts";
 import { PgError } from "#orm/database/adapter/adapters/postgres/pgError.ts";
 import { toCamelCase } from "@vef/string-utils";
 import {
@@ -21,7 +24,6 @@ import {
 } from "#orm/database/adapter/adapters/postgres/maps/maps.ts";
 import { AUTH } from "#orm/database/adapter/adapters/postgres/pgAuth.ts";
 import { ScramClient } from "#orm/database/adapter/adapters/postgres/scram.ts";
-import { OrmException } from "../../../../../../mod.ts";
 
 export class PostgresClient {
   private conn!: Deno.Conn;

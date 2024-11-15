@@ -4,7 +4,6 @@ import type {
   RealtimeClientMessage,
   RealtimeRoomDef,
 } from "#/realtime/realtimeTypes.ts";
-import { easyLog } from "#/log/logging.ts";
 import { asyncPause } from "#/utils.ts";
 import type { SafeType, User } from "@vef/types";
 import type { EasyCache } from "#/cache/cache.ts";

@@ -1,13 +1,7 @@
 import { InputListener, MenuView } from "@vef/easy-cli";
-import {
-  type BasicFgColor,
-  ColorMe,
-  formatUtils,
-  printUtils,
-} from "@vef/easy-cli";
 
 import type { EasyApp } from "#/app/easyApp.ts";
-import { asyncPause, checkForFile } from "#/utils.ts";
+import { checkForFile } from "#/utils.ts";
 import begin from "#/app/runner/begin.ts";
 import { easyLog } from "#/log/logging.ts";
 
@@ -34,7 +28,7 @@ export function setupRunMenu(app: EasyApp): void {
     abortController,
     hideCursor: true,
   });
-  const run = async (watch: boolean, prod?: boolean) => {
+  const run = (watch: boolean, prod?: boolean) => {
     app.cli.onStop = async () => {
       listener.listen();
 
@@ -47,7 +41,7 @@ export function setupRunMenu(app: EasyApp): void {
     };
     app.cli.stop();
   };
-  signal.addEventListener("abort", async (event) => {
+  signal.addEventListener("abort", (event) => {
     listener.stop();
     easyLog.warning("Shutting down...", "Lifecycle", {
       hideTrace: true,

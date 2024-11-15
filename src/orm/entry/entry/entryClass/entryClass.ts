@@ -1,9 +1,9 @@
-import type { EntityHookFunction } from "#orm/entity/entity/entityRecord/entityRecordTypes.ts";
+import type { EntryHookFunction } from "./entryClassTypes.ts";
 import type {
   EasyFieldType,
   EasyFieldTypeMap,
-  EntityAction,
-  EntityDefinition,
+  EntryAction,
+  EntryTypeDef,
   FieldMethod,
   SafeType,
   User,
@@ -12,10 +12,9 @@ import { raiseOrmException } from "#orm/ormException.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
 import { generateId, isEmpty } from "#orm/utils/misc.ts";
-import type { ChildList } from "#orm/entity/child/childRecord.ts";
-import { easyLog } from "#/log/logging.ts";
+import type { ChildList } from "#orm/entry/child/childRecord.ts";
 
-export class EntityRecordClass {
+export class EntryClass {
   private _data: Record<string, any> = {};
 
   private _multiChoiceData: Record<string, any> = {};
@@ -61,18 +60,18 @@ export class EntityRecordClass {
     this._data.updatedAt = value;
   }
   get data(): Record<string, SafeType> {
-    const keys = this.entityDefinition.fields.filter((field) => field.hidden)
+    const keys = this.entryType.fields.filter((field) => field.hidden)
       .map((field) => field.key);
     const data = { ...this._data };
     for (const key of keys) {
       delete data[key];
     }
 
-    const childrenKeys = this.entityDefinition.children.map(
+    const childrenKeys = this.entryType.children.map(
       (child) => child.childName,
     );
 
-    const multiChoiceKeys = this.entityDefinition.fields.filter(
+    const multiChoiceKeys = this.entryType.fields.filter(
       (field) => field.fieldType === "MultiChoiceField",
     ).map((field) => field.key);
 
@@ -87,28 +86,28 @@ export class EntityRecordClass {
     return data;
   }
 
-  entityDefinition!: EntityDefinition;
+  entryType!: EntryTypeDef;
 
-  _beforeInsert!: Array<EntityHookFunction>;
+  _beforeInsert!: Array<EntryHookFunction>;
 
-  _afterInsert!: Array<EntityHookFunction>;
+  _afterInsert!: Array<EntryHookFunction>;
 
-  _beforeSave!: Array<EntityHookFunction>;
+  _beforeSave!: Array<EntryHookFunction>;
 
-  _afterSave!: Array<EntityHookFunction>;
+  _afterSave!: Array<EntryHookFunction>;
 
-  _validate!: Array<EntityHookFunction>;
+  _validate!: Array<EntryHookFunction>;
 
-  _beforeValidate!: Array<EntityHookFunction>;
+  _beforeValidate!: Array<EntryHookFunction>;
 
-  _beforeDelete!: Array<EntityHookFunction>;
+  _beforeDelete!: Array<EntryHookFunction>;
 
-  _afterDelete!: Array<EntityHookFunction>;
+  _afterDelete!: Array<EntryHookFunction>;
 
-  actions!: Record<string, EntityAction>;
+  actions!: Record<string, EntryAction>;
 
   get _title(): string {
-    const titleField = this.entityDefinition.config.titleField || "id";
+    const titleField = this.entryType.config.titleField || "id";
 
     return this[titleField as keyof this] as string;
   }
@@ -166,7 +165,7 @@ export class EntityRecordClass {
     this._prevData = {};
     const idKey = this.primaryKey || "id";
     const data = await this.orm.database.getRow(
-      this.entityDefinition.config.tableName,
+      this.entryType.config.tableName,
       idKey,
       id,
     );
@@ -177,20 +176,20 @@ export class EntityRecordClass {
   }
 
   private async loadChildren() {
-    for (const child of this.entityDefinition.children) {
+    for (const child of this.entryType.children) {
       const childClass = this[child.childName as keyof this] as ChildList;
       await childClass.load(this.id);
     }
   }
 
   private async loadMultiChoiceFields() {
-    const fields = this.entityDefinition.fields.filter((field) =>
+    const fields = this.entryType.fields.filter((field) =>
       field.fieldType === "MultiChoiceField"
     );
 
     for (const field of fields) {
       const values = await this.orm.database.getRows(
-        `${this.entityDefinition.entityId}_${field.key}_mc_values`,
+        `${this.entryType.entryType}_${field.key}_mc_values`,
         {
           filter: {
             parentId: this.id,
@@ -206,7 +205,7 @@ export class EntityRecordClass {
   }
 
   /**
-   * This method is used to save the entity to the database.
+   * This method is used to save the entry to the database.
    * It returns the changed data.
    */
   async save(): Promise<Record<string, any> | undefined> {
@@ -217,7 +216,7 @@ export class EntityRecordClass {
       await this.beforeSave();
       const changed = this.adaptChangedData(this._data);
       await this.orm.database.insertRow(
-        this.entityDefinition.config.tableName,
+        this.entryType.config.tableName,
         changed,
       );
 
@@ -229,7 +228,7 @@ export class EntityRecordClass {
       this._prevData = {};
       await this.orm.runGlobalHook(
         "afterInsert",
-        this.entityDefinition.entityId,
+        this.entryType.entryType,
         this,
       );
       return changed;
@@ -245,21 +244,21 @@ export class EntityRecordClass {
     changedData = this.adaptChangedData(changedData);
 
     await this.orm.database.updateRow(
-      this.entityDefinition.config.tableName,
+      this.entryType.config.tableName,
       this.id,
       changedData,
     );
 
     await this.afterSave();
     this._prevData = {};
-    this.entityDefinition.fields.forEach((field) => {
+    this.entryType.fields.forEach((field) => {
       if (field.hidden && field.key in changedData) {
         changedData[field.key] = "********";
       }
     });
     await this.orm.runGlobalHook(
       "afterChange",
-      this.entityDefinition.entityId,
+      this.entryType.entryType,
       this,
       changedData,
     );
@@ -267,7 +266,7 @@ export class EntityRecordClass {
   }
 
   private changedChildren() {
-    const childrenKeys = this.entityDefinition.children.map((child) =>
+    const childrenKeys = this.entryType.children.map((child) =>
       child.childName
     );
     const changed: string[] = [];
@@ -281,20 +280,20 @@ export class EntityRecordClass {
   }
 
   private async saveMultiChoiceFields() {
-    const multiChoiceFields = this.entityDefinition.fields.filter(
+    const multiChoiceFields = this.entryType.fields.filter(
       (field) => field.fieldType === "MultiChoiceField",
     );
     for (const field of multiChoiceFields) {
       const values = this[field.key as keyof this] as Record<string, any>[];
       await this.orm.database.deleteRows(
-        `${this.entityDefinition.entityId}_${field.key}_mc_values`,
+        `${this.entryType.entryType}_${field.key}_mc_values`,
         {
           parentId: this.id,
         },
       );
       for (const value of values) {
         await this.orm.database.insertRow(
-          `${this.entityDefinition.entityId}_${field.key}_mc_values`,
+          `${this.entryType.entryType}_${field.key}_mc_values`,
           {
             id: generateId(16),
             parentId: this.id,
@@ -318,7 +317,7 @@ export class EntityRecordClass {
   }
 
   private async deleteChildren() {
-    const childrenKeys = this.entityDefinition.children.map((child) =>
+    const childrenKeys = this.entryType.children.map((child) =>
       child.childName
     );
     for (const key of childrenKeys) {
@@ -331,35 +330,33 @@ export class EntityRecordClass {
   }
   async delete() {
     if (!this.id) {
-      raiseOrmException("InvalidId", "Cannot delete entity without an id");
+      raiseOrmException("InvalidId", "Cannot delete entry without an id");
     }
     await this.beforeDelete();
 
     await this.deleteChildren();
     const idKey = this.primaryKey || "id";
     await this.orm.database.deleteRow(
-      this.entityDefinition.config.tableName,
+      this.entryType.config.tableName,
       idKey,
       this.id,
     );
     await this.afterDelete();
     await this.orm.runGlobalHook(
       "afterDelete",
-      this.entityDefinition.entityId,
+      this.entryType.entryType,
       this,
     );
   }
 
   update(data: Record<string, any>): void {
-    const childKeys = this.entityDefinition.children.map((child) =>
-      child.childName
-    );
+    const childKeys = this.entryType.children.map((child) => child.childName);
     for (const key in data) {
       if (childKeys.includes(key)) {
         this[key as keyof this] = data[key];
         continue;
       }
-      if (!this.entityDefinition.fields.find((field) => field.key === key)) {
+      if (!this.entryType.fields.find((field) => field.key === key)) {
         continue;
       }
       this[key as keyof this] = data[key];
@@ -374,8 +371,8 @@ export class EntityRecordClass {
     data = data || {};
 
     const task = await this.orm.createEntity("taskQueue", {
-      taskType: "entity",
-      recordType: this.entityDefinition.entityId,
+      taskType: "entry",
+      recordType: this.entryType.entryType,
       recordId: this.id,
       recordTitle: this._title,
       action: actionKey,
@@ -389,7 +386,7 @@ export class EntityRecordClass {
     if (!action) {
       raiseOrmException(
         "InvalidAction",
-        `Action ${actionKey} not found in entity ${this.entityDefinition.entityId}`,
+        `Action ${actionKey} not found in entry type ${this.entryType.entryType}`,
       );
     }
     if (action.params) {
@@ -431,7 +428,7 @@ export class EntityRecordClass {
     if (!this._isNew) {
       return;
     }
-    const method = this.entityDefinition.config.idMethod;
+    const method = this.entryType.config.idMethod;
     let id: string | number | null;
     switch (method.type) {
       case "hash":
@@ -439,7 +436,7 @@ export class EntityRecordClass {
         break;
       case "number": {
         const result = await this.orm.database.getRows(
-          this.entityDefinition.config.tableName,
+          this.entryType.config.tableName,
           {
             orderBy: "id",
             order: "desc",
@@ -482,7 +479,7 @@ export class EntityRecordClass {
 
     // set children ids
 
-    const childrenKeys = this.entityDefinition.children.map((child) =>
+    const childrenKeys = this.entryType.children.map((child) =>
       child.childName
     );
 
@@ -497,7 +494,7 @@ export class EntityRecordClass {
         data[key] = row[key];
       }
     });
-    this.entityDefinition.fields.forEach((field) => {
+    this.entryType.fields.forEach((field) => {
       if (field.key in row) {
         data[field.key] = this.orm.database.adaptLoadValue(
           field,
@@ -536,7 +533,7 @@ export class EntityRecordClass {
         continue;
       }
       if (key === "id") {
-        const type = this.entityDefinition.config.idMethod.type;
+        const type = this.entryType.config.idMethod.type;
         let fieldType: EasyFieldType = "DataField";
         switch (type) {
           case "number":
@@ -550,10 +547,10 @@ export class EntityRecordClass {
           case "uuid":
             break;
           case "field":
-            fieldType = this.entityDefinition.fields.find(
+            fieldType = this.entryType.fields.find(
               (field) =>
                 field.key ===
-                  (this.entityDefinition.config.idMethod as FieldMethod).field,
+                  (this.entryType.config.idMethod as FieldMethod).field,
             )?.fieldType || "DataField";
             break;
           case "data":
@@ -569,7 +566,7 @@ export class EntityRecordClass {
         continue;
       }
       let fieldType: EasyFieldType | undefined;
-      this.entityDefinition.fields.forEach((field) => {
+      this.entryType.fields.forEach((field) => {
         if (field.key === key) {
           fieldType = field.fieldType;
         }
@@ -578,7 +575,7 @@ export class EntityRecordClass {
       if (!fieldType) {
         raiseOrmException(
           "InvalidField",
-          `Field ${key} not found in entity ${this.entityDefinition.entityId}`,
+          `Field ${key} not found in Entry Type ${this.entryType.entryType}`,
         );
       }
 
@@ -596,7 +593,7 @@ export class EntityRecordClass {
   async syncFetchFields(force?: boolean) {
     // return;
     const entry = this.orm.registry.findInRegistry(
-      this.entityDefinition.entityId,
+      this.entryType.entryType,
     );
     if (!entry) {
       return;
@@ -611,7 +608,7 @@ export class EntityRecordClass {
       const targets = entry[key];
       for (const target of targets) {
         await this.orm.batchUpdateField(
-          target.entity,
+          target.entryType,
           target.field as string,
           value,
           {
@@ -626,15 +623,8 @@ export class EntityRecordClass {
    * Fetches the values of fields that have `fetchOptions` set
    */
   async refreshFetchedFields() {
-    // const titleFields = this.entityDefinition.fields.filter(
-    //   (field) => field.connectionTitleField,
-    // ).map((field) => field.connectionTitleField);
-    const fields = this.entityDefinition.fields.filter((field) =>
-      field.fetchOptions
-    );
+    const fields = this.entryType.fields.filter((field) => field.fetchOptions);
     for (const field of fields) {
-      //  field.fetchOptions!.thisIdKey
-
       const { fetchEntity, thatFieldKey, thisFieldKey, thisIdKey } = field
         .fetchOptions!;
 
@@ -653,7 +643,7 @@ export class EntityRecordClass {
   }
 
   private setDefaultValues(data: Record<PropertyKey, any>) {
-    for (const field of this.entityDefinition.fields) {
+    for (const field of this.entryType.fields) {
       if (field.fieldType === "MultiChoiceField") {
         continue;
       }
@@ -703,7 +693,7 @@ export class EntityRecordClass {
     }
     const keys = Object.keys(changedData);
 
-    const fields = this.entityDefinition.fields.filter((field) =>
+    const fields = this.entryType.fields.filter((field) =>
       field.fieldType === "ConnectionField" && keys.includes(field.key)
     );
 
@@ -713,7 +703,7 @@ export class EntityRecordClass {
       ) {
         raiseOrmException(
           "InvalidConnection",
-          `Invalid connection for field ${field.label} in entity ${this.entityDefinition.entityId}`,
+          `Invalid connection for field ${field.label} in entry type ${this.entryType.entryType}`,
         );
       }
     }

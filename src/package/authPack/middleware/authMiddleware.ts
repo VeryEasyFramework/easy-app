@@ -6,7 +6,6 @@ import type { EasyApp } from "#/app/easyApp.ts";
 import type { SessionData } from "#/package/authPack/entities/userSession.ts";
 import type { SafeType, User } from "@vef/types";
 import { OrmException } from "#orm/ormException.ts";
-import { easyLog } from "#/log/logging.ts";
 
 export const authMiddleware = createMiddleware(async (
   app,
@@ -46,7 +45,7 @@ async function processAuthToken(
     return false;
   }
   const token = request.authToken;
-  let userRecord = app.cacheGet("userToken", request.authToken) as User;
+  const userRecord = app.cacheGet("userToken", request.authToken) as User;
   if (userRecord) {
     request.user = userRecord;
     return true;
@@ -105,11 +104,11 @@ async function loadSessionData(
   let sessionData = app.cacheGet("userSession", sessionId) as SessionData;
   if (!sessionData) {
     try {
-      const entity = await app.orm.getEntity("userSession", sessionId);
+      const entity = await app.orm.getEntry("userSession", sessionId);
       sessionData = entity.sessionData as SessionData;
       app.cacheSet("userSession", sessionId, sessionData);
     } catch (e) {
-      if (e instanceof OrmException && e.type === "EntityNotFound") {
+      if (e instanceof OrmException && e.type === "EntryTypeNotFound") {
         return null;
       }
       throw e;

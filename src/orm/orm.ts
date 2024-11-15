@@ -6,7 +6,7 @@ import type {
   CountOptions,
   EasyFieldType,
   EasyFieldTypeMap,
-  EntityDefinition,
+  EntryTypeDef,
   ListOptions,
   ReportOptions,
   RowsResult,
@@ -14,46 +14,46 @@ import type {
 } from "@vef/types";
 
 import { raiseOrmException } from "#orm/ormException.ts";
-import { migrateEntity } from "#orm/database/migrate/migrateEntity.ts";
+import { migrateEntryType } from "#orm/database/migrate/migrateEntity.ts";
 
 import { installDatabase } from "#orm/database/install/installDatabase.ts";
-import type { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
-import { buildEasyEntity } from "#orm/entity/entity/entityDefinition/buildEasyEntity.ts";
-import { validateEntityDefinition } from "#orm/entity/entity/entityDefinition/validateEasyEntity.ts";
-import { FetchRegistry } from "#orm/entity/registry.ts";
-import { buildRecordClass } from "#orm/entity/entity/entityRecord/buildRecordClass.ts";
-import type { EntityRecordClass } from "#orm/entity/entity/entityRecord/entityRecord.ts";
-import type { SettingsEntityDefinition, User } from "@vef/types";
+import type { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
+import { buildEntryType } from "#orm/entry/entry/entryType/buildEasyEntity.ts";
+import { validateEntityDefinition } from "#orm/entry/entry/entryType/validateEntryType.ts";
+import { FetchRegistry } from "#orm/entry/registry.ts";
+import { buildEntryClass } from "#orm/entry/entry/entryClass/buildEntryClass.ts";
+import type { EntryClass } from "#orm/entry/entry/entryClass/entryClass.ts";
+import type { SettingsTypeDef, User } from "@vef/types";
 
 import { migrateSettingsEntity } from "#orm/database/migrate/migrateSettingsEntity.ts";
-import type { SettingsRecordClass } from "#orm/entity/settings/settingsRecord.ts";
-import { buildSettingsEntity } from "#orm/entity/settings/buildSettingsEntity.ts";
-import { buildSettingsRecordClass } from "#orm/entity/settings/buildSettingsRecordClass.ts";
-import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
+import type { SettingsClass } from "#orm/entry/settings/settingsRecord.ts";
+import { buildSettingsType } from "#orm/entry/settings/buildSettingsEntity.ts";
+import { buildSettingsRecordClass } from "#orm/entry/settings/buildSettingsRecordClass.ts";
+import type { SettingsType } from "#orm/entry/settings/settingsEntity.ts";
 import type { EasyApp } from "#/app/easyApp.ts";
-import type { SettingsRecord } from "#orm/entity/settings/settingsRecordTypes.ts";
-import type { EntityRecord } from "#orm/entity/entity/entityDefinition/entityDefTypes.ts";
+import type { Settings } from "#orm/entry/settings/settingsRecordTypes.ts";
+import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
 
 type GlobalHook = (
-  entityId: string,
-  record: EntityRecord,
+  entryType: string,
+  entry: Entry,
 ) => Promise<void> | void;
 
 type GlobalSettingsHook = {
   (
-    settingsId: string,
-    record: SettingsRecord,
+    settingsType: string,
+    settings: Settings,
   ): Promise<void> | void;
 };
 
 type GlobalSettingsSaveHook = (
-  settingsId: string,
-  record: SettingsRecord,
+  settingsType: string,
+  settings: Settings,
   changedData: Record<string, any> | undefined,
 ) => Promise<void> | void;
 type GlobalSaveHook = (
-  entityId: string,
-  record: EntityRecord,
+  entryType: string,
+  entry: Entry,
   changedData: Record<string, any> | undefined,
 ) => Promise<void> | void;
 interface GlobalHooks {
@@ -95,13 +95,13 @@ interface HookMap {
   afterDelete: GlobalHook;
 }
 export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
-  easyEntities: Array<EasyEntity> = [];
-  entities: Record<string, EntityDefinition> = {};
-  settingsDefinitions: Record<string, SettingsEntityDefinition> = {};
+  entryTypesList: Array<EntryType> = [];
+  entryTypes: Record<string, EntryTypeDef> = {};
+  settingsTypes: Record<string, SettingsTypeDef> = {};
 
-  settingsEntities: Array<SettingsEntity> = [];
-  entityClasses: Record<string, typeof EntityRecordClass> = {};
-  settingsClasses: Record<string, typeof SettingsRecordClass> = {};
+  settingsTypesList: Array<SettingsType> = [];
+  entryClasses: Record<string, typeof EntryClass> = {};
+  settingsClasses: Record<string, typeof SettingsClass> = {};
   app: EasyApp;
   private globalHooks: GlobalHooks = {
     beforeInsert: [],
@@ -130,7 +130,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
 
   idFieldType: EasyFieldType = "IDField";
   constructor(options: {
-    entities?: EasyEntity[];
+    entryTypes?: EntryType[];
     databaseType: D;
     databaseConfig: DatabaseConfig[D];
     app: EasyApp;
@@ -147,9 +147,9 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       config: options.databaseConfig,
       idFieldType: this.idFieldType,
     });
-    if (options.entities) {
-      for (const entity of options.entities) {
-        this.addEntity(entity);
+    if (options.entryTypes) {
+      for (const entryType of options.entryTypes) {
+        this.addEntryType(entryType);
       }
     }
   }
@@ -157,68 +157,68 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   async init() {
     await this.database.init();
     this.initialized = true;
-    this.buildEntities();
-    this.validateEntities();
-    this.createEntityClasses();
+    this.buildEntryTypes();
+    this.validateEntryTypes();
+    this.createEntryClasses();
 
-    this.buildSettingsEntities();
+    this.buildSettingsTypes();
     this.createSettingsClasses();
   }
   stop() {
     this.database.stop();
   }
 
-  addEntity(entity: EasyEntity) {
+  addEntryType(entryType: EntryType) {
     if (this.initialized) {
       raiseOrmException(
         "InvalidOperation",
-        "Cannot add entity after initialization",
+        "Cannot add Entry Type after initialization",
       );
     }
-    if (this.hasEntity(entity.entityId)) {
+    if (this.hasEntryType(entryType.entryType)) {
       raiseOrmException(
         "InvalidOperation",
-        `Entity with id ${entity.entityId} already exists!`,
+        `Entry Type with id ${entryType.entryType} already exists!`,
       );
     }
-    this.easyEntities.push(entity);
+    this.entryTypesList.push(entryType);
   }
 
-  addSettingsEntity(entity: SettingsEntity) {
+  addSettingsType(settingsType: SettingsType) {
     if (this.initialized) {
       raiseOrmException(
         "InvalidOperation",
-        "Cannot add entity after initialization",
+        "Cannot add Entry Type after initialization",
       );
     }
-    if (this.hasSettingsEntity(entity.settingsId)) {
+    if (this.hasSettingsType(settingsType.settingsType)) {
       raiseOrmException(
         "InvalidOperation",
-        `Settings entity with id ${entity.settingsId} already exists!`,
+        `Settings Type with id ${settingsType.settingsType} already exists!`,
       );
     }
-    this.settingsEntities.push(entity);
+    this.settingsTypesList.push(settingsType);
   }
 
   async runGlobalHook<H extends keyof GlobalHooks>(
     hook: H,
-    entityId: string,
-    record: EntityRecordClass,
+    entryType: string,
+    entry: EntryClass,
     changedData?: Record<string, any>,
   ) {
     for (const callback of this.globalHooks[hook]) {
-      await callback(entityId, record, changedData);
+      await callback(entryType, entry, changedData);
     }
   }
 
   async runGlobalSettingsHook<H extends keyof GlobalSettingsHooks>(
     hook: H,
-    settingsId: string,
-    record: SettingsRecordClass,
+    settingsType: string,
+    settings: SettingsClass,
     changedData?: Record<string, any>,
   ) {
     for (const callback of this.globalSettingsHooks[hook]) {
-      await callback(settingsId, record, changedData);
+      await callback(settingsType, settings, changedData);
     }
   }
   addGlobalSettingsHook<H extends keyof GlobalSettingsHooks>(
@@ -233,48 +233,46 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   ) {
     (this.globalHooks[hook] as HookMap[H][]).push(callback);
   }
-  private buildEntities() {
-    for (const entity of this.easyEntities) {
-      const entityDefinition = buildEasyEntity(this, entity);
-      this.entities[entityDefinition.entityId] = entityDefinition;
+  private buildEntryTypes() {
+    for (const entryType of this.entryTypesList) {
+      const entryTypeDef = buildEntryType(this, entryType);
+      this.entryTypes[entryTypeDef.entryType] = entryTypeDef;
     }
   }
 
-  private buildSettingsEntities() {
-    for (const settingsEntity of this.settingsEntities) {
-      const settingsEntityDefinition = buildSettingsEntity(
+  private buildSettingsTypes() {
+    for (const settingsType of this.settingsTypesList) {
+      const settingsTypeDef = buildSettingsType(
         this,
-        settingsEntity,
+        settingsType,
       );
-      this.settingsDefinitions[settingsEntityDefinition.settingsId] =
-        settingsEntityDefinition;
+      this.settingsTypes[settingsTypeDef.settingsType] = settingsTypeDef;
     }
   }
-  private validateEntities() {
-    for (const entityDefinition of Object.values(this.entities)) {
-      validateEntityDefinition(this, entityDefinition);
+  private validateEntryTypes() {
+    for (const entryType of Object.values(this.entryTypes)) {
+      validateEntityDefinition(this, entryType);
     }
   }
 
-  private createEntityClasses() {
-    for (const entityDefinition of Object.values(this.entities)) {
-      const entityRecordClass = buildRecordClass(this, entityDefinition);
-      this.entityClasses[entityDefinition.entityId] = entityRecordClass;
+  private createEntryClasses() {
+    for (const entryType of Object.values(this.entryTypes)) {
+      const entryClass = buildEntryClass(this, entryType);
+      this.entryClasses[entryType.entryType] = entryClass;
     }
   }
 
   private createSettingsClasses() {
     for (
-      const settingsEntityDefinition of Object.values(
-        this.settingsDefinitions,
+      const settingsType of Object.values(
+        this.settingsTypes,
       )
     ) {
-      const settingsRecordClass = buildSettingsRecordClass(
+      const settingsClass = buildSettingsRecordClass(
         this,
-        settingsEntityDefinition,
+        settingsType,
       );
-      this.settingsClasses[settingsEntityDefinition.settingsId] =
-        settingsRecordClass;
+      this.settingsClasses[settingsType.settingsType] = settingsClass;
     }
   }
   async install() {
@@ -289,25 +287,25 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       return ColorMe.fromOptions(message, { color });
     };
 
-    const entities = Object.values(this.entities);
+    const entryTypes = Object.values(this.entryTypes);
     const results: string[] = [];
-    const total = entities.length;
+    const total = entryTypes.length;
     const progress = options?.onProgress || (() => {});
     progress(0, total, message("Validating installation", "brightYellow"));
     await this.install();
     progress(0, total, message("Installation validated", "brightGreen"));
 
     let count = 0;
-    for (const entity of entities) {
+    for (const entryType of entryTypes) {
       progress(
         count,
         total,
-        message(`Migrating ${entity.entityId}`, "brightBlue"),
+        message(`Migrating ${entryType.entryType}`, "brightBlue"),
       );
 
-      await migrateEntity({
+      await migrateEntryType({
         database: this.database,
-        entity,
+        entryType,
         onOutput: (message) => {
           progress(count, total, message);
         },
@@ -315,10 +313,10 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       progress(
         ++count,
         total,
-        message(`Migrated ${entity.entityId}`, "brightGreen"),
+        message(`Migrated ${entryType.entryType}`, "brightGreen"),
       );
     }
-    for (const settingsEntity of this.settingsEntities) {
+    for (const settingsEntity of this.settingsTypesList) {
       await migrateSettingsEntity({
         database: this.database,
         settingsEntity,
@@ -331,108 +329,108 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   }
 
   /**
-   * Get an entity by id
+   * Get an entry by id
    */
-  async getEntity<E extends EntityRecord = EntityRecord>(
-    entityId: string,
+  async getEntry<E extends Entry = Entry>(
+    entryType: string,
     id: EasyFieldTypeMap["IDField"],
     user?: User,
   ): Promise<E> {
-    const entityClass = this.getEntityClass(entityId);
+    const entryClass = this.getEntryClass(entryType);
 
-    const entityRecord = new entityClass();
-    entityRecord._user = user;
-    await entityRecord.load(id);
-    return entityRecord as E;
+    const entry = new entryClass();
+    entry._user = user;
+    await entry.load(id);
+    return entry as E;
   }
 
   /**
-   * Create an new entity
+   * Create an new entry
    */
   async createEntity(
-    entityId: string,
+    entryType: string,
     data: Record<string, SafeType | undefined>,
     user?: User,
-  ): Promise<EntityRecord> {
-    const entityClass = this.getEntityClass(entityId);
+  ): Promise<Entry> {
+    const entryClass = this.getEntryClass(entryType);
 
-    const entityRecord = new entityClass();
-    entityRecord._user = user;
-    entityRecord.update(data);
-    await entityRecord.save();
-    return entityRecord;
+    const entry = new entryClass();
+    entry._user = user;
+    entry.update(data);
+    await entry.save();
+    return entry;
   }
 
   /**
-   * Update an entity
+   * Update an entry
    */
-  async updateEntity(
-    entityId: string,
+  async updateEntry(
+    entryType: string,
     id: string,
     data: Record<string, SafeType>,
     user?: User,
-  ): Promise<EntityRecord> {
-    const entityRecord = await this.getEntity(entityId, id, user);
-    entityRecord.update(data);
-    await entityRecord.save();
-    return entityRecord;
+  ): Promise<Entry> {
+    const entry = await this.getEntry(entryType, id, user);
+    entry.update(data);
+    await entry.save();
+    return entry;
   }
 
   /**
-   * Delete an entity
+   * Delete an entry
    */
   async deleteEntity(
-    entityId: string,
+    entryType: string,
     id: string | number,
     user?: User,
   ): Promise<boolean> {
-    const entityRecord = await this.getEntity(entityId, id as string, user);
-    await entityRecord.delete();
+    const entry = await this.getEntry(entryType, id as string, user);
+    await entry.delete();
     return true;
   }
 
   /**
    * Get a list of entities
    */
-  async getEntityList<E extends Record<string, any> = Record<string, any>>(
-    entityId: string,
+  async getEntryList<E extends Record<string, any> = Record<string, any>>(
+    entryType: string,
     options?: ListOptions,
     user?: User,
   ): Promise<RowsResult<E>> {
-    const entityDef = this.getEntityDef(entityId);
+    const entryTypeDef = this.getEntryType(entryType);
 
     options = options || {};
     if (!options.columns) {
-      options.columns = entityDef.listFields as string[];
+      options.columns = entryTypeDef.listFields as string[];
     }
     if (!options.limit) {
       options.limit = 100;
     }
 
     const result = await this.database.getRows<E>(
-      entityDef.config.tableName,
+      entryTypeDef.config.tableName,
       options,
     );
     return result;
   }
 
-  async getReport(entityId: string, options: ReportOptions) {
-    const entityDef = this.getEntityDef(entityId);
+  async getReport(entryType: string, options: ReportOptions) {
+    const entryTypeDef = this.getEntryType(entryType);
     const result = await this.database.getReport(
-      entityDef.config.tableName,
+      entryTypeDef.config.tableName,
       options,
     );
   }
   /**
-   * Find an entity by a filter. Returns the first entity that matches the filter
+   * Find an entry by a filter. Returns the first entry that matches the filter
    */
   async findEntity(
-    entityId: string,
+    entryType: string,
     filter: Required<ListOptions["filter"]>,
-  ): Promise<EntityRecord | null> {
-    const entityDef = this.getEntityDef(entityId);
+  ): Promise<Entry | null> {
+    const entryTypeDef = this.getEntryType(entryType);
     const result = await this.database.getRows<Record<string, SafeType>>(
-      entityDef.config.tableName,
+      entryTypeDef.config.tableName,
       {
         filter,
         columns: ["id"],
@@ -442,16 +440,16 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       return null;
     }
     const id = result.data[0].id as string;
-    return await this.getEntity(entityId, id);
+    return await this.getEntry(entryType, id);
   }
 
   async count(
-    entityId: string,
+    entryType: string,
     options?: CountOptions,
   ): Promise<number> {
-    const entityDef = this.getEntityDef(entityId);
+    const entryTypeDef = this.getEntryType(entryType);
     const total = await this.database.count(
-      entityDef.config.tableName,
+      entryTypeDef.config.tableName,
       options,
     );
 
@@ -469,120 +467,122 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         count: number;
       },
   >(
-    entityId: string,
+    entryType: string,
     groupBy: K,
     options?: CountOptions,
   ): Promise<Array<R>> {
-    const entityDef = this.getEntityDef(entityId);
+    const entryTypeDef = this.getEntryType(entryType);
     for (const item of groupBy) {
-      const field = entityDef.fields.find((f) => f.key === item);
+      const field = entryTypeDef.fields.find((f) => f.key === item);
       if (!field) {
         raiseOrmException(
           "InvalidField",
-          `Field ${item as string} does not exist in entity ${entityId}`,
+          `Field ${item as string} does not exist in Entry Type ${entryType}`,
         );
       }
     }
 
     const result = await this.database.countGrouped<K>(
-      entityDef.config.tableName,
+      entryTypeDef.config.tableName,
       groupBy,
       options,
     );
     return result as Array<R>;
   }
   async getValue<T = SafeType>(
-    entityId: string,
+    entryType: string,
     id: string,
     field: string,
   ): Promise<T> {
-    const entityDef = this.getEntityDef(entityId);
+    const entryTypeDef = this.getEntryType(entryType);
     const result = await this.database.getValue<T>(
-      entityDef.config.tableName,
+      entryTypeDef.config.tableName,
       id,
       field,
     );
     return result;
   }
   async batchUpdateField(
-    entityId: string,
+    entryType: string,
     field: string,
     value: any,
     filters: Record<string, any>,
   ) {
-    const entityDef: EntityDefinition = this.getEntityDef(entityId);
+    const entryTypeDef: EntryTypeDef = this.getEntryType(entryType);
     await this.database.batchUpdateField(
-      entityDef.config.tableName,
+      entryTypeDef.config.tableName,
       field,
       value,
       filters,
     );
   }
   /**
-   *  Getters for entity definitions
+   *  Getters for entry types
    */
 
-  getEasyEntityDef(entityId: string): EasyEntity {
-    const entity = this.easyEntities.find((e) => e.entityId === entityId);
-    if (!entity) {
+  getEntryTypeSource(entryType: string): EntryType {
+    const entryTypeDef = this.entryTypesList.find((e) =>
+      e.entryType === entryType
+    );
+    if (!entryTypeDef) {
       raiseOrmException(
-        "EntityNotFound",
-        `Entity '${entityId}' is not a registered entity!`,
+        "EntryTypeNotFound",
+        `Entry Type '${entryType}' is not a registered entry type!`,
       );
     }
-    return entity;
+    return entryTypeDef;
   }
-  getEntityDef(entityId: string): EntityDefinition {
-    const def = this.entities[entityId];
-    if (!def) {
+  getEntryType(entryType: string): EntryTypeDef {
+    const entryTypeDef = this.entryTypes[entryType];
+    if (!entryTypeDef) {
       raiseOrmException(
-        "EntityNotFound",
-        `Entity '${entityId as string}' is not a registered entity!`,
+        "EntryTypeNotFound",
+        `Entry Type '${entryType}' is not a registered entry type!`,
       );
     }
-    return def;
+    return entryTypeDef;
   }
 
-  private getEntityClass<
-    E extends typeof EntityRecordClass = typeof EntityRecordClass,
+  private getEntryClass<
+    E extends typeof EntryClass = typeof EntryClass,
   >(
-    entityId: string,
+    entryType: string,
   ): E {
-    const entityClass = this.entityClasses[entityId];
-    if (!entityClass) {
+    const entryClass = this.entryClasses[entryType];
+    if (!entryClass) {
       raiseOrmException(
-        "EntityNotFound",
-        `Entity '${entityId}' is not a registered entity!`,
+        "EntryTypeNotFound",
+        `Entry Type '${entryType}' is not a registered  entry type!`,
       );
     }
-    return entityClass as E;
+    return entryClass as E;
   }
 
   /**
    * Validation helpers
    */
 
-  hasEntity(entity: string): boolean {
-    if (entity in this.entities) {
+  hasEntryType(entryType: string): boolean {
+    if (entryType in this.entryTypes) {
       return true;
     }
     return false;
   }
 
-  hasSettingsEntity(entity: string): boolean {
-    if (entity in this.settingsDefinitions) {
+  hasSettingsType(settingsType: string): boolean {
+    if (settingsType in this.settingsTypes) {
       return true;
     }
     return false;
   }
-  async exists(entityId: string, id: string): Promise<boolean> {
-    if (!this.hasEntity(entityId)) {
+  async exists(entryType: string, id: string): Promise<boolean> {
+    if (!this.hasEntryType(entryType)) {
       return false;
     }
 
-    const entityDef = this.getEntityDef(entityId);
+    const entryTypeDef = this.getEntryType(entryType);
     const result = await this.database.getRow<Record<string, SafeType>>(
-      entityDef.config.tableName,
+      entryTypeDef.config.tableName,
       "id",
       id,
     );
@@ -590,47 +590,47 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   }
 
   /**
-   * Settings entity methods
+   * Settings Types methods
    */
 
   async getSettings(
-    settingsId: string,
+    settingsType: string,
     user?: User,
-  ): Promise<SettingsRecord> {
-    const settingsClass = this.getSettingsClass(settingsId);
-    const settingsRecord = new settingsClass();
-    settingsRecord._user = user;
-    await settingsRecord.load();
-    return settingsRecord;
+  ): Promise<Settings> {
+    const settingsClass = this.getSettingsClass(settingsType);
+    const settings = new settingsClass();
+    settings._user = user;
+    await settings.load();
+    return settings;
   }
 
   async updateSettings(
     settingsId: string,
     data: Record<string, any>,
     user?: User,
-  ): Promise<SettingsRecord> {
+  ): Promise<Settings> {
     const settingsRecord = await this.getSettings(settingsId, user);
     settingsRecord.update(data);
     await settingsRecord.save();
     return settingsRecord;
   }
-  private getSettingsClass(settingsId: string): typeof SettingsRecordClass {
+  private getSettingsClass(settingsId: string): typeof SettingsClass {
     const settingsClass = this.settingsClasses[settingsId];
     if (!settingsClass) {
       raiseOrmException(
-        "EntityNotFound",
-        `Settings entity '${settingsId}' is not a registered entity!`,
+        "EntryTypeNotFound",
+        `Settings Type '${settingsId}' is not a registered settings type!`,
       );
     }
     return settingsClass;
   }
 
-  getSettingsEntity(settingsId: string): SettingsEntityDefinition {
-    const settingsEntity = this.settingsDefinitions[settingsId];
+  getSettingsEntity(settingsId: string): SettingsTypeDef {
+    const settingsEntity = this.settingsTypes[settingsId];
     if (!settingsEntity) {
       raiseOrmException(
-        "EntityNotFound",
-        `Settings entity '${settingsId}' is not a registered entity!`,
+        "EntryTypeNotFound",
+        `Settings Type '${settingsId}' is not a registered settings type!`,
       );
     }
     return settingsEntity;

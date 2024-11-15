@@ -1,8 +1,8 @@
 import { EasyApp } from "#/app/easyApp.ts";
-import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { EntryType } from "../src/orm/entry/entry/entryType/entryType.ts";
 
 const app = new EasyApp();
-const test = new EasyEntity("test", {
+const test = new EntryType("test", {
   label: "Test",
   description: "A test entity",
 });
@@ -12,5 +12,5 @@ test.addField({
   label: "Tag",
   fieldType: "ListField",
 });
-app.orm.addEntity(test);
+app.orm.addEntryType(test);
 app.run();

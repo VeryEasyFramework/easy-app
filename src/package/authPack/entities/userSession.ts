@@ -1,6 +1,6 @@
-import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
 
-export const userSessionEntity = new EasyEntity("userSession", {
+export const userSessionEntity = new EntryType("userSession", {
   label: "User Session",
   description: "An authenticated user session",
 });

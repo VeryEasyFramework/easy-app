@@ -1,7 +1,7 @@
-import { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
 import { toCamelCase } from "@vef/string-utils";
 
-export const userRoleEntity = new EasyEntity("userRole");
+export const userRoleEntity = new EntryType("userRole");
 
 userRoleEntity.setConfig({
   label: "User Role",
@@ -36,6 +36,16 @@ userRoleEntity.addFields([
     description: "A description of the role",
   },
 ]);
+
+userRoleEntity.addChild({
+  childName: "entityPermission",
+  label: "Entity Permission",
+  fields: [{
+    key: "entity",
+    label: "Entity",
+    fieldType: "DataField",
+  }],
+});
 
 userRoleEntity.addHook("beforeValidate", {
   label: "Generate Role Key",

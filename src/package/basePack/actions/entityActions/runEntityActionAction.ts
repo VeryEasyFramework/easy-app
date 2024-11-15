@@ -6,7 +6,7 @@ import { OrmException } from "#orm/ormException.ts";
 export const runEntityActionAction = createAction("runEntityAction", {
   description: "Run an action that is defined on the entity",
   async action(app, { entity, id, action, data, enqueue }, request) {
-    const entityRecord = await app.orm.getEntity(entity, id, request.user);
+    const entityRecord = await app.orm.getEntry(entity, id, request.user);
     if (!entityRecord) {
       raiseEasyException(`${entity} doesn't exist`, 404);
     }

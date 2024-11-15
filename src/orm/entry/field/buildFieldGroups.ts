@@ -1,9 +1,9 @@
-import type { SettingsEntity } from "#orm/entity/settings/settingsEntity.ts";
+import type { SettingsType } from "../settings/settingsEntity.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
-import type { EasyEntity } from "#orm/entity/entity/entityDefinition/easyEntity.ts";
+import type { EntryType } from "../entry/entryType/entryType.ts";
 import type { FieldGroup } from "@vef/types";
 export function buildFieldGroups(
-  entity: EasyEntity | SettingsEntity,
+  entity: EntryType | SettingsType,
 ): FieldGroup[] {
   const groups: Record<string, FieldGroup> = {
     default: {

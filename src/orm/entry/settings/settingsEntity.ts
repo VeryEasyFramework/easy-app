@@ -1,22 +1,22 @@
-import { BaseDefinition } from "#orm/entity/baseDefinition.ts";
+import { BaseDefinition } from "../baseDefinition.ts";
 import type {
   Choice,
   EasyField,
   SettingsAction,
-  SettingsEntityConfig,
   SettingsHook,
+  SettingsTypeConfig,
 } from "@vef/types";
 import type {
+  Settings,
   SettingsActionDefinition,
-  SettingsEntityHooks,
-  SettingsRecord,
-} from "#orm/entity/settings/settingsRecordTypes.ts";
+  SettingsHooks,
+} from "./settingsRecordTypes.ts";
 
-export class SettingsEntity
-  extends BaseDefinition<SettingsEntityConfig, "settings"> {
-  settingsId: string;
+export class SettingsType
+  extends BaseDefinition<SettingsTypeConfig, "settings"> {
+  settingsType: string;
 
-  hooks: SettingsEntityHooks = {
+  hooks: SettingsHooks = {
     beforeSave: [],
     afterSave: [],
     validate: [],
@@ -27,12 +27,12 @@ export class SettingsEntity
     description?: string;
   }) {
     super(settingsName, options);
-    this.settingsId = this.key;
+    this.settingsType = this.key;
   }
   addHook(hook: SettingsHook, definition: {
     label?: string;
     description?: string;
-    action(settings: SettingsRecord): Promise<void> | void;
+    action(settings: Settings): Promise<void> | void;
   }) {
     this.hooks[hook].push(definition);
   }

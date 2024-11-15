@@ -1,22 +1,22 @@
 import type { EasyOrm } from "#orm/orm.ts";
-import { SettingsRecordClass } from "#orm/entity/settings/settingsRecord.ts";
-import { validateField } from "#orm/entity/field/validateField.ts";
+import { SettingsClass } from "./settingsRecord.ts";
+import { validateField } from "../field/validateField.ts";
 
 import type {
   SettingsAction,
-  SettingsEntityDefinition,
-  SettingsEntityHookDefinition,
   SettingsHook,
+  SettingsTypeDef,
+  SettingsTypeHookDefinition,
 } from "@vef/types";
-import type { SettingsHookFunction } from "#orm/entity/settings/settingsRecordTypes.ts";
+import type { SettingsHookFunction } from "./settingsRecordTypes.ts";
 
 export function buildSettingsRecordClass(
   orm: EasyOrm,
-  settingsEntity: SettingsEntityDefinition,
+  settingsEntity: SettingsTypeDef,
 ) {
   const hooks = extractHooks(settingsEntity);
   const actions = extractActions(settingsEntity);
-  const settingsRecordClass = class extends SettingsRecordClass {
+  const settingsRecordClass = class extends SettingsClass {
     override orm = orm;
     override settingsDefinition = settingsEntity;
     override _beforeSave = hooks.beforeSave;
@@ -32,8 +32,8 @@ export function buildSettingsRecordClass(
 }
 
 function setFields(
-  settingsRecordClass: typeof SettingsRecordClass,
-  settingsEntity: SettingsEntityDefinition,
+  settingsRecordClass: typeof SettingsClass,
+  settingsEntity: SettingsTypeDef,
 ) {
   settingsEntity.fields.forEach((field) => {
     Object.defineProperty(settingsRecordClass.prototype, field.key, {
@@ -54,15 +54,15 @@ function setFields(
   });
 }
 
-function extractActions(settingsEntity: SettingsEntityDefinition) {
+function extractActions(settingsEntity: SettingsTypeDef) {
   const actions: Record<string, SettingsAction> = {};
   settingsEntity.actions.forEach((action) => {
     actions[action.key] = action;
   });
   return actions;
 }
-function extractHooks(settingsEntity: SettingsEntityDefinition) {
-  const getHookActions = (hook: SettingsEntityHookDefinition[]) => {
+function extractHooks(settingsEntity: SettingsTypeDef) {
+  const getHookActions = (hook: SettingsTypeHookDefinition[]) => {
     return hook.map((hookAction) => {
       return hookAction.action;
     });

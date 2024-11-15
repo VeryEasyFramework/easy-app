@@ -4,7 +4,7 @@ import { editLogEntity } from "#/package/basePack/entities/editLogEntity.ts";
 export const getRecordInfoAction = createAction("getRecordInfo", {
   description: "Get summary information about a record",
   async action(app, { entity, id }, request) {
-    const editLog = await app.orm.getEntityList("editLog", {
+    const editLog = await app.orm.getEntryList("editLog", {
       filter: {
         entity,
         recordId: id,

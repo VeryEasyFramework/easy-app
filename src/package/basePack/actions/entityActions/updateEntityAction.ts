@@ -3,7 +3,7 @@ import { createAction } from "#/actions/createAction.ts";
 export const updateEntityAction = createAction("updateEntity", {
   description: "Update an entity",
   action: async (app, { entity, id, data }, request) => {
-    const updatedEntity = await app.orm.updateEntity(
+    const updatedEntity = await app.orm.updateEntry(
       entity,
       id,
       data,

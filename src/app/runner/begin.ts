@@ -1,5 +1,5 @@
 import startProcess from "#/app/runner/startProcess.ts";
-import { asyncPause, getCoreCount } from "#/utils.ts";
+import { getCoreCount } from "#/utils.ts";
 import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
 import { easyLog } from "#/log/logging.ts";
 import { toTitleCase } from "@vef/string-utils";

@@ -3,7 +3,6 @@ import {
   type PostgresConfig,
 } from "#orm/database/adapter/adapters/pgAdapter.ts";
 
-import type { DatabaseAdapter } from "./adapter/databaseAdapter.ts";
 import type {
   CountOptions,
   EasyField,
@@ -13,9 +12,9 @@ import type {
   RowsResult,
   SafeType,
 } from "@vef/types";
-import {
+import type {
   DenoKvAdapter,
-  type DenoKvConfig,
+  DenoKvConfig,
 } from "#orm/database/adapter/adapters/denoKvAdapter.ts";
 
 export interface DatabaseConfig {
