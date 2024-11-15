@@ -7,7 +7,7 @@ export const getEntryInfoAction = createAction("getEntryInfo", {
     const editLog = await app.orm.getEntryList("editLog", {
       filter: {
         entryType,
-        recordId: id,
+        entryId: id,
       },
       columns: [
         "id",

@@ -1,7 +1,7 @@
 import { createAction } from "#/actions/createAction.ts";
 import { raiseEasyException } from "#/easyException.ts";
 
-export const getEntryInfoAction = createAction("getEntryInfo", {
+export const getEntryTypeAction = createAction("getEntryType", {
   description: "Get the entry info",
   action: (app, { entryType }) => {
     const entryTypeDef = app.orm.entryTypes[entryType];

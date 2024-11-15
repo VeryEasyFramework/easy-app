@@ -1,8 +1,8 @@
 import type { EasyAction } from "#/actions/actionTypes.ts";
 import {
-  getSettingsDefAction
-} from "#/package/basePack/actions/settingsActions/getSettingsDefAction.ts";
-import { getSettingsAction } from "#/package/basePack/actions/settingsActions/getSettingsRecord.ts";
+  getSettingsTypeAction,
+} from "#/package/basePack/actions/settingsActions/getSettingsTypeAction.ts";
+import { getSettingsAction } from "./getSettingsAction.ts";
 import {
   updateSettingsRecordAction,
   updateSettingsValueAction,
@@ -11,7 +11,7 @@ import { runSettingsAction } from "#/package/basePack/actions/settingsActions/ru
 
 export const settingsActions: EasyAction[] = [
   getSettingsAction,
-  getSettingsDefAction,
+  getSettingsTypeAction,
   updateSettingsRecordAction,
   updateSettingsValueAction,
   runSettingsAction,

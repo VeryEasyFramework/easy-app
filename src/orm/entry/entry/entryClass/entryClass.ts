@@ -3,7 +3,7 @@ import type {
   EasyFieldType,
   EasyFieldTypeMap,
   EntryAction,
-  EntryTypeDef,
+  EntryType as EntryTypeDef,
   FieldMethod,
   SafeType,
   User,

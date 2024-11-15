@@ -8,7 +8,7 @@ export const ormGlobalHooks: BootAction = {
       if (entryType === "editLog") {
         return;
       }
-      const { titleField } = entry.entryType.config;
+      const { titleField } = entry._entryType.config;
       const titleValue = titleField ? entry[titleField] : entry.id;
       await app.orm.createEntry("editLog", {
         entryType,
@@ -39,8 +39,8 @@ export const ormGlobalHooks: BootAction = {
         if (!changedData) {
           return;
         }
-        if (entry.entryType.config.editLog) {
-          const { titleField } = entry.entryType.config;
+        if (entry._entryType.config.editLog) {
+          const { titleField } = entry._entryType.config;
           const titleValue = titleField ? entry[titleField] : entry.id;
 
           await app.orm.createEntry("editLog", {
@@ -71,7 +71,7 @@ export const ormGlobalHooks: BootAction = {
         if (!changedData) {
           return;
         }
-        const room = `settings:${settingsType}`;
+        const room = `settingsType:${settingsType}`;
         if (settings.settingsDefinition.config.editLog) {
           await app.orm.createEntry("editLog", {
             entryType: "settings",
@@ -92,7 +92,7 @@ export const ormGlobalHooks: BootAction = {
       if (entryType === "editLog") {
         return;
       }
-      const { titleField } = entry.entryType.config;
+      const { titleField } = entry._entryType.config;
       const titleValue = titleField ? entry[titleField] : entry.id;
       await app.orm.createEntry("editLog", {
         entryType,

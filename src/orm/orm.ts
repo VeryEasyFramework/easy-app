@@ -5,12 +5,12 @@ import type {
   CountOptions,
   EasyFieldType,
   EasyFieldTypeMap,
-  EntryTypeDef,
+  EntryType as EntryTypeDef,
   ListOptions,
   ReportOptions,
   RowsResult,
   SafeType,
-  SettingsTypeDef,
+  SettingsType as SettingsTypeDef,
   User,
 } from "@vef/types";
 
@@ -605,21 +605,21 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   }
 
   async updateSettings(
-    settingsId: string,
+    settingsType: string,
     data: Record<string, any>,
     user?: User,
   ): Promise<Settings> {
-    const settingsRecord = await this.getSettings(settingsId, user);
+    const settingsRecord = await this.getSettings(settingsType, user);
     settingsRecord.update(data);
     await settingsRecord.save();
     return settingsRecord;
   }
-  private getSettingsClass(settingsId: string): typeof SettingsClass {
-    const settingsClass = this.settingsClasses[settingsId];
+  private getSettingsClass(settingsType: string): typeof SettingsClass {
+    const settingsClass = this.settingsClasses[settingsType];
     if (!settingsClass) {
       raiseOrmException(
         "EntryTypeNotFound",
-        `Settings Type '${settingsId}' is not a registered settings type!`,
+        `Settings Type '${settingsType}' is not a registered settings type!`,
       );
     }
     return settingsClass;

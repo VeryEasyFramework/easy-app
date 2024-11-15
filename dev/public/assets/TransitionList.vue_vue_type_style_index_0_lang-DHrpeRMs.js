@@ -1,0 +1,1 @@
+import{d as a,o,c as s,w as t,m as n,O as r}from"./index-CS0ctzBO.js";const d=a({__name:"TransitionList",props:{fade:{type:Boolean}},setup(i){return(e,p)=>(o(),s(r,{name:e.fade?"list-fade":"list"},{default:t(()=>[n(e.$slots,"default")]),_:3},8,["name"]))}});export{d as _};

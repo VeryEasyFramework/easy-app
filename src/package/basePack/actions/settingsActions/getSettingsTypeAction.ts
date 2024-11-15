@@ -1,7 +1,7 @@
 import { createAction } from "#/actions/createAction.ts";
 import { raiseEasyException } from "#/easyException.ts";
 
-export const getSettingsDefAction = createAction("getSettingsType", {
+export const getSettingsTypeAction = createAction("getSettingsType", {
   description: "Get settings type definition",
 
   action(app, { settingsType }, request) {

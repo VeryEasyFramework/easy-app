@@ -5,8 +5,9 @@ import { deleteEntryAction } from "#/package/basePack/actions/entryActions/delet
 import {
   runEntryActionAction,
 } from "#/package/basePack/actions/entryActions/runEntryActionAction.ts";
-import { getEntryListAction, } from "#/package/basePack/actions/entryActions/getEntryListAction.ts";
-import { getEntryInfoAction, } from "#/package/basePack/actions/entryActions/getEntryInfoAction.ts";
+import { getEntryListAction } from "#/package/basePack/actions/entryActions/getEntryListAction.ts";
+import { getEntryInfoAction } from "#/package/basePack/actions/entryActions/getEntryInfoAction.ts";
+import { getEntryTypeAction } from "#/package/basePack/actions/entryActions/getEntryTypeAction.ts";
 
 export const entryActions = [
   getEntryListAction,
@@ -14,7 +15,7 @@ export const entryActions = [
   updateEntryAction,
   getEntryAction,
   deleteEntryAction,
-  getEntryInfoAction,
   runEntryActionAction,
   getEntryInfoAction,
+  getEntryTypeAction,
 ];

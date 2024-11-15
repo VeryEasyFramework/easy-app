@@ -38,6 +38,7 @@
   "ormOptions": {
     "databaseType": "postgres",
     "databaseConfig": {
+      "debug": true,
       "size": 1,
       "clientOptions": {
         "user": "postgres",
