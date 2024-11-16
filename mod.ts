@@ -1,7 +1,8 @@
+export { calculateMemorySettings } from "#orm/database/adapter/adapters/postgres/pgUtils.ts";
+
 export { generateId, isEmpty } from "#orm/utils/misc.ts";
 
 export { ChildList } from "./src/orm/entry/child/childRecord.ts";
-
 export type {
   ActionsDefMap,
   ActionsMap,
