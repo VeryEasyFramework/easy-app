@@ -1,5 +1,14 @@
-export function calculateMemorySettings(maxConnections?: number) {
-  const settings = {
+interface MemorySettings {
+  sharedBuffers: number;
+  workMem: number;
+  maintenanceWorkMem: number;
+  maxConnections: number;
+  effectiveCacheSize: number;
+}
+export function calculateMemorySettings(
+  maxConnections?: number,
+): MemorySettings {
+  const settings: MemorySettings = {
     sharedBuffers: 0,
     workMem: 0,
     maintenanceWorkMem: 0,
