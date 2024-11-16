@@ -72,7 +72,7 @@ export const ormGlobalHooks: BootAction = {
           return;
         }
         const room = `settingsType:${settingsType}`;
-        if (settings.settingsDefinition.config.editLog) {
+        if (settings._settingsType.config.editLog) {
           await app.orm.createEntry("editLog", {
             entryType: "settings",
             entryId: settingsType,

@@ -1,10 +1,6 @@
 import type { EasyOrm } from "#orm/orm.ts";
-import type {
-  EasyFieldType,
-  SafeType,
-  SettingsType as SettingsTypeDef,
-  User,
-} from "@vef/types";
+import type { EasyFieldType, SafeType, SettingsType, User } from "@vef/types";
+
 import type { SettingsAction, SettingsHookFunction } from "./settingsTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 
@@ -15,7 +11,7 @@ export class SettingsClass {
 
   orm!: EasyOrm;
 
-  settingsDefinition!: SettingsTypeDef;
+  _settingsType!: SettingsType;
 
   _beforeSave!: Array<SettingsHookFunction>;
 
@@ -57,7 +53,7 @@ export class SettingsClass {
 
   update(data: Record<string, any>): void {
     for (const key in data) {
-      const field = this.settingsDefinition.fields.find((f) => f.key === key);
+      const field = this._settingsType.fields.find((f) => f.key === key);
       if (!field) {
         continue;
       }
@@ -75,12 +71,12 @@ export class SettingsClass {
       return this.data;
     }
     for (const key in changedData) {
-      const field = this.settingsDefinition.fields.find((f) => f.key === key);
+      const field = this._settingsType.fields.find((f) => f.key === key);
       if (!field) {
         continue;
       }
       const value = this.orm.database.adaptSaveValue(field, changedData[key]);
-      const id = `${this.settingsDefinition.settingsType}:${key}`;
+      const id = `${this._settingsType.settingsType}:${key}`;
       await this.orm.database.updateRow("easy_settings", id, {
         value: JSON.stringify({
           fieldType: field.fieldType,
@@ -94,7 +90,7 @@ export class SettingsClass {
 
     await this.orm.runGlobalSettingsHook(
       "afterChange",
-      this.settingsDefinition.settingsType,
+      this._settingsType.settingsType,
       this,
       changedData,
     );
@@ -104,7 +100,7 @@ export class SettingsClass {
   async load(): Promise<void> {
     const data = this.orm.app.cacheGet<typeof this._data>(
       "settings",
-      this.settingsDefinition.settingsType,
+      this._settingsType.settingsType,
     );
     if (data) {
       this._data = data;
@@ -123,13 +119,13 @@ export class SettingsClass {
       };
     }>("easy_settings", {
       filter: {
-        settingsId: this.settingsDefinition.settingsType,
+        settingsType: this._settingsType.settingsType,
       },
       columns: ["key", "value"],
     });
 
     for (const row of results.data) {
-      const field = this.settingsDefinition.fields.find(
+      const field = this._settingsType.fields.find(
         (f) => f.key === row.key,
       );
       if (!field) {
@@ -143,7 +139,7 @@ export class SettingsClass {
 
     this.orm.app.cacheSet(
       "settings",
-      this.settingsDefinition.settingsType,
+      this._settingsType.settingsType,
       this._data,
     );
   }
@@ -170,7 +166,7 @@ export class SettingsClass {
     if (!action) {
       raiseOrmException(
         "InvalidAction",
-        `Action ${actionKey} not found in settings ${this.settingsDefinition.settingsType}`,
+        `Action ${actionKey} not found in settings ${this._settingsType.settingsType}`,
       );
     }
     if (action.params) {

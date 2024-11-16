@@ -5,20 +5,20 @@ import { validateField } from "../field/validateField.ts";
 import type {
   SettingsAction,
   SettingsHook,
-  SettingsType as SettingsTypeDef,
+  SettingsType,
   SettingsTypeHookDefinition,
 } from "@vef/types";
 import type { SettingsHookFunction } from "./settingsTypes.ts";
 
 export function buildSettingsClass(
   orm: EasyOrm,
-  settingsType: SettingsTypeDef,
+  settingsType: SettingsType,
 ) {
   const hooks = extractHooks(settingsType);
   const actions = extractActions(settingsType);
   const settingsRecordClass = class extends SettingsClass {
     override orm = orm;
-    override settingsDefinition = settingsType;
+    override _settingsType = settingsType;
     override _beforeSave = hooks.beforeSave;
     override _afterSave = hooks.afterSave;
     override _validate = hooks.validate;
@@ -33,7 +33,7 @@ export function buildSettingsClass(
 
 function setFields(
   settingsClass: typeof SettingsClass,
-  settingsType: SettingsTypeDef,
+  settingsType: SettingsType,
 ) {
   settingsType.fields.forEach((field) => {
     Object.defineProperty(settingsClass.prototype, field.key, {
@@ -54,14 +54,14 @@ function setFields(
   });
 }
 
-function extractActions(settingsType: SettingsTypeDef) {
+function extractActions(settingsType: SettingsType) {
   const actions: Record<string, SettingsAction> = {};
   settingsType.actions.forEach((action) => {
-    actions[action.key] = action;
+    actions[action.key] = action as SettingsAction;
   });
   return actions;
 }
-function extractHooks(settingsType: SettingsTypeDef) {
+function extractHooks(settingsType: SettingsType) {
   const getHookActions = (hook: SettingsTypeHookDefinition[]) => {
     return hook.map((hookAction) => {
       return hookAction.action;

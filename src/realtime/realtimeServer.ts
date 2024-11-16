@@ -143,6 +143,9 @@ export class RealtimeServer extends WebsocketBase {
       if (data.event === "join" || data.event === "leave") {
         this.validateRoom(data.room);
         const user = data.data.user;
+        if (!user) {
+          return;
+        }
         const room = this.rooms[data.room];
         if (data.event === "join") {
           room.users.push(user);

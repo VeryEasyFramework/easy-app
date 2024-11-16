@@ -12,7 +12,7 @@ async function createSettingsTable(database: Database<any>) {
   const tableName = "easy_settings";
   const fields: EasyField[] = [
     {
-      key: "settingsId",
+      key: "settingsType",
       fieldType: "DataField",
     },
     {
