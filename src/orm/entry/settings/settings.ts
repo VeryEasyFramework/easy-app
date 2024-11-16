@@ -1,5 +1,10 @@
 import type { EasyOrm } from "#orm/orm.ts";
-import type { EasyFieldType, SafeType, SettingsTypeDef, User, } from "@vef/types";
+import type {
+  EasyFieldType,
+  SafeType,
+  SettingsType as SettingsTypeDef,
+  User,
+} from "@vef/types";
 import type { SettingsAction, SettingsHookFunction } from "./settingsTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 

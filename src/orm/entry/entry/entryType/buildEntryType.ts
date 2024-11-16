@@ -2,7 +2,7 @@ import type {
   ChildListDefinition,
   EasyField,
   EasyFieldType,
-  EntryTypeDef,
+  EntryType as EntryTypeDef,
   FieldGroup,
 } from "@vef/types";
 import { camelToSnakeCase, toPascalCase } from "@vef/string-utils";

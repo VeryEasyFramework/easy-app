@@ -5,7 +5,7 @@ import { validateField } from "../field/validateField.ts";
 import type {
   SettingsAction,
   SettingsHook,
-  SettingsTypeDef,
+  SettingsType as SettingsTypeDef,
   SettingsTypeHookDefinition,
 } from "@vef/types";
 import type { SettingsHookFunction } from "./settingsTypes.ts";
