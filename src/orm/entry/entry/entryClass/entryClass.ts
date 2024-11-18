@@ -13,6 +13,7 @@ import type { EasyOrm } from "#orm/orm.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
 import { generateId, isEmpty } from "#orm/utils/misc.ts";
 import type { ChildList } from "#orm/entry/child/childRecord.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export class EntryClass {
   private _data: Record<string, any> = {};
@@ -698,6 +699,10 @@ export class EntryClass {
     );
 
     for (const field of fields) {
+      const id = changedData[field.key];
+      if (!id) {
+        continue;
+      }
       if (
         !await this.orm.exists(
           field.connectionEntryType!,

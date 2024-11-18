@@ -711,10 +711,11 @@ export class EasyApp {
             return easyResponse.error(message, 500, subject);
           }
           if (e instanceof OrmException) {
+            console.log(e.stack);
             // const subject = toTitleCase(e.type);
             const message = `${e.type}: ${e.message}`;
             easyLog.error(message, "ORM Error", {
-              hideTrace: true,
+              hideTrace: false,
             });
             return easyResponse.error(message, 500, e.type);
           }

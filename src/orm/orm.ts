@@ -14,7 +14,7 @@ import type {
   User,
 } from "@vef/types";
 
-import { raiseOrmException } from "#orm/ormException.ts";
+import { OrmException, raiseOrmException } from "#orm/ormException.ts";
 import { migrateEntryType } from "#orm/database/migrate/migrateEntryType.ts";
 
 import { installDatabase } from "#orm/database/install/installDatabase.ts";
@@ -581,12 +581,19 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     }
 
     const entryTypeDef = this.getEntryType(entryType);
-    const result = await this.database.getRow<Record<string, SafeType>>(
-      entryTypeDef.config.tableName,
-      "id",
-      id,
-    );
-    return result ? true : false;
+    try {
+      const result = await this.database.getRow<Record<string, SafeType>>(
+        entryTypeDef.config.tableName,
+        "id",
+        id,
+      );
+      return result ? true : false;
+    } catch (e) {
+      if (e instanceof OrmException) {
+        return false;
+      }
+    }
+    return false;
   }
 
   /**
