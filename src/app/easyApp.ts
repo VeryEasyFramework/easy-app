@@ -694,7 +694,9 @@ export class EasyApp {
           if (e instanceof EasyException) {
             const subject = `${e.status} - ${e.name}`;
             easyLog.error(e.message, subject, {
-              hideTrace: true,
+              hideTrace: false,
+              stack: e.stack,
+              traceOffset: 1,
             });
             if (e.redirect) {
               return easyResponse.redirect(e.redirect);
@@ -706,16 +708,19 @@ export class EasyApp {
             const subject = e.name;
             const message = `${subject}: ${e.message}`;
             easyLog.error(message, "Database Error (Postgres)", {
-              hideTrace: true,
+              hideTrace: false,
+              stack: e.stack,
+              traceOffset: 1,
             });
             return easyResponse.error(message, 500, subject);
           }
           if (e instanceof OrmException) {
-            console.log(e.stack);
             // const subject = toTitleCase(e.type);
             const message = `${e.type}: ${e.message}`;
             easyLog.error(message, "ORM Error", {
               hideTrace: false,
+              stack: e.stack,
+              traceOffset: 1,
             });
             return easyResponse.error(message, 500, e.type);
           }

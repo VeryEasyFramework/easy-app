@@ -8,12 +8,12 @@ import type {
   SafeType,
   User,
 } from "@vef/types";
+
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
 import { generateId, isEmpty } from "#orm/utils/misc.ts";
 import type { ChildList } from "#orm/entry/child/childRecord.ts";
-import { easyLog } from "#/log/logging.ts";
 
 export class EntryClass {
   private _data: Record<string, any> = {};

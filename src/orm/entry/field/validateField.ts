@@ -303,9 +303,16 @@ export function validateChoices(field: EasyField, value: any): string | null {
     );
   }
   const choices = field.choices.map((choice) => {
+    if (typeof choice.key === "number") {
+      return choice.key.toString();
+    }
     return choice.key;
   });
-  if (!choices.includes(value)) {
+  let temValue = value;
+  if (typeof value === "number") {
+    temValue = value.toString();
+  }
+  if (!choices.includes(temValue)) {
     raiseOrmException(
       "InvalidValue",
       `Invalid value for ChoicesField ${

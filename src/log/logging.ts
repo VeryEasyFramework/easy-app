@@ -58,6 +58,7 @@ function log(options: {
   hideTrace?: boolean;
   stack?: string;
   compact?: boolean;
+  traceOffset?: number;
 }) {
   const env = getEnv("VEF_ENVIRONMENT");
   let { content, type, subject, hideTrace, stack } = options;
@@ -80,7 +81,10 @@ function log(options: {
     stack = stack || new Error().stack;
     let lines: string[] = [];
 
-    stack?.split("\n").slice(1, -1).forEach((line, index) => {
+    const offset = options.traceOffset ? options.traceOffset + 1 : 1;
+    const stackLines = stack?.split("\n") || [];
+    const stackLinesFilter = stackLines.slice(offset);
+    stackLinesFilter.forEach((line, index) => {
       line = line.trim().replace("at ", "");
       let out = line;
 
@@ -102,7 +106,14 @@ function log(options: {
           // func = `${fgGreen}${fullFunc[fullFunc.length - 2]}.${fgYellow}${
           //   fullFunc[fullFunc.length - 1]
           // }${fgWhite}()${reset}`;
+        } else {
+          func = ColorMe.chain().content(func)
+            .color("brightYellow")
+            .content("()")
+            .color("brightWhite")
+            .end();
         }
+
         func = func.replace("async ", "");
         const file = args[1]?.replace(")", "");
         let tabs = "";
@@ -110,7 +121,7 @@ function log(options: {
           tabs += tab;
         }
         out = `${func} ${ColorMe.fromOptions(file, { color: "brightCyan" })}`;
-        if (line.startsWith("ext:deno")) {
+        if (line.includes("ext:")) {
           return;
         }
       }
@@ -127,6 +138,7 @@ function log(options: {
     });
 
     lines = lines.reverse();
+
     if (type === "error") {
       message.push(lines.join("\n"));
     } else {
