@@ -1,4 +1,4 @@
-import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
+import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 
 export const taskQueue = new EntryType("taskQueue");

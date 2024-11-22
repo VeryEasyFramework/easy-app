@@ -5,19 +5,23 @@ import type {
   FieldGroupDefinition,
   SettingsHook,
 } from "@vef/types";
-import { camelToSnakeCase, camelToTitleCase, toCamelCase, } from "@vef/string-utils";
+import {
+  camelToSnakeCase,
+  camelToTitleCase,
+  toCamelCase,
+} from "@vef/string-utils";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type {
   SettingsActionDefinition,
   SettingsHookDefinition,
-  SettingsHooks
-} from "./settings/settingsTypes.ts";
+  SettingsHooks,
+} from "#orm/entry/settings/settingsTypes.ts";
 import type {
   EntryActionDefinition,
   EntryHook,
   EntryHookDefinition,
   EntryHooks,
-} from "./entry/entryType/entry.ts";
+} from "#orm/entry/entry/entryType/entry.ts";
 
 type EasyFieldDef = Omit<EasyField, "choices"> & {
   choices?: Array<Choice<PropertyKey>> | Array<string>;

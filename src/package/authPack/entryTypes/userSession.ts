@@ -32,7 +32,7 @@ userSessionEntry.addHook("beforeInsert", {
   description: "Add sessionId to the sessionData",
   action(userSession) {
     userSession.sessionData = {
-      ...userSession.sessionData as Record<string, any>,
+      ...(userSession.sessionData as Record<string, any>),
       sessionId: userSession.id,
     };
   },

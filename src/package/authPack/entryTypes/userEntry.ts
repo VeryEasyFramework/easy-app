@@ -113,11 +113,13 @@ userEntry.addAction("setPassword", {
     user.resetPasswordToken = null;
     await user.save();
   },
-  params: [{
-    key: "password",
-    fieldType: "PasswordField",
-    required: true,
-  }],
+  params: [
+    {
+      key: "password",
+      fieldType: "PasswordField",
+      required: true,
+    },
+  ],
 });
 
 userEntry.addAction("validatePassword", {
@@ -126,17 +128,19 @@ userEntry.addAction("validatePassword", {
   private: true,
   async action(user, params) {
     const password = params?.password as string;
-    const existingPassword = user.password as string | null || "";
+    const existingPassword = (user.password as string | null) || "";
 
     const [salt, hashed] = existingPassword.split(":");
     const testHash = await hashPassword(password, salt);
     return hashed === testHash;
   },
-  params: [{
-    key: "password",
-    fieldType: "PasswordField",
-    required: true,
-  }],
+  params: [
+    {
+      key: "password",
+      fieldType: "PasswordField",
+      required: true,
+    },
+  ],
 });
 
 userEntry.addAction("generateResetToken", {
