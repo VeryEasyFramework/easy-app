@@ -1,16 +1,24 @@
 import { BaseDefinition } from "#orm/entry/baseDefinition.ts";
 import type { Choice, EasyField, EntryTypeConfig } from "@vef/types";
 import type {
-  Entry,
+  Entry as EntryInstance,
   EntryActionDefinition,
   EntryHook,
   EntryHooks,
+  TypedEntry,
 } from "#orm/entry/entry/entryType/entry.ts";
 import type { Permission } from "#orm/entry/permission/permissionTypes.ts";
-import { toCamelCase, toTitleCase } from "@vef/string-utils";
+import {
+  camelToSnakeCase,
+  toCamelCase,
+  toPascalCase,
+  toTitleCase,
+} from "@vef/string-utils";
 import { raiseEasyException } from "#/easyException.ts";
+import { fieldTypeMap } from "#orm/entry/field/fieldTypeMap.ts";
 
-export class EntryType extends BaseDefinition<EntryTypeConfig, "entry"> {
+export class EntryType<T = Record<string, any>>
+  extends BaseDefinition<EntryTypeConfig<keyof T>, "entry"> {
   readonly entryType: string;
 
   roles: Map<string, Permission> = new Map();
@@ -52,7 +60,7 @@ export class EntryType extends BaseDefinition<EntryTypeConfig, "entry"> {
     description?: string;
 
     action(
-      entry: Entry,
+      entry: TypedEntry<T>,
     ): Promise<void> | void;
   }) {
     this.hooks[hook].push(definition);
@@ -65,7 +73,7 @@ export class EntryType extends BaseDefinition<EntryTypeConfig, "entry"> {
     F extends Array<EasyField<P, K, C>>,
   >(
     actionName: string,
-    actionDefinition: EntryActionDefinition<F>,
+    actionDefinition: EntryActionDefinition<T, F>,
   ) {
     this.actions.push(
       {
@@ -86,5 +94,54 @@ export class EntryType extends BaseDefinition<EntryTypeConfig, "entry"> {
       );
     }
     this.roles.set(roleId, permission);
+  }
+
+  generateType() {
+    const fields = this.fields.map((field) => {
+      const fieldType = fieldTypeMap[field.fieldType];
+      if (!fieldType) {
+        raiseEasyException(
+          `Field type ${field.fieldType} does not exist`,
+          400,
+        );
+      }
+      const { label, description, required } = field;
+      const descriptionDoc = description
+        ? ` * @description ${description}`
+        : "";
+      const doc = [
+        `/**`,
+        ` * **${label || ""}** (${field.fieldType})`,
+      ];
+      if (description) {
+        doc.push(` * @description ${description}`);
+      }
+      doc.push(` * @type {${fieldType}}`);
+      if (required) {
+        doc.push(` * @required ${required}`);
+      }
+      doc.push(` */`);
+      const row = [
+        `${field.key}${required ? "" : "?"}: ${fieldType};`,
+      ];
+
+      return [...doc, ...row].join("\n");
+    });
+    const writeFilePath =
+      `${Deno.cwd()}/generatedTypes/${this.entryType}Interface.ts`;
+    const name = camelToSnakeCase(this.entryType);
+    const rows: string[] = [];
+    rows.push(`export interface ${toPascalCase(name)} {`);
+    rows.push(...fields);
+    rows.push("}");
+    console.log(Deno.cwd());
+    Deno.mkdirSync(`${Deno.cwd()}/generatedTypes`, {
+      recursive: true,
+    });
+    Deno.writeTextFileSync(
+      writeFilePath,
+      rows.join("\n"),
+      {},
+    );
   }
 }

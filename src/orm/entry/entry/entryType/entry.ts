@@ -1,10 +1,19 @@
-import type { Choice, EasyField, EasyFieldTypeMap, SafeReturnType, } from "@vef/types";
+import type {
+  Choice,
+  EasyField,
+  EasyFieldTypeMap,
+  SafeReturnType,
+} from "@vef/types";
 import type { EntryClass } from "../entryClass/entryClass.ts";
 
 export interface Entry extends EntryClass {
   [key: string]: any;
 }
+
+export type TypedEntry<T> = EntryClass & T;
+
 export interface EntryActionDefinition<
+  T = Entry,
   F extends Array<EasyField> = Array<EasyField>,
   D extends {
     [key in F[number]["key"]]: F[number]["choices"] extends Choice<infer T>[]
@@ -29,7 +38,7 @@ export interface EntryActionDefinition<
    */
   global?: boolean;
   action(
-    entry: Entry,
+    entry: TypedEntry<T>,
     params: D,
   ): SafeReturnType;
   params?: F;
