@@ -164,11 +164,8 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
 
     this.buildSettingsTypes();
     this.createSettingsClasses();
-    if (getEnv("VEF_ENVIRONMENT") === "development") {
-      this.generateTypes();
-    }
   }
-  private generateTypes() {
+  generateTypes() {
     for (const entryType of this.entryTypesList) {
       entryType.generateType();
     }
