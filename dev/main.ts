@@ -40,7 +40,6 @@ test.addAction("testAction", {
     entry.status;
   },
 });
-const testType = test.generateType();
-console.log(testType);
-// app.orm.addEntryType(test);
-// app.run();
+
+app.orm.addEntryType(test);
+app.run();

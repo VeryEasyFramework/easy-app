@@ -33,6 +33,7 @@ import type { SettingsType } from "#orm/entry/settings/settingsType.ts";
 import type { EasyApp } from "#/app/easyApp.ts";
 import type { Settings } from "#orm/entry/settings/settingsTypes.ts";
 import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
+import { getEnv } from "#/appConfig/configEnv.ts";
 
 type GlobalHook = (
   entryType: string,
@@ -163,12 +164,20 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
 
     this.buildSettingsTypes();
     this.createSettingsClasses();
+    if (getEnv("VEF_ENVIRONMENT") === "development") {
+      this.generateTypes();
+    }
+  }
+  private generateTypes() {
+    for (const entryType of this.entryTypesList) {
+      entryType.generateType();
+    }
   }
   stop() {
     this.database.stop();
   }
 
-  addEntryType(entryType: EntryType) {
+  addEntryType<T extends EntryType<any>>(entryType: T) {
     if (this.initialized) {
       raiseOrmException(
         "InvalidOperation",

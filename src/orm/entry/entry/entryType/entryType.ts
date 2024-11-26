@@ -8,11 +8,16 @@ import type {
   TypedEntry,
 } from "#orm/entry/entry/entryType/entry.ts";
 import type { Permission } from "#orm/entry/permission/permissionTypes.ts";
-import { toCamelCase, toPascalCase, toTitleCase } from "@vef/string-utils";
+import {
+  camelToSnakeCase,
+  toCamelCase,
+  toPascalCase,
+  toTitleCase,
+} from "@vef/string-utils";
 import { raiseEasyException } from "#/easyException.ts";
 import { fieldTypeMap } from "#orm/entry/field/fieldTypeMap.ts";
 
-export class EntryType<T extends Record<string, any>>
+export class EntryType<T = Record<string, any>>
   extends BaseDefinition<EntryTypeConfig<keyof T>, "entry"> {
   readonly entryType: string;
 
@@ -124,9 +129,9 @@ export class EntryType<T extends Record<string, any>>
     });
     const writeFilePath =
       `${Deno.cwd()}/generatedTypes/${this.entryType}Interface.ts`;
-
+    const name = camelToSnakeCase(this.entryType);
     const rows: string[] = [];
-    rows.push(`export interface ${toPascalCase(this.entryType)} {`);
+    rows.push(`export interface ${toPascalCase(name)} {`);
     rows.push(...fields);
     rows.push("}");
     console.log(Deno.cwd());
