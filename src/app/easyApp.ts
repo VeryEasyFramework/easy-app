@@ -39,6 +39,7 @@ import { emailPack } from "#/package/emailPack/emailPack.ts";
 import appRunner from "#/app/runner/mod.ts";
 import { workersPack } from "#/package/workersPack/workersPack.ts";
 import type { AppProcess } from "#/app/runner/begin.ts";
+import { reportingPack } from "#/package/reportingPack/reportingPack.ts";
 
 const config = await initAppConfig();
 /**
@@ -152,6 +153,7 @@ export class EasyApp {
       }
     };
     this.addEasyPack(basePack);
+    this.addEasyPack(reportingPack);
 
     config.easyPacks.forEach((pack) => {
       switch (pack) {
