@@ -390,7 +390,7 @@ export class EntryClass {
         `Action ${actionKey} not found in entry type ${this._entryType.entryType}`,
       );
     }
-    if (action.params) {
+    if (action.params && !action.customValidation) {
       for (const param of action.params) {
         if (param.required && !data?.[param.key]) {
           raiseOrmException(

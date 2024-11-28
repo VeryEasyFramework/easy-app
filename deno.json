@@ -1,6 +1,6 @@
 {
   "name": "@vef/easy-app",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "exports": "./mod.ts",
   "exclude": [
     "references",
@@ -31,7 +31,7 @@
     "@vef/easy-cli": "jsr:@vef/easy-cli@^0.2.8",
     "@vef/easy-ops": "jsr:@vef/easy-ops@^0.1.3",
     "@vef/string-utils": "jsr:@vef/string-utils@^0.1.5",
-    "@vef/types": "jsr:@vef/types@^0.1.23"
+    "@vef/types": "jsr:@vef/types@^0.1.24"
   },
   "tasks": {
     "dev": "cd dev && deno run -A --unstable-kv main.ts",
