@@ -19,7 +19,7 @@ export function buildEntryType(
     entryType.statusField = entryType.config.statusField;
   }
   buildConnectionFields(orm, entryType);
-  buildChildred(orm, entryType);
+  buildChildren(orm, entryType);
   const groups: FieldGroup[] = buildFieldGroups(entryType);
   const listFields = buildListFields(entryType);
 
@@ -56,7 +56,7 @@ function buildConnectionFields(orm: EasyOrm, entryType: EntryType) {
   }
 }
 
-function buildChildred(orm: EasyOrm, entryType: EntryType) {
+function buildChildren(orm: EasyOrm, entryType: EntryType) {
   for (const child of entryType.children) {
     buildChild(orm, child);
   }

@@ -1,4 +1,4 @@
-import type { EntryType as EntryTypeDef } from "@vef/types";
+import type { EasyField, EntryType as EntryTypeDef } from "@vef/types";
 import type { EasyOrm } from "#orm/orm.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 
@@ -31,6 +31,9 @@ function validateConnectionFields(orm: EasyOrm, entryType: EntryTypeDef) {
   }
 }
 
+function registerConnectionField(orm: EasyOrm, field: EasyField) {
+  orm.registry.registerConnectionField(field);
+}
 function validateFetchFields(orm: EasyOrm, entryType: EntryTypeDef) {
   const fields = entryType.fields.filter((field) => field.fetchOptions);
   for (const field of fields) {
