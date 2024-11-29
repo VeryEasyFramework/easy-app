@@ -13,6 +13,7 @@ import type {
   SettingsType as SettingsTypeDef,
   User,
 } from "@vef/types";
+import type { EntryConnection } from "@vef/types";
 
 import { OrmException, raiseOrmException } from "#orm/ormException.ts";
 import { migrateEntryType } from "#orm/database/migrate/migrateEntryType.ts";
@@ -33,7 +34,6 @@ import type { SettingsType } from "#orm/entry/settings/settingsType.ts";
 import type { EasyApp } from "#/app/easyApp.ts";
 import type { Settings } from "#orm/entry/settings/settingsTypes.ts";
 import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
-import { getEnv } from "#/appConfig/configEnv.ts";
 
 type GlobalHook = (
   entryType: string,
@@ -160,6 +160,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     this.initialized = true;
     this.buildEntryTypes();
     this.validateEntryTypes();
+    this.setupConnections();
     this.createEntryClasses();
 
     this.buildSettingsTypes();
@@ -258,6 +259,33 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   private validateEntryTypes() {
     for (const entryType of Object.values(this.entryTypes)) {
       validateEntryType(this, entryType);
+    }
+  }
+
+  private setupConnections() {
+    const connections = new Map<
+      string,
+      Array<EntryConnection>
+    >();
+    for (const entryType of Object.values(this.entryTypes)) {
+      const connectionFields = entryType.fields.filter((field) =>
+        field.fieldType === "ConnectionField"
+      );
+
+      for (const field of connectionFields) {
+        if (!connections.has(field.connectionEntryType)) {
+          connections.set(field.connectionEntryType, []);
+        }
+        connections.get(field.connectionEntryType)!.push({
+          entryType: entryType.entryType,
+          idFieldKey: field.key,
+        });
+      }
+    }
+
+    for (const [entryType, connectedFields] of connections) {
+      const entryTypeDef = this.getEntryType(entryType);
+      entryTypeDef.connections = connectedFields;
     }
   }
 
