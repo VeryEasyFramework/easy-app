@@ -387,11 +387,11 @@ export class EasyApp {
    * Get a list of all the registered entry types and their properties
    */
   get entryTypeInfo(): EntryTypeDef[] {
-    return Object.values(this.orm.entryTypes);
+    return Array.from(this.orm.entryTypes.values());
   }
 
   get settingsTypeInfo(): SettingsTypeDef[] {
-    return Object.values(this.orm.settingsTypes);
+    return Array.from(this.orm.settingsTypes.values());
   }
 
   /**

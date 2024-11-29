@@ -16,7 +16,7 @@ export function buildEntryClass(orm: EasyOrm, entryType: EntryTypeDef) {
   const entryClass = class extends EntryClass {
     override _entryType = entryType;
 
-    override actions: Record<string, EntryAction> = actions;
+    override _actions: Record<string, EntryAction> = actions;
     override _beforeInsert: EntryHookFunction[] = hooks.beforeInsert;
     override _afterInsert: EntryHookFunction[] = hooks.afterInsert;
     override _beforeSave: EntryHookFunction[] = hooks.beforeSave;

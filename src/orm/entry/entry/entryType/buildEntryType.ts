@@ -33,6 +33,7 @@ export function buildEntryType(
     config: entryType.config,
     hooks: entryType.hooks,
     actions: entryType.actions,
+    connections: [],
   };
 }
 

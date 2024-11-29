@@ -185,7 +185,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
 
   async deleteRows(
     tableName: string,
-    filters: Record<string, any>,
+    filters?: Record<string, any>,
   ): Promise<void> {
     tableName = this.toSnake(tableName);
     let query = `DELETE FROM ${this.schema}.${tableName}`;

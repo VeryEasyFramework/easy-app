@@ -4,6 +4,9 @@ import type {
   EasyField,
   EntryType as EntryTypeDef,
 } from "@vef/types";
+import { EasyOrm } from "#orm/orm.ts";
+import { fieldTypeMap } from "#orm/entry/field/fieldTypeMap.ts";
+import { generateId } from "#orm/utils/misc.ts";
 
 const idField: EasyField = {
   key: "id",
@@ -20,6 +23,44 @@ const baseFields: EasyField[] = [
     fieldType: "TimeStampField",
   },
 ];
+
+export async function syncEntryTypesToDatabase({
+  orm,
+  entryTypes,
+  onOutput,
+}: {
+  orm: EasyOrm;
+  entryTypes: EntryTypeDef[];
+  onOutput?: (message: string) => void;
+}) {
+  await orm.database.deleteRows("entryType");
+  await orm.database.deleteRows("childEntryTypeFields");
+  for (const entryType of entryTypes) {
+    const config = entryType.config as any;
+    console.log("Creating entry type", entryType.entryType);
+    const newEntry = await orm.database.insertRow("entryType", {
+      id: entryType.entryType,
+      entryType: entryType.entryType,
+      ...config,
+      idMethod: config.type,
+      // fields: entryType.fields,
+    });
+    const fields = entryType.fields.map((f) => ({
+      id: generateId(16),
+      parentId: entryType.entryType,
+      key: f.key,
+      label: f.label,
+      fieldType: f.fieldType,
+      description: f.description || "",
+      required: f.required || false,
+    }));
+    for (const field of fields) {
+      await orm.database.insertRow("childEntryTypeFields", field);
+    }
+    // console.log(entryType.fields.map((f) => f.key));
+  }
+}
+
 export async function migrateEntryType(options: {
   database: Database<keyof DatabaseConfig>;
   entryType: EntryTypeDef;

@@ -16,7 +16,10 @@ import type {
 import type { EntryConnection } from "@vef/types";
 
 import { OrmException, raiseOrmException } from "#orm/ormException.ts";
-import { migrateEntryType } from "#orm/database/migrate/migrateEntryType.ts";
+import {
+  migrateEntryType,
+  syncEntryTypesToDatabase,
+} from "#orm/database/migrate/migrateEntryType.ts";
 
 import { installDatabase } from "#orm/database/install/installDatabase.ts";
 import type { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
@@ -97,12 +100,12 @@ interface HookMap {
 }
 export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   entryTypesList: Array<EntryType> = [];
-  entryTypes: Record<string, EntryTypeDef> = {};
-  settingsTypes: Record<string, SettingsTypeDef> = {};
+  entryTypes: Map<string, EntryTypeDef> = new Map();
+  settingsTypes: Map<string, SettingsTypeDef> = new Map();
 
   settingsTypesList: Array<SettingsType> = [];
-  entryClasses: Record<string, typeof EntryClass> = {};
-  settingsClasses: Record<string, typeof SettingsClass> = {};
+  entryClasses: Map<string, typeof EntryClass> = new Map();
+  settingsClasses: Map<string, typeof SettingsClass> = new Map();
   app: EasyApp;
   private globalHooks: GlobalHooks = {
     beforeInsert: [],
@@ -243,7 +246,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   private buildEntryTypes() {
     for (const entryType of this.entryTypesList) {
       const entryTypeDef = buildEntryType(this, entryType);
-      this.entryTypes[entryTypeDef.entryType] = entryTypeDef;
+      this.entryTypes.set(entryTypeDef.entryType, entryTypeDef);
     }
   }
 
@@ -253,11 +256,11 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         this,
         settingsType,
       );
-      this.settingsTypes[settingsTypeDef.settingsType] = settingsTypeDef;
+      this.settingsTypes.set(settingsTypeDef.settingsType, settingsTypeDef);
     }
   }
   private validateEntryTypes() {
-    for (const entryType of Object.values(this.entryTypes)) {
+    for (const entryType of this.entryTypes.values()) {
       validateEntryType(this, entryType);
     }
   }
@@ -267,17 +270,18 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       string,
       Array<EntryConnection>
     >();
-    for (const entryType of Object.values(this.entryTypes)) {
+    for (const entryType of this.entryTypes.values()) {
       const connectionFields = entryType.fields.filter((field) =>
         field.fieldType === "ConnectionField"
       );
 
       for (const field of connectionFields) {
-        if (!connections.has(field.connectionEntryType)) {
-          connections.set(field.connectionEntryType, []);
+        if (!connections.has(field.connectionEntryType!)) {
+          connections.set(field.connectionEntryType!, []);
         }
-        connections.get(field.connectionEntryType)!.push({
+        connections.get(field.connectionEntryType!)!.push({
           entryType: entryType.entryType,
+          label: entryType.config.label,
           idFieldKey: field.key,
         });
       }
@@ -290,23 +294,21 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   }
 
   private createEntryClasses() {
-    for (const entryType of Object.values(this.entryTypes)) {
+    for (const entryType of this.entryTypes.values()) {
       const entryClass = buildEntryClass(this, entryType);
-      this.entryClasses[entryType.entryType] = entryClass;
+      this.entryClasses.set(entryType.entryType, entryClass);
     }
   }
 
   private createSettingsClasses() {
     for (
-      const settingsType of Object.values(
-        this.settingsTypes,
-      )
+      const settingsType of this.settingsTypes.values()
     ) {
       const settingsClass = buildSettingsClass(
         this,
         settingsType,
       );
-      this.settingsClasses[settingsType.settingsType] = settingsClass;
+      this.settingsClasses.set(settingsType.settingsType, settingsClass);
     }
   }
   async install() {
@@ -321,7 +323,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       return ColorMe.fromOptions(message, { color });
     };
 
-    const entryTypes = Object.values(this.entryTypes);
+    const entryTypes = Array.from(this.entryTypes.values());
     const results: string[] = [];
     const total = entryTypes.length;
     const progress = options?.onProgress || (() => {});
@@ -359,6 +361,11 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         },
       });
     }
+
+    await syncEntryTypesToDatabase({
+      orm: this,
+      entryTypes,
+    });
     return results;
   }
 
@@ -390,6 +397,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
 
     const entry = new entryClass();
     entry._user = user;
+    console.log("Creating entry", entryType, data);
     entry.update(data);
     await entry.save();
     return entry;
@@ -477,6 +485,24 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return await this.getEntry(entryType, id);
   }
 
+  async getConnectionsCount(entryType: string, id: string, user?: User) {
+    const entryTypeDef = this.getEntryType(entryType);
+    const connections = entryTypeDef.connections;
+    const results = [];
+    for (const connection of connections) {
+      const count = await this.count(connection.entryType, {
+        filter: {
+          [connection.idFieldKey]: id,
+        },
+      });
+      results.push({
+        entryType: connection.entryType,
+        label: connection.label,
+        count,
+      });
+    }
+    return results;
+  }
   async count(
     entryType: string,
     options?: CountOptions,
@@ -567,7 +593,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return entryTypeDef;
   }
   getEntryType(entryType: string): EntryTypeDef {
-    const entryTypeDef = this.entryTypes[entryType];
+    const entryTypeDef = this.entryTypes.get(entryType);
     if (!entryTypeDef) {
       raiseOrmException(
         "EntryTypeNotFound",
@@ -582,7 +608,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   >(
     entryType: string,
   ): E {
-    const entryClass = this.entryClasses[entryType];
+    const entryClass = this.entryClasses.get(entryType);
     if (!entryClass) {
       raiseOrmException(
         "EntryTypeNotFound",
@@ -597,14 +623,14 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
    */
 
   hasEntryType(entryType: string): boolean {
-    if (entryType in this.entryTypes) {
+    if (this.entryTypes.has(entryType)) {
       return true;
     }
     return false;
   }
 
   hasSettingsType(settingsType: string): boolean {
-    if (settingsType in this.settingsTypes) {
+    if (this.settingsTypes.has(settingsType)) {
       return true;
     }
     return false;
@@ -656,7 +682,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return settingsRecord;
   }
   private getSettingsClass(settingsType: string): typeof SettingsClass {
-    const settingsClass = this.settingsClasses[settingsType];
+    const settingsClass = this.settingsClasses.get(settingsType);
     if (!settingsClass) {
       raiseOrmException(
         "EntryTypeNotFound",
@@ -667,7 +693,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   }
 
   getSettingsType(settingsType: string): SettingsTypeDef {
-    const settingsTypeDef = this.settingsTypes[settingsType];
+    const settingsTypeDef = this.settingsTypes.get(settingsType);
     if (!settingsTypeDef) {
       raiseOrmException(
         "EntryTypeNotFound",

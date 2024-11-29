@@ -98,7 +98,7 @@ export class Database<
 
   async deleteRows(
     tableName: string,
-    filters: Record<string, any>,
+    filters?: Record<string, any>,
   ): Promise<void> {
     await this.adapter.deleteRows(tableName, filters);
   }

@@ -9,6 +9,7 @@ import { buildCli } from "#/package/basePack/init/cli/cli.ts";
 import { editLogEntry } from "#/package/basePack/entryTypes/editLogEntry.ts";
 import { ormGlobalHooks } from "#/package/basePack/boot/ormGlobalHooks.ts";
 import { settingsActions } from "#/package/basePack/actions/settingsActions/index.ts";
+import { entryTypeEntry } from "#/package/basePack/entryTypes/entryTypeEntry.ts";
 
 const basePack = new EasyPack("base", {
   description:
@@ -26,6 +27,7 @@ basePack.addRealtimeRoom({
 basePack.addMiddleware(requestOptionsMiddleware);
 
 basePack.addEntryType(editLogEntry);
+basePack.addEntryType(entryTypeEntry);
 
 basePack.setVersion(0, 1, 0);
 basePack.addBootAction(bootEntryRooms);
