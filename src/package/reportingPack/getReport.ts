@@ -18,8 +18,11 @@ export async function getReport(
   const entryTypeDef = orm.getEntryType(entryType);
   const columns = new Set(
     options.columns ??
-      entryTypeDef.listFields,
+      ["id"],
   );
+  if (entryTypeDef.config.titleField) {
+    columns.add(entryTypeDef.config.titleField);
+  }
   let subGroupLabel = options.subGroup;
   if (options.subGroup) {
     const subGroupField = entryTypeDef.fields.find(

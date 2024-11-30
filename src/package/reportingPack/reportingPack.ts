@@ -12,11 +12,13 @@ reportingPack.addAction(
       const { user } = request;
       const { orm } = app;
       let join: ReportOptions["join"] = undefined;
-      join = {
-        type: params.joinType as "left" | "right" | "inner" || "left",
-        columns: params.joinColumns,
-        entryType: params.joinEntryType,
-      };
+      if (params.joinType && params.joinColumns && params.joinEntryType) {
+        join = {
+          type: params.joinType as "left" | "right" | "inner" || "left",
+          columns: params.joinColumns,
+          entryType: params.joinEntryType,
+        };
+      }
       const order = ["asc", "desc"].includes(params.order)
         ? params.order as "asc" | "desc"
         : undefined;
@@ -40,7 +42,7 @@ reportingPack.addAction(
       },
       columns: {
         type: "ListField",
-        required: true,
+        required: false,
       },
       subGroup: {
         type: "DataField",
