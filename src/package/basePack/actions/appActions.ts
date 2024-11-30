@@ -2,7 +2,7 @@ import { createAction } from "#/actions/createAction.ts";
 import type { EasyPackInfo } from "#/package/easyPack.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import type { DocsActionGroup } from "#/actions/actionTypes.ts";
-import type { EntityDefinition } from "@vef/easy-orm";
+import type { EntryType as EntryTypeDef } from "@vef/types";
 
 export const appActions = [
   createAction("apiDocs", {
@@ -39,13 +39,28 @@ export const appActions = [
     },
     response: "string",
   }),
-  createAction("entities", {
-    description: "Get the entities for the app",
-    action: (app): EntityDefinition[] => {
-      return app.entityInfo;
+  createAction("getCache", {
+    description: "Get the cache",
+    action: (app) => {
+      return app.cache.getAll();
     },
-    response: "EntityDefinition[]",
   }),
+  createAction("entryTypes", {
+    description: "Get the entryTypes for the app",
+    action: (app): EntryTypeDef[] => {
+      return app.entryTypeInfo;
+    },
+    response: "EntryTypeDef[]",
+  }),
+
+  createAction("settingsTypes", {
+    description: "Get the settings types for the app",
+    action(app) {
+      return app.settingsTypeInfo;
+    },
+    response: "SettingsType[]",
+  }),
+
   createAction("notify", {
     description: "Send a realtime notification",
     action: (app, { room, event, data }) => {

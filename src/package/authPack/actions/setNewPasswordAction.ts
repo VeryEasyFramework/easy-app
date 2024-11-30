@@ -5,7 +5,7 @@ export const setNewPasswordAction = createAction("setNewPassword", {
   description: "Reset user password",
   public: true,
   async action(app, { token, password }, request, response) {
-    const user = await app.orm.findEntity("user", {
+    const user = await app.orm.findEntry("user", {
       resetPasswordToken: token,
     });
     if (!user) {

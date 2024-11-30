@@ -1,11 +1,11 @@
 import { easyLog } from "#/log/logging.ts";
-import type { DBType } from "@vef/easy-orm";
 import type { EasyAppConfig } from "#/appConfig/appConfigTypes.ts";
 import { setConfigEnv } from "#/appConfig/configEnv.ts";
+import type { DBType } from "#orm/database/database.ts";
 
 const configDefault: EasyAppConfig<"postgres"> = {
   appName: "Easy App",
-  singlePageApp: false,
+  singlePageApp: true,
   staticFilesOptions: {
     staticFilesRoot: "./public",
     cache: true,
@@ -15,6 +15,22 @@ const configDefault: EasyAppConfig<"postgres"> = {
     enable: true,
     port: 11254,
   },
+  multiProcessing: {
+    enable: false,
+    processCount: "auto",
+  },
+  workers: {
+    short: {
+      port: 12700,
+    },
+    medium: {
+      port: 12701,
+    },
+    long: {
+      port: 12702,
+    },
+  },
+  easyPacks: ["authPack", "emailPack", "workersPack"],
   serverOptions: {
     hostname: "127.0.0.1",
     port: 8000,
@@ -36,7 +52,6 @@ const configDefault: EasyAppConfig<"postgres"> = {
 
 const optionalDefault: Partial<EasyAppConfig<"postgres">> = {
   appRootPath: ".",
-  mainModule: "main.ts",
   pathPrefix: "",
 };
 
@@ -68,9 +83,13 @@ export async function initAppConfig(): Promise<
         hideTrace: true,
       },
     );
+    const configJson = {
+      $schema: "https://veryeasyframework.com/easyAppConfigSchema.json",
+      ...configDefault,
+    };
     await Deno.writeTextFile(
       "./appConfig.json",
-      JSON.stringify(configDefault, null, 2),
+      JSON.stringify(configJson, null, 2),
     );
 
     prompt("Press Enter to continue...");

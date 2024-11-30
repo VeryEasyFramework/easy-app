@@ -1,4 +1,4 @@
-import { EasyRequest } from "#/easyRequest.ts";
+import type { EasyRequest } from "#/app/easyRequest.ts";
 
 export async function fetchProxy(
   easyRequest: EasyRequest,

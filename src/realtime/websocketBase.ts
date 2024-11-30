@@ -1,19 +1,20 @@
-import type {
-  RealtimeClient,
-  RealtimeMessage,
-} from "#/realtime/realtimeTypes.ts";
-import type { EasyRequest } from "#/easyRequest.ts";
+import type { RealtimeClient } from "#/realtime/realtimeTypes.ts";
+import type { EasyRequest } from "#/app/easyRequest.ts";
+import type { User } from "@vef/types";
 
 export abstract class WebsocketBase {
-  clients: RealtimeClient[];
+  clients: Map<string, RealtimeClient>;
+
   constructor() {
-    this.clients = [];
+    this.clients = new Map();
   }
 
   handleUpgrade(easyRequest: EasyRequest): Response {
     if (easyRequest.upgradeSocket) {
-      const { socket, response } = Deno.upgradeWebSocket(easyRequest.request);
-      this.addClient(socket);
+      const { socket, response } = Deno.upgradeWebSocket(
+        easyRequest.request,
+      );
+      this.addClient(socket, easyRequest.user);
       return response;
     }
 
@@ -29,10 +30,11 @@ export abstract class WebsocketBase {
       client.socket.send(JSON.stringify({ message }));
     });
   }
-  private addClient(socket: WebSocket) {
+  private addClient(socket: WebSocket, user?: User) {
     const client: RealtimeClient = {
       id: Math.random().toString(36).substring(7),
       socket,
+      user,
       rooms: [],
     };
     this.addListeners(client);
@@ -40,7 +42,7 @@ export abstract class WebsocketBase {
   }
   private addListeners(client: RealtimeClient) {
     client.socket.onopen = () => {
-      this.clients.push(client);
+      this.clients.set(client.id, client);
       this.handleConnection(client);
     };
     client.socket.onmessage = (event) => {
@@ -55,7 +57,7 @@ export abstract class WebsocketBase {
     client.socket.onclose = () => {
       this.handleClose(client);
 
-      this.clients = this.clients.filter((c) => c.id !== client.id);
+      this.clients.delete(client.id);
     };
   }
   abstract handleConnection(client: RealtimeClient): void;

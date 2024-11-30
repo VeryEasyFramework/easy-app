@@ -1,6 +1,7 @@
-import type { DatabaseConfig, DBType, EasyFieldType } from "@vef/easy-orm";
+import type { DatabaseConfig, DBType } from "#orm/database/database.ts";
 import type { StaticFilesOptions } from "#/staticFiles/staticFileHandler.ts";
-import { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
+import type { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
+import type { EasyFieldType } from "@vef/types";
 
 export interface EasyAppConfig<D extends DBType> {
   /**
@@ -22,12 +23,71 @@ export interface EasyAppConfig<D extends DBType> {
   environment?: "development" | "production";
   appRootPath?: string;
 
+  easyPacks?: Array<string>;
+
   /**
-   * The file name of the main module for the app.
+   * Options for running multiple instances of the app on separate threads. This controls the number of instances of the app
+   * that will run in parallel to handle requests on the web server.
    *
-   * For example `main.ts` or `app.ts`
+   * *NOTE:* Only supported on Linux. It makes use of the `reusePort` functionality of the OS. This is not supported on Windows. It handles requests in a round-robin fashion.
+   *
+   * **`enable`** - Whether to enable multi-threading or not. Default: `false`
+   * **`processCount`** - The number of instances of the app to run in parallel. `auto` will use the number of CPU cores available. Default: `auto`
+   * **`max`** - The maximum number of workers to run. This is useful when you want to limit the number of workers that can run when using `auto` mode.
+   * Note: This is separate from the workers that are used for background tasks, which are
+   * each in their own process.
    */
-  mainModule?: string;
+  multiProcessing: {
+    /**
+     * Whether to enable multiprocessing or not.
+     * @default false
+     */
+    enable: boolean;
+    /**
+     * The number of instances of the app to run in parallel.
+     * `auto` will use the number of CPU cores available.
+     * @default "auto"
+     */
+    processCount: "auto" | number;
+    /**
+     * The maximum number of instances of the app to run in parallel.
+     */
+    max?: number;
+  };
+  workers: {
+    /**
+     * Short workers are used for quick tasks that take less than 1 minute.
+     */
+    short: {
+      /**
+       * The port to run the short worker on.
+       * @default 12700
+       */
+      port: number;
+    };
+    /**
+     * Medium workers are used for tasks that take up to 5 minutes.
+     */
+    medium: {
+      /**
+       * The port to run the medium worker on.
+       * @default 12701
+       */
+      port: number;
+    };
+    /**
+     * Long workers are used for tasks that take up to 30 minutes.
+     * This is the maximum time a worker should run.
+     */
+    long: {
+      /**
+       * The port to run the long worker on.
+       * @default 12702
+       */
+      port: number;
+    };
+  };
+
   /**
    * The name of the app. This is used in the logs and other places where the app name is needed.
    */
@@ -35,13 +95,6 @@ export interface EasyAppConfig<D extends DBType> {
   appName?: string;
   /**
    * The path prefix for the app. This is useful when the app is running behind a reverse proxy.
-   *
-   * **Example:**
-   * ```ts
-   * const app = new EasyApp({
-   * pathPrefix: "/myapp",
-   * });
-   * ```
    */
   pathPrefix?: string;
 
@@ -92,6 +145,4 @@ export interface EasyAppConfig<D extends DBType> {
     enable: boolean;
     port: number;
   };
-
-  emailOptions?: SMTPOptions;
 }

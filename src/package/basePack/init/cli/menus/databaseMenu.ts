@@ -1,5 +1,5 @@
 import { MenuView } from "@vef/easy-cli";
-import type { EasyApp } from "#/easyApp.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
 
 export function setupDbMenu(app: EasyApp): void {
   const dbMenu = new MenuView({
@@ -21,6 +21,14 @@ export function setupDbMenu(app: EasyApp): void {
     description: "Migrate the database",
     action: () => {
       app.cli.changeView("migrateDb");
+    },
+  });
+
+  dbMenu.addAction({
+    name: "Generate Types",
+    description: "Generate entry type typescript interfaces",
+    action: () => {
+      app.cli.changeView("generateTypes");
     },
   });
   app.cli.addView(dbMenu, "database");

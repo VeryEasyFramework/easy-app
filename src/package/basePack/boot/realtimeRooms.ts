@@ -1,16 +1,17 @@
 import type { BootAction } from "#/types.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
-export const bootEntityRooms: BootAction = {
-  actionName: "bootEntityRooms",
-  description: "Create realtime rooms for each entity",
+
+export const bootEntryRooms: BootAction = {
+  actionName: "bootEntryRooms",
+  description: "Create realtime rooms for each entry type",
   action(app) {
-    const entities = app.orm.entities;
+    const entryTypes = app.orm.entryTypes;
     const rooms: RealtimeRoomDef[] = [];
-    for (const entity of Object.values(entities)) {
+    for (const entryType of Object.values(entryTypes)) {
       rooms.push({
-        roomName: `entity:${entity.entityId}`,
-        description: `Realtime room for the ${entity.config.label} entity`,
-        events: ["create", "update", "delete", "list"],
+        roomName: `entryType:${entryType.entryType}`,
+        description:
+          `Realtime room for the ${entryType.config.label} entry type`,
       });
     }
     app.addRealtimeRooms(rooms);

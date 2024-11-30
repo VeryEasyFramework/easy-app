@@ -1,5 +1,5 @@
 import { MenuView } from "@vef/easy-cli";
-import type { EasyApp } from "#/easyApp.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
 import { checkForFile } from "#/utils.ts";
 
 export function setupMainMenu(app: EasyApp): void {

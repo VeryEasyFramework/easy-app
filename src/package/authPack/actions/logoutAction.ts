@@ -4,7 +4,7 @@ export const logoutAction = createAction("logout", {
   description: "Logout user",
   async action(app, data, request, response) {
     if (request.sessionData) {
-      const userSessions = await app.orm.getEntityList("userSession", {
+      const userSessions = await app.orm.getEntryList("userSession", {
         filter: {
           user: request.sessionData.userId,
         },
@@ -12,7 +12,7 @@ export const logoutAction = createAction("logout", {
       });
 
       for (const session of userSessions.data) {
-        await app.orm.deleteEntity("userSession", session.id as string);
+        await app.orm.deleteEntry("userSession", session.id as string);
         app.cacheDelete("userSession", session.id as string);
       }
       response.clearCookie("sessionId");

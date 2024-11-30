@@ -1,9 +1,10 @@
 {
   "name": "@vef/easy-app",
-  "version": "0.3.29",
+  "version": "0.5.7",
   "exports": "./mod.ts",
   "exclude": [
-    "references"
+    "references",
+    "dev/public"
   ],
   "publish": {
     "exclude": [
@@ -16,16 +17,26 @@
       "src/client/**/*"
     ]
   },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-unused-vars",
+        "no-explicit-any"
+      ]
+    }
+  },
   "imports": {
     "#/": "./src/",
-    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.2.6",
+    "#orm/": "./src/orm/",
+    "@vef/easy-cli": "jsr:@vef/easy-cli@^0.2.8",
     "@vef/easy-ops": "jsr:@vef/easy-ops@^0.1.3",
-    "@vef/easy-orm": "jsr:@vef/easy-orm@^0.3.18",
-    "@vef/string-utils": "jsr:@vef/string-utils@^0.1.5"
+    "@vef/string-utils": "jsr:@vef/string-utils@^0.1.5",
+    "@vef/types": "jsr:@vef/types@^0.1.25"
   },
   "tasks": {
     "dev": "cd dev && deno run -A --unstable-kv main.ts",
     "check": "deno publish --dry-run",
-    "update": "deno add jsr:@vef/easy-orm jsr:@vef/easy-cli jsr:@vef/string-utils jsr:@vef/easy-ops"
+    "lint": "deno lint mod.ts src/**/*.ts",
+    "update": "deno add jsr:@vef/easy-cli jsr:@vef/string-utils jsr:@vef/easy-ops jsr:@vef/types"
   }
 }

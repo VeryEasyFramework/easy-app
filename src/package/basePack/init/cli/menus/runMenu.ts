@@ -1,6 +1,9 @@
 import { InputListener, MenuView } from "@vef/easy-cli";
-import type { EasyApp } from "#/easyApp.ts";
-import { asyncPause, checkForFile } from "#/utils.ts";
+
+import type { EasyApp } from "#/app/easyApp.ts";
+import { checkForFile } from "#/utils.ts";
+import begin from "#/app/runner/begin.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export function setupRunMenu(app: EasyApp): void {
   const runMenu = new MenuView({
@@ -25,22 +28,32 @@ export function setupRunMenu(app: EasyApp): void {
     abortController,
     hideCursor: true,
   });
+  const run = (watch: boolean, prod?: boolean) => {
+    app.cli.onStop = async () => {
+      listener.listen();
+
+      const procs = await begin({
+        multiProcess: app.config.multiProcessing,
+        flags: watch ? ["--watch"] : [],
+        app,
+      });
+      app.processes.push(...procs);
+    };
+    app.cli.stop();
+  };
+  signal.addEventListener("abort", (event) => {
+    listener.stop();
+    easyLog.warning("Shutting down...", "Lifecycle", {
+      hideTrace: true,
+    });
+    app.exit(0);
+  });
   if (dev) {
     runMenu.addAction({
       name: "Development",
       description: "Run the app in development mode",
       action: () => {
-        app.cli.stop();
-
-        app.begin({
-          args: [],
-          signal,
-        });
-        listener.listen();
-        signal.addEventListener("abort", async (event) => {
-          await asyncPause(1000);
-          Deno.exit();
-        });
+        run(false);
       },
     });
 
@@ -48,18 +61,7 @@ export function setupRunMenu(app: EasyApp): void {
       name: "Development Watch",
       description: "Run the app in development mode with a file watcher",
       action: () => {
-        app.cli.stop();
-
-        app.begin({
-          args: [],
-          flags: ["--watch"],
-          signal,
-        });
-        listener.listen();
-        signal.addEventListener("abort", async (event) => {
-          await asyncPause(1000);
-          Deno.exit();
-        });
+        run(true);
       },
     });
     return;
@@ -72,6 +74,7 @@ export function setupRunMenu(app: EasyApp): void {
       break;
     case "darwin":
       prodBinary = "appOsx";
+
       break;
     default:
       prodBinary = "app";
@@ -83,17 +86,7 @@ export function setupRunMenu(app: EasyApp): void {
       name: "Production",
       description: "Run the app in production mode",
       action: () => {
-        app.cli.stop();
-
-        app.begin({
-          args: ["--prod"],
-          signal,
-        });
-        listener.listen();
-        signal.addEventListener("abort", async (event) => {
-          await asyncPause(1000);
-          Deno.exit();
-        });
+        run(false, true);
       },
     });
   }

@@ -1,6 +1,5 @@
 import type { MiddleWare } from "#/middleware/middleware.ts";
 import { createAction } from "#/actions/createAction.ts";
-import type { EasyEntity, SettingsEntity } from "@vef/easy-orm";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
 import type {
@@ -10,13 +9,15 @@ import type {
   EasyAction,
 } from "#/actions/actionTypes.ts";
 import type { BootAction, InitAction } from "#/types.ts";
+import type { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
+import type { SettingsType } from "#orm/entry/settings/settingsType.ts";
 
 export interface EasyPackInfo {
   EasyPackName: string;
   description: string;
   version: string;
-  entities: Array<string>;
-  settingsEntities: Array<string>;
+  entryTypes: Array<string>;
+  settingsTypes: Array<string>;
   actions: Array<Record<string, string[]>>;
   middleware: Array<string>;
   bootActions: Array<{ actionName: string; description: string }>;
@@ -40,7 +41,7 @@ function validateSemverString(version: string): boolean {
  *
  * - **Actions** - Actions are the main way to interact with your app,
  * - **Middleware** - Middleware is used to perform tasks such as authentication, logging, or modifying the request or response,
- * - **Entities** - Entities are used to define the structure of the data that is stored in the database,
+ * - **EntryTypes** - Entry Types are used to define the structure of the data that is stored in the database,
  * - **Realtime Rooms** - Realtime rooms are used to group together clients that are connected to the realtime server.
  * - **Version** - The version of the EasyPack
  * - **Description** - A description of the EasyPack
@@ -63,7 +64,7 @@ function validateSemverString(version: string): boolean {
  * - ***`addAction`*** - Add an action to the EasyPack
  * - ***`addActionGroup`*** - Add multiple actions to a group
  * - ***`addActionToGroup`*** - Add an action to a group
- * - ***`addEntity`*** - Add an entity to the EasyPack
+ * - ***`addEntryType`*** - Add an entry type to the EasyPack
  * - ***`addMiddleware`*** - Add middleware to the EasyPack
  * - ***`addRealtimeRoom`*** - Add a realtime room to the EasyPack
  * - ***`setVersion`*** - Set the version of the EasyPack
@@ -72,9 +73,9 @@ function validateSemverString(version: string): boolean {
 export class EasyPack {
   middleware: Array<MiddleWare> = [];
   actionGroups: Record<string, Array<EasyAction>> = {};
-  entities: Array<EasyEntity> = [];
+  entryTypes: Array<EntryType> = [];
 
-  settingsEntities: Array<SettingsEntity> = [];
+  settingsTypes: Array<SettingsType> = [];
   bootActions: Array<BootAction> = [];
   initActions: Array<InitAction> = [];
   description: string;
@@ -110,11 +111,9 @@ export class EasyPack {
       EasyPackName: this.easyPackName,
       description: this.description,
       version: this.version,
-      entities: this.entities.map((entity) => entity.entityId),
+      entryTypes: this.entryTypes.map((entry) => entry.entryType),
 
-      settingsEntities: this.settingsEntities.map((settingsEntity) =>
-        settingsEntity.key
-      ),
+      settingsTypes: this.settingsTypes.map((settingsType) => settingsType.key),
       actions: Object.entries(this.actionGroups).map((
         [groupName, actions],
       ) => ({
@@ -369,32 +368,14 @@ export class EasyPack {
   }
 
   /**
-   * Add an entity to the EasyPack. This is an alternative to `defineEntity` that allows you to add an entity that you may have created elsewhere.
-   * Typically this would be the case if you have many entities and want to organize their declarations in other files and import them here.
-   *
-   * **Example**
-   * ```ts
-   * // Create an entity
-   * const userEntity = defineEntity("user", {
-   *      label: "User",
-   *      fields: [
-   *        {
-   *          key: "username",
-   *          fieldType: "DataField",
-   *          label: "Username",
-   *        },
-   *      ],
-   *    });
-   *
-   * // Add the entity to the EasyPack
-   * easyPack.addEntity(userEntity);
+   * Add an Entry Type to the EasyPack.;
    */
 
-  addEntity(entity: EasyEntity) {
-    this.entities.push(entity);
+  addEntryType(entryType: EntryType) {
+    this.entryTypes.push(entryType);
   }
 
-  addSettingsEntity(settingsEntity: SettingsEntity) {
-    this.settingsEntities.push(settingsEntity);
+  addSettingsType(settingsType: SettingsType) {
+    this.settingsTypes.push(settingsType);
   }
 }

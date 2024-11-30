@@ -1,5 +1,5 @@
 import { TaskView } from "@vef/easy-cli";
-import { EasyApp } from "#/easyApp.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
 
 export function setupGetDevUi(app: EasyApp): void {
   const getDevUiView = new TaskView({

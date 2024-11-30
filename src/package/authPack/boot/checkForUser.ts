@@ -6,9 +6,9 @@ export const checkForNoUsers: BootAction = {
   description: "Add an admin user if no users exist",
   async action(app) {
     try {
-      const userCount = await app.orm.countEntities("user");
+      const userCount = await app.orm.count("user");
       if (userCount === 0) {
-        const user = await app.orm.createEntity("user", {
+        const user = await app.orm.createEntry("user", {
           firstName: "Admin",
           lastName: "User",
           email: "admin@user.email",

@@ -1,14 +1,15 @@
 import { createAction } from "#/actions/createAction.ts";
 import { raiseEasyException } from "#/easyException.ts";
-import type { EntityRecord } from "@vef/easy-orm";
-import type { EasyApp } from "#/easyApp.ts";
-import type { EasyResponse } from "#/easyResponse.ts";
+
+import type { EasyApp } from "#/app/easyApp.ts";
+import type { EasyResponse } from "#/app/easyResponse.ts";
+import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
 
 export const loginAction = createAction("login", {
   description: "Login user",
   public: true,
   async action(app, { email, password }, request, response) {
-    const user = await app.orm.findEntity("user", {
+    const user = await app.orm.findEntry("user", {
       email: email,
     });
     if (!user) {
@@ -37,7 +38,7 @@ export const loginAction = createAction("login", {
 
 async function createUserSession(
   app: EasyApp,
-  user: EntityRecord,
+  user: Entry,
   response: EasyResponse,
 ) {
   const sessionData = {
@@ -46,7 +47,7 @@ async function createUserSession(
     firstName: user.firstName,
     lastName: user.lastName,
   };
-  const session = await app.orm.createEntity("userSession", {
+  const session = await app.orm.createEntry("userSession", {
     user: user.id,
     sessionData,
   });

@@ -1,7 +1,7 @@
-import type { EasyApp } from "#/easyApp.ts";
-import type { EasyRequest } from "#/easyRequest.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
+import type { EasyRequest } from "#/app/easyRequest.ts";
 import { raiseEasyException } from "#/easyException.ts";
-import type { EasyResponse } from "#/easyResponse.ts";
+import type { EasyResponse } from "#/app/easyResponse.ts";
 
 export async function handleApi(
   app: EasyApp,

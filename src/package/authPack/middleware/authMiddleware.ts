@@ -1,19 +1,21 @@
 import { raiseEasyException } from "#/easyException.ts";
 import { createMiddleware } from "#/middleware/middleware.ts";
-import type { EasyRequest } from "#/easyRequest.ts";
-import type { EasyApp } from "#/easyApp.ts";
-import { OrmException, SafeType } from "@vef/easy-orm";
-import { SessionData } from "#/package/authPack/entities/userSession.ts";
+import type { EasyRequest } from "#/app/easyRequest.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
+
+import type { SessionData } from "#/package/authPack/entryTypes/userSession.ts";
+import type { User } from "@vef/types";
+import { OrmException } from "#orm/ormException.ts";
 
 export const authMiddleware = createMiddleware(async (
   app,
   request,
   response,
 ) => {
+  const isAuthenticatedWithToken = await processAuthToken(app, request);
   if (isAllowed(app, request)) {
     return;
   }
-  const isAuthenticatedWithToken = await processAuthToken(app, request);
   if (isAuthenticatedWithToken) {
     return;
   }
@@ -43,26 +45,39 @@ async function processAuthToken(
     return false;
   }
   const token = request.authToken;
-  let userRecord = app.cacheGet("userToken", request.authToken) as Record<
-    string,
-    SafeType
-  >;
-  if (!userRecord) {
-    const user = await app.orm.findEntity("user", {
-      apiToken: token,
-    });
-
-    if (!user) {
-      return false;
-    }
-    userRecord = user.data;
-    app.cacheSet("userToken", token, userRecord);
+  const userRecord = app.cacheGet("userToken", request.authToken) as User;
+  if (userRecord) {
+    request.user = userRecord;
+    return true;
   }
+
+  const user = await app.orm.findEntry("user", {
+    apiToken: token,
+  });
+  if (user) {
+    request.user = {
+      id: user.id as string,
+      firstName: user.firstName as string,
+      lastName: user.lastName as string,
+    };
+    app.cacheSet("userToken", token, request.user);
+    return true;
+  }
+
+  const sessionData = await loadSessionData(app, token);
+
+  if (!sessionData) {
+    return false;
+  }
+
   request.user = {
-    id: userRecord.id as string,
-    firstName: userRecord.firstName as string,
-    lastName: userRecord.lastName as string,
+    id: sessionData.userId,
+    firstName: sessionData.firstName,
+    lastName: sessionData.lastName,
   };
+
+  app.cacheSet("userToken", token, userRecord);
+
   return true;
 }
 
@@ -89,11 +104,11 @@ async function loadSessionData(
   let sessionData = app.cacheGet("userSession", sessionId) as SessionData;
   if (!sessionData) {
     try {
-      const entity = await app.orm.getEntity("userSession", sessionId);
-      sessionData = entity.sessionData as SessionData;
+      const entry = await app.orm.getEntry("userSession", sessionId);
+      sessionData = entry.sessionData as SessionData;
       app.cacheSet("userSession", sessionId, sessionData);
     } catch (e) {
-      if (e instanceof OrmException && e.type === "EntityNotFound") {
+      if (e instanceof OrmException && e.type === "EntryTypeNotFound") {
         return null;
       }
       throw e;

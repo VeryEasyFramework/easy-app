@@ -11,6 +11,7 @@ import {
   setupMigrateDbView,
 } from "#/package/basePack/init/cli/views/migrateDbView.ts";
 import { setupGetDevUi } from "#/package/basePack/init/cli/views/getDevUiView.ts";
+import { setupGenerateTypesView } from "#/package/basePack/init/cli/views/generateTypesView.ts";
 
 export const buildCli: InitAction = {
   actionName: "buildCli",
@@ -27,6 +28,7 @@ export const buildCli: InitAction = {
     setupReleaseView(app);
     setupGetDevUi(app);
     setupMigrateDbView(app);
+    setupGenerateTypesView(app);
     setupRunMenu(app);
     setupMainMenu(app);
     setupGroupsMenu(app);

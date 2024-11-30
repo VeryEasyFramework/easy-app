@@ -4,7 +4,7 @@ export const registerUserAction = createAction("registerUser", {
   description: "Register a new user",
   system: true,
   async action(app, { firstName, lastName, email, password }) {
-    const user = await app.orm.createEntity("user", {
+    const user = await app.orm.createEntry("user", {
       firstName,
       lastName,
       email,

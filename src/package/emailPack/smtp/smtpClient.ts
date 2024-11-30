@@ -5,6 +5,7 @@ import type {
   State,
 } from "#/package/emailPack/smtp/smtpTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
+
 // https://mailtrap.io/blog/smtp-commands-and-responses/#SMTP-response-codes
 
 export class SMTPClient {
@@ -250,8 +251,6 @@ export class SMTPClient {
     const reader = this.connection.readable.getReader();
     reader.read().then((result) => {
       result.value && write(result.value);
-      if (result.done) {
-      }
     });
 
     const connected = await this.waitForState("connected");

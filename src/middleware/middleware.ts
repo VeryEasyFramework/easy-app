@@ -1,6 +1,6 @@
-import type { EasyRequest } from "#/easyRequest.ts";
-import type { EasyResponse } from "#/easyResponse.ts";
-import type { EasyApp } from "#/easyApp.ts";
+import type { EasyRequest } from "#/app/easyRequest.ts";
+import type { EasyResponse } from "#/app/easyResponse.ts";
+import type { EasyApp } from "#/app/easyApp.ts";
 
 /**
  * Middleware function type

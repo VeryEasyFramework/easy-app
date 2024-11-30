@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EasyAppConfig",
+  "type": "object",
+  "properties": {
+    "environment": {
+      "type": "string",
+      "enum": ["development", "production"],
+      "description": "The environment in which the app is running."
+    },
+    "appRootPath": {
+      "type": "string",
+      "description": "The root path of the app. Defaults to the current directory."
+    },
+    "easyPacks": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": ["authPack", "emailPack", "workersPack"]
+      },
+      "description": "The built-in Easy Packs to include in the app."
+    },
+    "multiProcessing": {
+      "type": "object",
+      "title": "Multi-Processing",
+      "description": "Options for running multiple instances of the app on separate threads. This controls the number of instances of the app that will run in parallel to handle requests on the web server.",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to enable multiprocessing or not."
+        },
+        "processCount": {
+          "type": ["string", "number"],
+          "oneOf": [
+            {
+              "enum": ["auto"]
+            },
+            {
+              "type": "number",
+              "minimum": 1
+            }
+          ],
+          "default": "auto",
+          "description": "The number of instances of the app to run in parallel."
+        },
+        "max": {
+          "type": "number",
+          "minimum": 1,
+          "description": "The maximum number of instances of the app to run in parallel."
+        }
+      },
+      "required": ["enable", "processCount"]
+    },
+    "workers": {
+      "type": "object",
+      "description": "Options for running worker processes.",
+      "title": "Task Queue Workers",
+      "properties": {
+        "short": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "number",
+              "default": 12700,
+              "description": "The port to run the short worker on."
+            }
+          },
+          "required": ["port"]
+        },
+        "medium": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "number",
+              "default": 12701,
+              "description": "The port to run the medium worker on."
+            }
+          },
+          "required": ["port"]
+        },
+        "long": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "number",
+              "default": 12702,
+              "description": "The port to run the long worker on."
+            }
+          },
+          "required": ["port"]
+        }
+      },
+      "required": ["short", "medium", "long"]
+    },
+    "appName": {
+      "type": "string",
+      "title": "App Name",
+      "default": "Easy App",
+      "description": "The name of the app."
+    },
+    "pathPrefix": {
+      "type": "string",
+      "description": "The path prefix for the app."
+    },
+    "singlePageApp": {
+      "type": "boolean",
+      "description": "Set to true if the app is a single page app (SPA)."
+    },
+    "staticFilesOptions": {
+      "type": "object",
+      "description": "Options for serving static files.",
+      "properties": {
+        "cache": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to cache files or not."
+        },
+        "staticFilesRoot": {
+          "type": "string",
+          "description": "The root directory of the static files."
+        }
+      }
+    },
+    "serverOptions": {
+      "type": "object",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "default": "127.0.0.1",
+          "description": "The hostname to run the server on."
+        },
+        "port": {
+          "type": "number",
+          "default": 8000,
+          "description": "The port to run the server on."
+        }
+      }
+    },
+    "ormOptions": {
+      "type": "object",
+      "properties": {
+        "databaseType": {
+          "type": "string",
+          "description": "The type of database to use."
+        },
+        "databaseConfig": {
+          "type": "object",
+          "description": "The configuration object for the database.",
+          "properties": {
+            "size": {
+              "type": "number",
+              "default": 1,
+              "description": "The size of the database connection pool."
+            },
+            "debug": {
+              "type": "boolean",
+              "title": "Debug Mode",
+              "default": false,
+              "description": "Enables debug mode for the database. This will log all queries to the console."
+            },
+            "clientOptions": {
+              "type": "object",
+              "description": "The client connection options for the database.",
+              "properties": {
+                "user": {
+                  "type": "string",
+                  "description": "The username for the database."
+                },
+                "password": {
+                  "type": "string",
+                  "description": "The password for the database."
+                },
+                "database": {
+                  "type": "string",
+                  "description": "The name of the database."
+                },
+                "host": {
+                  "type": "string",
+                  "description": "The host of the database."
+                },
+                "port": {
+                  "type": "number",
+                  "description": "The port of the database."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "realtimeOptions": {
+      "type": "object",
+      "description": "Options for real-time features.",
+      "title": "Real-Time Options",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to enable real-time features or not."
+        },
+        "port": {
+          "type": "number",
+          "default": 11254,
+          "description": "The port to run the real-time server on."
+        }
+      }
+    }
+  }
+}
