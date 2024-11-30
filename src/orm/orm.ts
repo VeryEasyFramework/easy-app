@@ -2,12 +2,10 @@ import { Database, type DatabaseConfig } from "#orm/database/database.ts";
 import { type BasicFgColor, ColorMe } from "@vef/easy-cli";
 
 import type {
-  CountOptions,
   EasyFieldType,
   EasyFieldTypeMap,
   EntryType as EntryTypeDef,
   ListOptions,
-  ReportOptions,
   RowsResult,
   SafeType,
   SettingsType as SettingsTypeDef,
@@ -37,6 +35,8 @@ import type { SettingsType } from "#orm/entry/settings/settingsType.ts";
 import type { EasyApp } from "#/app/easyApp.ts";
 import type { Settings } from "#orm/entry/settings/settingsTypes.ts";
 import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
+import { getReport } from "#/package/reportingPack/getReport.ts";
+import { CountOptions, ReportOptions } from "#orm/reports.ts";
 
 type GlobalHook = (
   entryType: string,
@@ -362,10 +362,10 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       });
     }
 
-    await syncEntryTypesToDatabase({
-      orm: this,
-      entryTypes,
-    });
+    // await syncEntryTypesToDatabase({
+    //   orm: this,
+    //   entryTypes,
+    // });
     return results;
   }
 
@@ -397,7 +397,6 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
 
     const entry = new entryClass();
     entry._user = user;
-    console.log("Creating entry", entryType, data);
     entry.update(data);
     await entry.save();
     return entry;
@@ -456,12 +455,8 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return result;
   }
 
-  async getReport(entryType: string, options: ReportOptions) {
-    const entryTypeDef = this.getEntryType(entryType);
-    const result = await this.database.getReport(
-      entryTypeDef.config.tableName,
-      options,
-    );
+  async getReport(entryType: string, options: ReportOptions, user?: User) {
+    return await getReport(this, entryType, options, user);
   }
   /**
    * Find an entry by a filter. Returns the first entry that matches the filter
