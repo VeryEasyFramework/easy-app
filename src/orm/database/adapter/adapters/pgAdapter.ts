@@ -543,7 +543,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       case "ConnectionField":
         return "TEXT";
       case "TimeStampField":
-        return "TIMESTAMP";
+        return "TIMESTAMP WITH TIME ZONE";
       case "IDField":
         return "VARCHAR(255)";
       case "URLField":
@@ -670,7 +670,8 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         if (value === null) {
           break;
         }
-        value = new Date(value).toISOString();
+        value = new Date(value).toUTCString();
+
         if (value === "Invalid Date") {
           value = null;
         }
