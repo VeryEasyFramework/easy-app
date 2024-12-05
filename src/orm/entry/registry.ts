@@ -1,5 +1,3 @@
-import { EasyField } from "../../../../vef-types/mod.ts";
-
 export interface RegisterConfig {
   source: {
     entryType: string;
