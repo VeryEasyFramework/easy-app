@@ -37,6 +37,8 @@ export interface EntryActionDefinition<
    * If true, this action can be called without loading a specific entry first
    */
   global?: boolean;
+
+  customValidation?: boolean;
   action(
     entry: TypedEntry<T>,
     params: D,

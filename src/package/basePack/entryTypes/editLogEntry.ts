@@ -53,6 +53,7 @@ editLogEntry.addFields([
     key: "user",
     fieldType: "ConnectionField",
     label: "User",
+    inList: true,
     description: "The user who made the edit",
     connectionEntryType: "user",
   },

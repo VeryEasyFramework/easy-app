@@ -630,7 +630,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       case "ConnectionField":
         return "TEXT";
       case "TimeStampField":
-        return "TIMESTAMP";
+        return "TIMESTAMP WITH TIME ZONE";
       case "IDField":
         return "VARCHAR(255)";
       case "URLField":
@@ -691,9 +691,18 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         break;
       case "ConnectionField":
         break;
-      case "TimeStampField":
-        value = new Date(value).getTime();
+      case "TimeStampField": {
+        if (value === null) {
+          break;
+        }
+        const date = new Date(value);
+        if (date.toString() === "Invalid Date") {
+          return null;
+        }
+        value = date.getTime();
+
         break;
+      }
       default:
         break;
     }
@@ -745,7 +754,14 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       case "ConnectionField":
         break;
       case "TimeStampField":
-        value = new Date(value).toISOString();
+        if (value === null) {
+          break;
+        }
+        value = new Date(value).toUTCString();
+
+        if (value === "Invalid Date") {
+          value = null;
+        }
         break;
       case "ListField":
         value = JSON.stringify(value || []);
