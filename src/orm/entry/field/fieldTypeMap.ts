@@ -21,4 +21,5 @@ export const fieldTypeMap: Record<EasyFieldType, string> = {
   RichTextField: "Record<string, any>",
   URLField: "string",
   ListField: "string[]",
+  CurrencyField: "number",
 };

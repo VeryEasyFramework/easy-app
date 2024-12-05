@@ -85,7 +85,7 @@ export async function getReport(
         case "IntField":
         case "DecimalField":
           column.aggregate = "sum";
-          column.alias = `${field.key}Sum`;
+          column.alias = `${field.key}`;
           break;
       }
       return column;

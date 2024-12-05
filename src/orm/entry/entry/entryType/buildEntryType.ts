@@ -131,7 +131,7 @@ function buildConnectionTitleField(
     return;
   }
   const newKey = `${field.key as string}${
-    toPascalCase(camelToSnakeCase(titleFieldKey))
+    toPascalCase(camelToSnakeCase(titleFieldKey as string))
   }`;
 
   const titleField = { ...entryTitleField };
@@ -163,6 +163,9 @@ function buildListFields(entryType: EntryType) {
   for (const field of entryType.fields) {
     if (field.inList) {
       listFields.push(field.key);
+      if (field.connectionTitleField) {
+        listFields.push(field.connectionTitleField);
+      }
     }
   }
   listFields.push("createdAt");

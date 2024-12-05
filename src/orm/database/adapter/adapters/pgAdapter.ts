@@ -607,6 +607,8 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         return "BIGINT";
       case "DecimalField":
         return "DECIMAL";
+      case "CurrencyField":
+        return "DECIMAL";
       case "DataField":
         return "VARCHAR(255)";
       case "JSONField":
@@ -652,6 +654,8 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       case "BigIntField":
         break;
       case "DecimalField":
+        break;
+      case "CurrencyField":
         break;
       case "DataField":
         break;
@@ -728,6 +732,8 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       case "BigIntField":
         break;
       case "DecimalField":
+        break;
+      case "CurrencyField":
         break;
       case "DataField":
         break;
