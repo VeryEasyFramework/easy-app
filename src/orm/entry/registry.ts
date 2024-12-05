@@ -1,3 +1,5 @@
+import { EasyField } from "../../../../vef-types/mod.ts";
+
 export interface RegisterConfig {
   source: {
     entryType: string;
@@ -20,9 +22,13 @@ interface Registry {
     }[];
   };
 }
+interface ConnectionRegistry {
+  [key: string]: [];
+}
 
 export class FetchRegistry {
   registry: Registry = {};
+  connectionRegistry: ConnectionRegistry = {};
   registerFetchField(config: RegisterConfig) {
     if (!this.registry[config.target.entryType]) {
       this.registry[config.target.entryType] = {};
@@ -36,6 +42,13 @@ export class FetchRegistry {
       idKey: config.target.idKey,
       field: config.source.field,
     });
+  }
+
+  registerConnectionField(
+    entryType: string,
+    foreignEntryType: string,
+    fieldKey: string,
+  ) {
   }
   findInRegistry(entryType: string): Registry[string] | undefined {
     return this.registry[entryType];

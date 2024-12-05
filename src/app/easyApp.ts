@@ -39,6 +39,7 @@ import { emailPack } from "#/package/emailPack/emailPack.ts";
 import appRunner from "#/app/runner/mod.ts";
 import { workersPack } from "#/package/workersPack/workersPack.ts";
 import type { AppProcess } from "#/app/runner/begin.ts";
+import { reportingPack } from "#/package/reportingPack/reportingPack.ts";
 
 const config = await initAppConfig();
 /**
@@ -152,6 +153,7 @@ export class EasyApp {
       }
     };
     this.addEasyPack(basePack);
+    this.addEasyPack(reportingPack);
 
     config.easyPacks.forEach((pack) => {
       switch (pack) {
@@ -385,11 +387,11 @@ export class EasyApp {
    * Get a list of all the registered entry types and their properties
    */
   get entryTypeInfo(): EntryTypeDef[] {
-    return Object.values(this.orm.entryTypes);
+    return Array.from(this.orm.entryTypes.values());
   }
 
   get settingsTypeInfo(): SettingsTypeDef[] {
-    return Object.values(this.orm.settingsTypes);
+    return Array.from(this.orm.settingsTypes.values());
   }
 
   /**

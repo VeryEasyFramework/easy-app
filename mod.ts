@@ -2,7 +2,7 @@ export { calculateMemorySettings } from "#orm/database/adapter/adapters/postgres
 
 export { generateId, isEmpty } from "#orm/utils/misc.ts";
 
-export { ChildList } from "./src/orm/entry/child/childRecord.ts";
+export { ChildList } from "#orm/entry/child/childRecord.ts";
 export type {
   ActionsDefMap,
   ActionsMap,
@@ -11,13 +11,13 @@ export type {
   EasyHooksMap,
   HooksDefMap,
   HooksMap,
-} from "./src/orm/entry/baseDefinition.ts";
+} from "#orm/entry/baseDefinition.ts";
 
 export { OrmException, raiseOrmException } from "#orm/ormException.ts";
 
 export { SettingsType } from "#orm/entry/settings/settingsType.ts";
 
-export { EntryType } from "./src/orm/entry/entry/entryType/entryType.ts";
+export { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 
 export { createMiddleware } from "#/middleware/middleware.ts";
 
@@ -48,7 +48,7 @@ export type {
   EntryHook,
   EntryHookDefinition,
   EntryHooks,
-} from "./src/orm/entry/entry/entryType/entry.ts";
+} from "#orm/entry/entry/entryType/entry.ts";
 
 export type {
   Settings,

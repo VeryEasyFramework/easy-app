@@ -105,7 +105,7 @@ export class EntryClass {
 
   _afterDelete!: Array<EntryHookFunction>;
 
-  actions!: Record<string, EntryAction>;
+  _actions!: Record<string, EntryAction>;
 
   get _title(): string {
     const titleField = this._entryType.config.titleField || "id";
@@ -383,7 +383,7 @@ export class EntryClass {
   }
 
   private validateAction(actionKey: string, data?: Record<string, any>) {
-    const action = this.actions[actionKey];
+    const action = this._actions[actionKey];
     if (!action) {
       raiseOrmException(
         "InvalidAction",

@@ -16,8 +16,15 @@ export const getEntryInfoAction = createAction("getEntryInfo", {
         ...editLogEntry.fields.map((field) => field.key),
       ],
     }, request.user);
+    const connections = await app.orm.getConnectionsCount(
+      entryType,
+      id,
+      request.user,
+    );
     return {
       editLog: editLog.data,
+      connections,
+      comments: [],
     };
   },
   params: {

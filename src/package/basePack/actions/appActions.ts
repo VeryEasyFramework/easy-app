@@ -60,7 +60,13 @@ export const appActions = [
     },
     response: "SettingsType[]",
   }),
-
+  createAction("migrate", {
+    description: "Migrate the database",
+    async action(app) {
+      await app.orm.migrate();
+      return "Database migrated";
+    },
+  }),
   createAction("notify", {
     description: "Send a realtime notification",
     action: (app, { room, event, data }) => {
