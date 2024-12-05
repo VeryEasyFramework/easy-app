@@ -30,7 +30,7 @@ export function buildEntryType(
     fieldGroups: groups,
     children: entryType.children,
     listFields: listFields,
-    config: entryType.config,
+    config: entryType.config as EntryTypeDef["config"],
     hooks: entryType.hooks,
     actions: entryType.actions,
     connections: [],

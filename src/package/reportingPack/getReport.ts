@@ -1,5 +1,5 @@
 import type { EasyOrm } from "#orm/orm.ts";
-import type { ReportOptions } from "#orm/reports.ts";
+import type { ReportOptions, ReportResult } from "#orm/reports.ts";
 import type { User } from "@vef/types";
 import {
   DatabaseReportColumn,
@@ -13,7 +13,7 @@ export async function getReport(
   entryType: string,
   options: ReportOptions,
   user?: User,
-) {
+): Promise<ReportResult> {
   const { database } = orm;
   const entryTypeDef = orm.getEntryType(entryType);
   const columns = new Set(

@@ -27,7 +27,7 @@ export class ChildList {
     this.changed = true;
   }
 
-  sanitizeRecord(record: Record<string, any>) {
+  sanitizeRecord(record: Record<string, any>): ChildRecord {
     const data: Record<string, any> = {};
     for (const key in record) {
       if (this.hasField(key) || ["id", "parentId", "order"].includes(key)) {
@@ -54,7 +54,7 @@ export class ChildList {
     this.fields = new Map(childDefinition.fields.map((f) => [f.key, f]));
   }
 
-  hasField(key: string) {
+  hasField(key: string): boolean {
     return this.fields.has(key);
   }
   async load(parentId: string) {

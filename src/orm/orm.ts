@@ -36,7 +36,7 @@ import type { EasyApp } from "#/app/easyApp.ts";
 import type { Settings } from "#orm/entry/settings/settingsTypes.ts";
 import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
 import { getReport } from "#/package/reportingPack/getReport.ts";
-import { CountOptions, ReportOptions } from "#orm/reports.ts";
+import { CountOptions, ReportOptions, ReportResult } from "#orm/reports.ts";
 
 type GlobalHook = (
   entryType: string,
@@ -455,7 +455,11 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return result;
   }
 
-  async getReport(entryType: string, options: ReportOptions, user?: User) {
+  async getReport(
+    entryType: string,
+    options: ReportOptions,
+    user?: User,
+  ): Promise<ReportResult> {
     return await getReport(this, entryType, options, user);
   }
   /**
@@ -480,7 +484,15 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     return await this.getEntry(entryType, id);
   }
 
-  async getConnectionsCount(entryType: string, id: string, user?: User) {
+  async getConnectionsCount(
+    entryType: string,
+    id: string,
+    user?: User,
+  ): Promise<{
+    entryType: string;
+    label: string;
+    count: number;
+  }[]> {
     const entryTypeDef = this.getEntryType(entryType);
     const connections = entryTypeDef.connections;
     const results = [];
