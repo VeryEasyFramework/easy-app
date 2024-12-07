@@ -1,6 +1,7 @@
 import { BaseDefinition } from "#orm/entry/baseDefinition.ts";
 import type { Choice, EasyField, EntryTypeConfig } from "@vef/types";
 import type {
+  Entry,
   Entry as EntryInstance,
   EntryActionDefinition,
   EntryHook,
@@ -17,13 +18,13 @@ import {
 import { raiseEasyException } from "#/easyException.ts";
 import { fieldTypeMap } from "#orm/entry/field/fieldTypeMap.ts";
 
-export class EntryType<T extends Record<string, any> = any>
+export class EntryType<T extends Record<string, any> = Entry>
   extends BaseDefinition<EntryTypeConfig<keyof T>, "entry"> {
   readonly entryType: string;
 
   roles: Map<string, Permission> = new Map();
 
-  hooks: EntryHooks;
+  hooks: EntryHooks<T>;
   constructor(entryType: string, options?: {
     label?: string;
     description?: string;

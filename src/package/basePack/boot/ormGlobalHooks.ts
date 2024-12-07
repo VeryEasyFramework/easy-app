@@ -1,8 +1,9 @@
 import type { BootAction } from "#/types.ts";
+import { EasyField } from "../../../../../vef-types/mod.ts";
 
 export const ormGlobalHooks: BootAction = {
   actionName: "addOrmGlobalHooks",
-  description: "Create realtime rooms for each entry type",
+  description: "Add global hooks to the ORM",
   action(app) {
     app.orm.addGlobalHook("afterInsert", async (entryType, entry) => {
       if (entryType === "editLog") {
@@ -113,5 +114,49 @@ export const ormGlobalHooks: BootAction = {
         ...notifyData,
       });
     });
+
+    app.orm.addGlobalHook(
+      "afterChange",
+      async (entryType, entry, changedData) => {
+        const { _entryType } = entry;
+        if (!_entryType.config.globalSearch || !changedData) {
+          return;
+        }
+        const isSearchable = (field: EasyField) => {
+          switch (field.fieldType) {
+            case "DataField":
+            case "TextField":
+            case "RichTextField":
+            case "EmailField":
+            case "PhoneField":
+            case "URLField":
+              return true;
+            default:
+              return false;
+          }
+        };
+        const searchFields: string[] = [];
+        for (const field of _entryType.fields) {
+          if (
+            isSearchable(field) && field.inGlobalSearch &&
+            field.key in changedData
+          ) {
+            searchFields.push(field.key);
+          }
+        }
+        if (!searchFields.length) {
+          return;
+        }
+        const searchValues: Record<string, any> = {};
+        for (const field of searchFields) {
+          searchValues[field] = entry[field];
+        }
+        await app.orm.globalSearch.updateEntryIndex(
+          entryType,
+          entry.id,
+          searchValues,
+        );
+      },
+    );
   },
 };

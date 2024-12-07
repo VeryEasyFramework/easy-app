@@ -45,24 +45,24 @@ export interface EntryActionDefinition<
   ): SafeReturnType;
   params?: F;
 }
-export interface EntryHookDefinition {
+export interface EntryHookDefinition<T = Entry> {
   label?: string;
   description?: string;
 
   action(
-    entry: Entry,
+    entry: TypedEntry<T>,
   ): Promise<void> | void;
 }
 
 export type EntryHook = keyof EntryHooks;
-export interface EntryHooks {
-  beforeSave: Array<EntryHookDefinition>;
-  afterSave: Array<EntryHookDefinition>;
-  beforeInsert: Array<EntryHookDefinition>;
-  afterInsert: Array<EntryHookDefinition>;
-  validate: Array<EntryHookDefinition>;
-  beforeValidate: Array<EntryHookDefinition>;
+export interface EntryHooks<T = Entry> {
+  beforeSave: Array<EntryHookDefinition<T>>;
+  afterSave: Array<EntryHookDefinition<T>>;
+  beforeInsert: Array<EntryHookDefinition<T>>;
+  afterInsert: Array<EntryHookDefinition<T>>;
+  validate: Array<EntryHookDefinition<T>>;
+  beforeValidate: Array<EntryHookDefinition<T>>;
 
-  beforeDelete: Array<EntryHookDefinition>;
-  afterDelete: Array<EntryHookDefinition>;
+  beforeDelete: Array<EntryHookDefinition<T>>;
+  afterDelete: Array<EntryHookDefinition<T>>;
 }

@@ -14,10 +14,7 @@ import type {
 import type { EntryConnection } from "@vef/types";
 
 import { OrmException, raiseOrmException } from "#orm/ormException.ts";
-import {
-  migrateEntryType,
-  syncEntryTypesToDatabase,
-} from "#orm/database/migrate/migrateEntryType.ts";
+import { migrateEntryType } from "#orm/database/migrate/migrateEntryType.ts";
 
 import { installDatabase } from "#orm/database/install/installDatabase.ts";
 import type { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
@@ -36,7 +33,12 @@ import type { EasyApp } from "#/app/easyApp.ts";
 import type { Settings } from "#orm/entry/settings/settingsTypes.ts";
 import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
 import { getReport } from "#/package/reportingPack/getReport.ts";
-import { CountOptions, ReportOptions, ReportResult } from "#orm/reports.ts";
+import type {
+  CountOptions,
+  ReportOptions,
+  ReportResult,
+} from "#orm/reports.ts";
+import { GlobalSearch } from "#orm/search/globalSearch.ts";
 
 type GlobalHook = (
   entryType: string,
@@ -107,6 +109,8 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   entryClasses: Map<string, typeof EntryClass> = new Map();
   settingsClasses: Map<string, typeof SettingsClass> = new Map();
   app: EasyApp;
+
+  globalSearch: GlobalSearch;
   private globalHooks: GlobalHooks = {
     beforeInsert: [],
     afterInsert: [],
@@ -156,10 +160,12 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         this.addEntryType(entryType);
       }
     }
+    this.globalSearch = new GlobalSearch(this);
   }
 
   async init() {
     await this.database.init();
+    await this.globalSearch.validateSearchTable();
     this.initialized = true;
     this.buildEntryTypes();
     this.validateEntryTypes();
@@ -230,6 +236,10 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     for (const callback of this.globalSettingsHooks[hook]) {
       await callback(settingsType, settings, changedData);
     }
+  }
+
+  async search(searchTerm: string, user?: User) {
+    return await this.globalSearch.search(searchTerm);
   }
   addGlobalSettingsHook<H extends keyof GlobalSettingsHooks>(
     hook: H,

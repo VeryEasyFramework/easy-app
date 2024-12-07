@@ -780,7 +780,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
 }
 
 type ValueType<Join> = Join extends false ? Array<string> : string | number;
-function formatValue<Join extends boolean>(
+export function formatValue<Join extends boolean>(
   value: any,
   joinList?: Join,
   noQuotes?: boolean,

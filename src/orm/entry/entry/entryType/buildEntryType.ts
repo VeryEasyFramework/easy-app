@@ -9,14 +9,24 @@ import { camelToSnakeCase, toPascalCase } from "@vef/string-utils";
 import type { EasyOrm } from "#orm/orm.ts";
 import { buildFieldGroups } from "#orm/entry/field/buildFieldGroups.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
-import type { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
+import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
+import { Entry, TypedEntry } from "#orm/entry/entry/entryType/entry.ts";
 
 export function buildEntryType(
   orm: EasyOrm,
   entryType: EntryType,
 ): EntryTypeDef {
-  if (entryType.config.statusField) {
-    entryType.statusField = entryType.config.statusField;
+  const { config } = entryType;
+  if (config.statusField) {
+    entryType.statusField = config.statusField;
+  }
+  if (config.globalSearch && config.titleField) {
+    const titleField = entryType.fields.find((field) =>
+      field.key === config.titleField
+    );
+    if (titleField) {
+      titleField.inGlobalSearch = true;
+    }
   }
   buildConnectionFields(orm, entryType);
   buildChildren(orm, entryType);

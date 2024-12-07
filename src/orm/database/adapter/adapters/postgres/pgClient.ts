@@ -364,6 +364,14 @@ export class PostgresClient {
           const message = this.reader.readAllBytes();
           break;
         }
+        case QR_TYPE.NOTICE_RESPONSE: {
+          const message = this.reader.readAllBytes();
+
+          const messageString = this.decode(message);
+          throw new PgError({
+            message: `Notice message: ${messageString}`,
+          });
+        }
         default: {
           const message = this.reader.readAllBytes();
           const messageType = this.reader.messageType;

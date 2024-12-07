@@ -11,4 +11,10 @@ tag?: string[];
  * @required true
  */
 status: string | number;
+/**
+ * **Name** (DataField)
+ * @type {string}
+ * @required true
+ */
+name: string;
 }

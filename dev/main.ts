@@ -8,8 +8,9 @@ const test = new EntryType<Test>("test", {
   description: "A test entry",
 });
 test.setConfig({
-  titleField: "tag",
+  titleField: "name",
   statusField: "status",
+  globalSearch: true,
 });
 test.addField({
   key: "tag",
@@ -25,6 +26,18 @@ test.addFields([
     required: true,
     fieldType: "ChoicesField",
     choices: ["Active", "Inactive"],
+  },
+  {
+    key: "name",
+    label: "Name",
+    fieldType: "DataField",
+    required: true,
+  },
+  {
+    key: "email",
+    label: "Email",
+    fieldType: "EmailField",
+    inGlobalSearch: true,
   },
 ]);
 

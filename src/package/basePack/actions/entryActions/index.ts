@@ -9,6 +9,9 @@ import { getEntryListAction } from "#/package/basePack/actions/entryActions/getE
 import { getEntryInfoAction } from "#/package/basePack/actions/entryActions/getEntryInfoAction.ts";
 import { getEntryTypeAction } from "#/package/basePack/actions/entryActions/getEntryTypeAction.ts";
 
+import { globalSearchAction } from "#/package/basePack/actions/entryActions/globalSearchAction.ts";
+
+import { rebuildSearchIndexAction } from "#/package/basePack/actions/entryActions/rebuildSearchIndex.ts";
 export const entryActions = [
   getEntryListAction,
   createEntryAction,
@@ -18,4 +21,6 @@ export const entryActions = [
   runEntryActionAction,
   getEntryInfoAction,
   getEntryTypeAction,
+  globalSearchAction,
+  rebuildSearchIndexAction,
 ];
