@@ -4,11 +4,10 @@ import {
 } from "#orm/database/adapter/adapters/pgAdapter.ts";
 
 import type {
-  CountOptions,
+  AdvancedFilter,
   EasyField,
   EasyFieldType,
   ListOptions,
-  ReportOptions,
   RowsResult,
   SafeType,
 } from "@vef/types";
@@ -16,6 +15,7 @@ import type {
   DenoKvAdapter,
   DenoKvConfig,
 } from "#orm/database/adapter/adapters/denoKvAdapter.ts";
+import { CountOptions } from "#orm/reports.ts";
 
 export interface DatabaseConfig {
   postgres: PostgresConfig;
@@ -98,7 +98,7 @@ export class Database<
 
   async deleteRows(
     tableName: string,
-    filters: Record<string, any>,
+    filters?: Record<string, any>,
   ): Promise<void> {
     await this.adapter.deleteRows(tableName, filters);
   }
@@ -145,10 +145,11 @@ export class Database<
     });
   }
 
-  async getReport<T>(
+  async getReport<T extends Record<string, any> = Record<string, any>>(
     tableName: string,
-    options: ReportOptions,
-  ): Promise<void> {
+    options: DatabaseReportOptions,
+  ): Promise<RowsResult<T>> {
+    return await this.adapter.getReport(tableName, options);
     // const results = await this.adapter.getReport(tableName, options);
     // return results;
   }
@@ -160,4 +161,28 @@ export class Database<
   ): Promise<void> {
     await this.adapter.batchUpdateField(tableName, field, value, filters);
   }
+}
+
+export interface DatabaseReportOptions {
+  columns: string[];
+  filter?: Record<string, string | number | AdvancedFilter>;
+  orFilter?: Record<string, string | number | AdvancedFilter>;
+  subGroup?: string;
+  joinTable?: {
+    tableName: string;
+    joinColumn: string;
+    type: "inner" | "left" | "right";
+    columns: DatabaseReportColumn[];
+    groupBy?: string[];
+  };
+  limit?: number;
+  offset?: number;
+  orderBy?: string;
+  order?: "asc" | "desc";
+}
+
+export interface DatabaseReportColumn {
+  name: string;
+  aggregate?: "sum" | "avg" | "count" | "min" | "max";
+  alias?: string;
 }

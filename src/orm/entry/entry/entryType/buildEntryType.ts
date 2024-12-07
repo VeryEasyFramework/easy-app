@@ -19,7 +19,7 @@ export function buildEntryType(
     entryType.statusField = entryType.config.statusField;
   }
   buildConnectionFields(orm, entryType);
-  buildChildred(orm, entryType);
+  buildChildren(orm, entryType);
   const groups: FieldGroup[] = buildFieldGroups(entryType);
   const listFields = buildListFields(entryType);
 
@@ -30,9 +30,10 @@ export function buildEntryType(
     fieldGroups: groups,
     children: entryType.children,
     listFields: listFields,
-    config: entryType.config,
+    config: entryType.config as EntryTypeDef["config"],
     hooks: entryType.hooks,
     actions: entryType.actions,
+    connections: [],
   };
 }
 
@@ -56,7 +57,7 @@ function buildConnectionFields(orm: EasyOrm, entryType: EntryType) {
   }
 }
 
-function buildChildred(orm: EasyOrm, entryType: EntryType) {
+function buildChildren(orm: EasyOrm, entryType: EntryType) {
   for (const child of entryType.children) {
     buildChild(orm, child);
   }
@@ -130,7 +131,7 @@ function buildConnectionTitleField(
     return;
   }
   const newKey = `${field.key as string}${
-    toPascalCase(camelToSnakeCase(titleFieldKey))
+    toPascalCase(camelToSnakeCase(titleFieldKey as string))
   }`;
 
   const titleField = { ...entryTitleField };
@@ -162,6 +163,9 @@ function buildListFields(entryType: EntryType) {
   for (const field of entryType.fields) {
     if (field.inList) {
       listFields.push(field.key);
+      if (field.connectionTitleField) {
+        listFields.push(field.connectionTitleField);
+      }
     }
   }
   listFields.push("createdAt");

@@ -151,6 +151,10 @@ export function validateDecimal(field: EasyField, value: any): number {
   return value;
 }
 
+export function validateCurrency(field: EasyField, value: any): number {
+  return validateDecimal(field, value);
+}
+
 export function validateData(field: EasyField, value: any): string {
   if (value === null) {
     return "";

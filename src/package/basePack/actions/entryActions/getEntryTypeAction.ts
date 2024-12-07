@@ -4,7 +4,7 @@ import { raiseEasyException } from "#/easyException.ts";
 export const getEntryTypeAction = createAction("getEntryType", {
   description: "Get the entry info",
   action: (app, { entryType }) => {
-    const entryTypeDef = app.orm.entryTypes[entryType];
+    const entryTypeDef = app.orm.getEntryType(entryType);
     if (!entryTypeDef) {
       raiseEasyException("Entry not found", 404);
     }

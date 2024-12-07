@@ -27,6 +27,7 @@ export function setupRunMenu(app: EasyApp): void {
   const listener = new InputListener({
     abortController,
     hideCursor: true,
+    captureMouse: false,
   });
   const run = (watch: boolean, prod?: boolean) => {
     app.cli.onStop = async () => {

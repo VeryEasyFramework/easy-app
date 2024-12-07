@@ -1,13 +1,9 @@
 import type {
   AdvancedFilter,
-  CountGroupedResult,
-  CountOptions,
   EasyField,
   EasyFieldType,
   IdMethodType,
   ListOptions,
-  ReportOptions,
-  ReportResult,
   RowsResult,
   SafeType,
 } from "@vef/types";
@@ -20,6 +16,12 @@ import { PostgresPool } from "#orm/database/adapter/adapters/postgres/pgPool.ts"
 import type { PgClientConfig } from "#orm/database/adapter/adapters/postgres/pgTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 import { easyLog } from "#/log/logging.ts";
+import { DatabaseReportOptions } from "#orm/database/database.ts";
+import {
+  CountGroupedResult,
+  CountOptions,
+  ReportResult,
+} from "#orm/reports.ts";
 
 export interface PostgresConfig {
   clientOptions: PgClientConfig;
@@ -70,7 +72,6 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const columns = result.columns.map((column) => {
       return this.camelCase ? column.camelName : column.name;
     });
-
     return {
       rowCount: result.rowCount,
       totalCount: result.rowCount,
@@ -185,7 +186,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
 
   async deleteRows(
     tableName: string,
-    filters: Record<string, any>,
+    filters?: Record<string, any>,
   ): Promise<void> {
     tableName = this.toSnake(tableName);
     let query = `DELETE FROM ${this.schema}.${tableName}`;
@@ -354,12 +355,98 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     return result.data[0][field];
   }
 
-  getReport<T>(
+  async getReport<T>(
     tableName: string,
-    options: ReportOptions,
-  ): ReportResult<T> {
+    options: DatabaseReportOptions,
+  ): Promise<ReportResult<T>> {
     tableName = this.toSnake(tableName);
-    return {} as ReportResult<T>;
+    const baseTableAlias = "A";
+    const joinTableAlias = "B";
+    const aColumns = options.columns.map((column) => {
+      return `${baseTableAlias}.${this.formatColumnName(column)}`;
+    });
+
+    const bColumns = options.joinTable?.columns.map((column) => {
+      const columnName = this.formatColumnName(column.alias || column.name);
+      let fullColumn = `${joinTableAlias}.${columnName}`;
+      if (column.aggregate) {
+        if (options.subGroup) {
+          fullColumn = `${column.aggregate.toUpperCase()}(${fullColumn})`;
+        }
+        return `COALESCE(${fullColumn}, 0) as ${columnName}`;
+      }
+      return fullColumn;
+    });
+
+    const columns = [...aColumns, ...(bColumns || [])].join(", ");
+    let query =
+      `SELECT ${columns} FROM ${this.schema}.${tableName} ${baseTableAlias}`;
+    let countQuery =
+      `SELECT COUNT(*) FROM ${this.schema}.${tableName} ${baseTableAlias}`;
+    if (options.joinTable) {
+      const joinTableName = this.toSnake(options.joinTable.tableName);
+      const joinColumn = this.formatColumnName(options.joinTable.joinColumn);
+      const joinType = options.joinTable.type.toUpperCase();
+
+      const joinColumns = [
+        joinColumn,
+        ...options.joinTable.columns.map((column) => {
+          const columnName = this.formatColumnName(column.name);
+          const columnAlias = this.formatColumnName(
+            column.alias || column.name,
+          );
+          if (column.aggregate) {
+            return `${column.aggregate.toUpperCase()}(${columnName}) as ${columnAlias}`;
+          }
+        }),
+      ].join(", ");
+
+      const joinQuery =
+        ` ${joinType} JOIN ( SELECT ${joinColumns} FROM ${this.schema}.${joinTableName} GROUP BY ${joinColumn} ) ${joinTableAlias} ON ${joinTableAlias}.${joinColumn}= ${baseTableAlias}.id`;
+      query += joinQuery;
+    }
+
+    let andFilter = "";
+    let orFilter = "";
+    if (options.filter) {
+      andFilter = this.makeAndFilter(options.filter);
+    }
+    if (options.orFilter) {
+      orFilter = this.makeOrFilter(options.orFilter);
+    }
+    if (andFilter && orFilter) {
+      query += ` WHERE ${andFilter} AND (${orFilter})`;
+      countQuery += ` WHERE ${andFilter} AND (${orFilter})`;
+    } else if (andFilter) {
+      query += ` WHERE ${andFilter}`;
+      countQuery += ` WHERE ${andFilter}`;
+    } else if (orFilter) {
+      query += ` WHERE ${orFilter}`;
+      countQuery += ` WHERE ${orFilter}`;
+    }
+
+    if (options.orderBy) {
+      query += ` ORDER BY ${this.formatColumnName(options.orderBy)}`;
+      const order = options.order || "ASC";
+      query += ` ${order}`;
+    }
+    if (options.subGroup) {
+      query += ` GROUP BY ${aColumns.join(", ")}`;
+    }
+    if (options.limit) {
+      query += ` LIMIT ${options.limit}`;
+    }
+
+    if (options.offset) {
+      query += ` OFFSET ${options.offset}`;
+    }
+    const result = await this.query<T>(query);
+    result.totalCount = result.rowCount;
+    if (options.limit) {
+      const countResult = await this.query<{ count: number }>(countQuery);
+      result.totalCount = countResult.data[0].count;
+    }
+    return result;
   }
   private makeFilter(
     filters: Record<string, SafeType | AdvancedFilter>,
@@ -520,6 +607,8 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         return "BIGINT";
       case "DecimalField":
         return "DECIMAL";
+      case "CurrencyField":
+        return "DECIMAL";
       case "DataField":
         return "VARCHAR(255)";
       case "JSONField":
@@ -543,7 +632,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       case "ConnectionField":
         return "TEXT";
       case "TimeStampField":
-        return "TIMESTAMP";
+        return "TIMESTAMP WITH TIME ZONE";
       case "IDField":
         return "VARCHAR(255)";
       case "URLField":
@@ -566,6 +655,8 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         break;
       case "DecimalField":
         break;
+      case "CurrencyField":
+        break;
       case "DataField":
         break;
       case "JSONField":
@@ -604,9 +695,18 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         break;
       case "ConnectionField":
         break;
-      case "TimeStampField":
-        value = new Date(value).getTime();
+      case "TimeStampField": {
+        if (value === null) {
+          break;
+        }
+        const date = new Date(value);
+        if (date.toString() === "Invalid Date") {
+          return null;
+        }
+        value = date.getTime();
+
         break;
+      }
       default:
         break;
     }
@@ -633,6 +733,8 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         break;
       case "DecimalField":
         break;
+      case "CurrencyField":
+        break;
       case "DataField":
         break;
       case "JSONField":
@@ -658,7 +760,14 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       case "ConnectionField":
         break;
       case "TimeStampField":
-        value = new Date(value).toISOString();
+        if (value === null) {
+          break;
+        }
+        value = new Date(value).toUTCString();
+
+        if (value === "Invalid Date") {
+          value = null;
+        }
         break;
       case "ListField":
         value = JSON.stringify(value || []);

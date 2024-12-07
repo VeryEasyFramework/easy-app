@@ -73,7 +73,7 @@ function validateSemverString(version: string): boolean {
 export class EasyPack {
   middleware: Array<MiddleWare> = [];
   actionGroups: Record<string, Array<EasyAction>> = {};
-  entryTypes: Array<EntryType> = [];
+  entryTypes: Array<EntryType<any>> = [];
 
   settingsTypes: Array<SettingsType> = [];
   bootActions: Array<BootAction> = [];
@@ -371,7 +371,7 @@ export class EasyPack {
    * Add an Entry Type to the EasyPack.;
    */
 
-  addEntryType(entryType: EntryType) {
+  addEntryType<E extends EntryType>(entryType: E) {
     this.entryTypes.push(entryType);
   }
 

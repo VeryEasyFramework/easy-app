@@ -17,7 +17,7 @@ import {
 import { raiseEasyException } from "#/easyException.ts";
 import { fieldTypeMap } from "#orm/entry/field/fieldTypeMap.ts";
 
-export class EntryType<T = Record<string, any>>
+export class EntryType<T extends Record<string, any> = any>
   extends BaseDefinition<EntryTypeConfig<keyof T>, "entry"> {
   readonly entryType: string;
 
