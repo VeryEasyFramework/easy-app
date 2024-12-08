@@ -70,7 +70,9 @@ export class PostgresClient {
     while (offset < data.length) {
       const chunk = data.subarray(offset, offset + chunkSize);
 
-      message += this.decoder.decode(chunk);
+      message += this.decoder.decode(chunk, {
+        stream: true,
+      });
       offset += chunkSize;
     }
     return message;
@@ -233,11 +235,21 @@ export class PostgresClient {
       }
     }
   }
-
+  async terminate() {
+    this.writer.setMessageType("X");
+    await this.conn.write(this.writer.message);
+    this.conn.close();
+    throw new PgError({
+      name: "terminate",
+      message: "Unknown message type",
+    });
+  }
   async reset() {
     this.writer.reset();
     await this.reader.clearBuffer();
-    this.conn.close();
+    this.conn.readable.cancel();
+    this.conn.writable.close();
+
     this.status = "notConnected";
     await this.connect();
   }
@@ -349,7 +361,7 @@ export class PostgresClient {
             | "T"
             | "E";
           this.serverStatus = statusMap[serverStatus];
-          status = "done";
+
           break;
         }
         case QR_TYPE.ERROR_RESPONSE: {
@@ -362,20 +374,24 @@ export class PostgresClient {
         }
         case QR_TYPE.COMMAND_COMPLETE: {
           const message = this.reader.readAllBytes();
+          status = "done";
           break;
         }
         default: {
-          const message = this.reader.readAllBytes();
-          const messageType = this.reader.messageType;
-          const messageString = this.decode(message);
-          throw new PgError({
-            message: `Unknown message type ${messageType}${messageString}`,
-          });
+          await this.terminate();
         }
       }
     }
+
     if (errors.length) {
       throw new PgError(errors[0]);
+    }
+    if (status === "fail") {
+      return {
+        rowCount: 0,
+        rows: [],
+        columns: [],
+      };
     }
     return {
       rowCount: data.length,

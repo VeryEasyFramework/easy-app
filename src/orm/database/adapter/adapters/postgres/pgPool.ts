@@ -8,13 +8,16 @@ import type {
   QueryResponse,
 } from "#orm/database/adapter/adapters/postgres/pgTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
+import { PgError } from "#orm/database/adapter/adapters/postgres/pgError.ts";
 
 class PostgresPoolClient {
   locked: boolean;
   client: PostgresClient;
   close: boolean;
+  config: PgClientConfig;
   constructor(config: PgClientConfig) {
     this.close = false;
+    this.config = config;
     this.locked = false;
     this.client = new PostgresClient(config);
   }
@@ -27,11 +30,17 @@ class PostgresPoolClient {
     this.locked = false;
   }
   async query<T>(query: string): Promise<QueryResponse<T>> {
-    return await this.client.query<T>(query).catch((e) => {
-      this.locked = false;
-
+    const response = await this.client.query<T>(query).catch(async (e) => {
+      if (e instanceof PgError) {
+        this.client = new PostgresClient(this.config);
+        await this.client.connect();
+        return await this.query<T>(query);
+      }
       throw e;
+    }).finally(() => {
+      this.locked = false;
     });
+    return response;
   }
   get connected(): boolean {
     return this.client.connected;

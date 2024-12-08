@@ -111,6 +111,7 @@ export class MessageReader {
     const size = 1024;
     const buf = new Uint8Array(size);
     let res: number | null = 0;
+
     while (true) {
       res = await this.conn.read(buf);
       if (res === null) {
