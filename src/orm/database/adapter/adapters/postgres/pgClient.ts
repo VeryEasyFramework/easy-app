@@ -320,6 +320,7 @@ export class PostgresClient {
       await this.reader.nextMessage();
       const messageType = this.reader
         .messageType as keyof SimpleQueryResponse;
+      console.log({ messageType });
       switch (messageType) {
         case QR_TYPE.ROW_DESCRIPTION: {
           if (gotDescription) {
@@ -337,7 +338,6 @@ export class PostgresClient {
           const row = {} as Record<string, any>;
           for (let i = 0; i < columnCount; i++) {
             const field = fields[i];
-
             const length = this.reader.readInt32(); //
 
             if (length === -1) {
@@ -365,6 +365,8 @@ export class PostgresClient {
           break;
         }
         case QR_TYPE.ERROR_RESPONSE: {
+          console.log({ messageType });
+          console.log({ error: "error" });
           const error = this.readError();
           errors.push(error);
           break;
@@ -372,26 +374,38 @@ export class PostgresClient {
         case QR_TYPE.EMPTY_QUERY_RESPONSE: {
           break;
         }
+        case QR_TYPE.PARSE_COMPLETE: {
+          status = "done";
+          break;
+        }
+        case QR_TYPE.CLOSE_COMPLETE: {
+          status = "done";
+          break;
+        }
+
         case QR_TYPE.COMMAND_COMPLETE: {
           const message = this.reader.readAllBytes();
+
+          status = "done";
+          break;
+        }
+        case QR_TYPE.BLANK: {
+          console.log("blank");
           status = "done";
           break;
         }
         default: {
+          console.log({ messageType, terminate: true });
           await this.terminate();
         }
+      }
+      if (errors.length) {
+        throw new PgError(errors[0]);
       }
     }
 
     if (errors.length) {
       throw new PgError(errors[0]);
-    }
-    if (status === "fail") {
-      return {
-        rowCount: 0,
-        rows: [],
-        columns: [],
-      };
     }
     return {
       rowCount: data.length,

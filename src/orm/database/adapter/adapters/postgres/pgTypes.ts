@@ -101,6 +101,9 @@ export type SimpleQueryResponse = {
   "E": "ErrorResponse";
   "Z": "ReadyForQuery";
   "N": "NoticeResponse";
+  "1": "ParseComplete";
+  "3": "CloseComplete";
+  "\x00": "Blank";
 };
 
 export const QR_TYPE = {
@@ -113,6 +116,9 @@ export const QR_TYPE = {
   ERROR_RESPONSE: "E",
   READY_FOR_QUERY: "Z",
   NOTICE_RESPONSE: "N",
+  PARSE_COMPLETE: "1",
+  CLOSE_COMPLETE: "3",
+  BLANK: "\x00",
 } as const;
 
 export const STATUS_MAP = {
