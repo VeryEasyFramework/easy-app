@@ -5,6 +5,7 @@ export class MessageReader {
   size: number;
   headerBuffer: Uint8Array;
   currentMessage!: Uint8Array;
+  dataView!: DataView;
   messageType!: ServerMessageType;
   messageLength!: number;
   conn: Deno.Conn;
@@ -20,8 +21,10 @@ export class MessageReader {
   }
 
   async nextMessage() {
+    this.headerBuffer = new Uint8Array(5);
     const res = await this.conn.read(this.headerBuffer);
     if (res === null) {
+      console.log("returning from null");
       return;
     }
     this.messageType = this.decode(
@@ -33,6 +36,7 @@ export class MessageReader {
     );
     this.currentMessage = new Uint8Array(this.messageLength - 4);
     const res2 = await this.conn.read(this.currentMessage);
+    this.dataView = new DataView(this.currentMessage.buffer);
     this.offset = 0;
     return res;
   }
@@ -49,7 +53,7 @@ export class MessageReader {
   }
 
   readInt32() {
-    const num = new DataView(this.currentMessage.buffer).getInt32(
+    const num = this.dataView.getInt32(
       this.offset,
       false,
     );
@@ -58,7 +62,7 @@ export class MessageReader {
   }
 
   readInt16() {
-    const num = new DataView(this.currentMessage.buffer).getInt16(
+    const num = this.dataView.getInt16(
       this.offset,
       false,
     );

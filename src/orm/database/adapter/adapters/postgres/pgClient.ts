@@ -251,6 +251,7 @@ export class PostgresClient {
     this.conn.writable.close();
 
     this.status = "notConnected";
+
     await this.connect();
   }
 
@@ -320,7 +321,7 @@ export class PostgresClient {
       await this.reader.nextMessage();
       const messageType = this.reader
         .messageType as keyof SimpleQueryResponse;
-      console.log({ messageType });
+      // console.log({ messageType });
       switch (messageType) {
         case QR_TYPE.ROW_DESCRIPTION: {
           if (gotDescription) {
@@ -336,12 +337,14 @@ export class PostgresClient {
           rowCount++;
           const columnCount = this.reader.readInt16();
           const row = {} as Record<string, any>;
+          const offsets = new Array(columnCount);
           for (let i = 0; i < columnCount; i++) {
             const field = fields[i];
             const length = this.reader.readInt32(); //
-
+            offsets[i] = this.reader.offset;
             if (length === -1) {
               row[field.camelName] = null;
+
               continue;
             }
             const column = this.reader.readBytes(length);
@@ -352,7 +355,14 @@ export class PostgresClient {
               field.dataType,
             );
           }
+          if (this.reader.offset < this.reader.messageLength - 5) {
+            console.log("thisone");
+            console.log(row);
+            console.log(this.reader.offset);
+            console.log(offsets);
+          }
           data.push(row as T);
+
           break;
         }
         case QR_TYPE.READY_FOR_QUERY: {
@@ -390,11 +400,14 @@ export class PostgresClient {
           break;
         }
         case QR_TYPE.BLANK: {
-          console.log("blank");
           status = "done";
           break;
         }
         default: {
+          console.log(this.reader.headerBuffer);
+          console.log(this.decode(this.reader.headerBuffer));
+          const message = this.reader.readAllBytes();
+
           console.log({ messageType, terminate: true });
           await this.terminate();
         }
@@ -402,6 +415,13 @@ export class PostgresClient {
       if (errors.length) {
         throw new PgError(errors[0]);
       }
+
+      if (this.reader.offset < this.reader.messageLength - 5) {
+        console.log(this.decode(this.reader.currentMessage));
+        console.log("continue");
+        continue;
+      }
+      // await new Promise((resolve) => setTimeout(resolve, 10));
     }
 
     if (errors.length) {
