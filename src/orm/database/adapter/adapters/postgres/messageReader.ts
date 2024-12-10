@@ -24,7 +24,6 @@ export class MessageReader {
     this.headerBuffer = new Uint8Array(5);
     const res = await this.conn.read(this.headerBuffer);
     if (res === null) {
-      console.log("returning from null");
       return;
     }
     this.messageType = this.decode(
@@ -34,11 +33,28 @@ export class MessageReader {
       1,
       false,
     );
-    this.currentMessage = new Uint8Array(this.messageLength - 4);
-    const res2 = await this.conn.read(this.currentMessage);
+    // read from the connection until we have the full message length
+    this.currentMessage = new Uint8Array(this.messageLength);
+    let bytesRead = 0;
+    let data = new Uint8Array(0);
+    const actualLength = this.messageLength - 4;
+
+    while (bytesRead < actualLength) {
+      const remaining = actualLength - bytesRead;
+      const buf = new Uint8Array(remaining);
+      const res = await this.conn.read(buf);
+      if (res === null) {
+        break;
+      }
+      data = new Uint8Array([...data, ...buf.slice(0, res)]);
+
+      bytesRead += res;
+    }
+    this.currentMessage = new Uint8Array([
+      ...data,
+    ]);
     this.dataView = new DataView(this.currentMessage.buffer);
     this.offset = 0;
-    return res;
   }
 
   decode(data: Uint8Array) {
