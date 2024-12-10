@@ -236,9 +236,13 @@ export class PostgresClient {
     }
   }
   async terminate() {
+    this.writer.reset();
     this.writer.setMessageType("X");
+
     await this.conn.write(this.writer.message);
     this.conn.close();
+    this.status = "notConnected";
+    this.reader = new MessageReader(this.conn);
     throw new PgError({
       name: "terminate",
       message: "Unknown message type",
@@ -251,6 +255,7 @@ export class PostgresClient {
     this.conn.writable.close();
 
     this.status = "notConnected";
+
     await this.connect();
   }
 
@@ -335,15 +340,22 @@ export class PostgresClient {
           rowCount++;
           const columnCount = this.reader.readInt16();
           const row = {} as Record<string, any>;
+          const offsets = new Array(columnCount);
           for (let i = 0; i < columnCount; i++) {
             const field = fields[i];
-
             const length = this.reader.readInt32(); //
-
+            offsets[i] = length;
             if (length === -1) {
+              row[field.camelName] = null;
+
+              continue;
+            }
+            if (length === 0) {
+              this.decode(this.reader.currentMessage);
               row[field.camelName] = null;
               continue;
             }
+
             const column = this.reader.readBytes(length);
 
             row[field.camelName] = convertToDataType(
@@ -353,6 +365,7 @@ export class PostgresClient {
             );
           }
           data.push(row as T);
+
           break;
         }
         case QR_TYPE.READY_FOR_QUERY: {
@@ -372,8 +385,22 @@ export class PostgresClient {
         case QR_TYPE.EMPTY_QUERY_RESPONSE: {
           break;
         }
+        case QR_TYPE.PARSE_COMPLETE: {
+          status = "done";
+          break;
+        }
+        case QR_TYPE.CLOSE_COMPLETE: {
+          status = "done";
+          break;
+        }
+
         case QR_TYPE.COMMAND_COMPLETE: {
           const message = this.reader.readAllBytes();
+
+          status = "done";
+          break;
+        }
+        case QR_TYPE.BLANK: {
           status = "done";
           break;
         }
@@ -381,17 +408,13 @@ export class PostgresClient {
           await this.terminate();
         }
       }
+      if (errors.length) {
+        throw new PgError(errors[0]);
+      }
     }
 
     if (errors.length) {
       throw new PgError(errors[0]);
-    }
-    if (status === "fail") {
-      return {
-        rowCount: 0,
-        rows: [],
-        columns: [],
-      };
     }
     return {
       rowCount: data.length,

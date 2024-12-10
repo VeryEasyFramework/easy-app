@@ -426,7 +426,9 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     }
 
     if (options.orderBy) {
-      query += ` ORDER BY ${this.formatColumnName(options.orderBy)}`;
+      query += ` ORDER BY ${baseTableAlias}.${
+        this.formatColumnName(options.orderBy)
+      }`;
       const order = options.order || "ASC";
       query += ` ${order}`;
     }

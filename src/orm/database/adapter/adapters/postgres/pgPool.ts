@@ -31,7 +31,7 @@ class PostgresPoolClient {
   }
   async query<T>(query: string): Promise<QueryResponse<T>> {
     const response = await this.client.query<T>(query).catch(async (e) => {
-      if (e instanceof PgError) {
+      if (e instanceof PgError && e.name === "terminate") {
         this.client = new PostgresClient(this.config);
         await this.client.connect();
         return await this.query<T>(query);

@@ -5,6 +5,7 @@ export class MessageReader {
   size: number;
   headerBuffer: Uint8Array;
   currentMessage!: Uint8Array;
+  dataView!: DataView;
   messageType!: ServerMessageType;
   messageLength!: number;
   conn: Deno.Conn;
@@ -20,6 +21,7 @@ export class MessageReader {
   }
 
   async nextMessage() {
+    this.headerBuffer = new Uint8Array(5);
     const res = await this.conn.read(this.headerBuffer);
     if (res === null) {
       return;
@@ -31,10 +33,28 @@ export class MessageReader {
       1,
       false,
     );
-    this.currentMessage = new Uint8Array(this.messageLength - 4);
-    const res2 = await this.conn.read(this.currentMessage);
+    // read from the connection until we have the full message length
+    this.currentMessage = new Uint8Array(this.messageLength);
+    let bytesRead = 0;
+    let data = new Uint8Array(0);
+    const actualLength = this.messageLength - 4;
+
+    while (bytesRead < actualLength) {
+      const remaining = actualLength - bytesRead;
+      const buf = new Uint8Array(remaining);
+      const res = await this.conn.read(buf);
+      if (res === null) {
+        break;
+      }
+      data = new Uint8Array([...data, ...buf.slice(0, res)]);
+
+      bytesRead += res;
+    }
+    this.currentMessage = new Uint8Array([
+      ...data,
+    ]);
+    this.dataView = new DataView(this.currentMessage.buffer);
     this.offset = 0;
-    return res;
   }
 
   decode(data: Uint8Array) {
@@ -49,7 +69,7 @@ export class MessageReader {
   }
 
   readInt32() {
-    const num = new DataView(this.currentMessage.buffer).getInt32(
+    const num = this.dataView.getInt32(
       this.offset,
       false,
     );
@@ -58,7 +78,7 @@ export class MessageReader {
   }
 
   readInt16() {
-    const num = new DataView(this.currentMessage.buffer).getInt16(
+    const num = this.dataView.getInt16(
       this.offset,
       false,
     );

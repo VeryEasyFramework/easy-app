@@ -90,7 +90,6 @@ export function convertToDataType(
     case "json":
       return JSON.parse(text);
     default:
-      // console.log("unknown", dataType, type, text);
       return text;
   }
 }
