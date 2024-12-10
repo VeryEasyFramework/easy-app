@@ -461,7 +461,6 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         return column;
       });
     }
-    easyLog.info(options);
     const result = await this.database.getRows<E>(
       entryTypeDef.config.tableName,
       options,
