@@ -226,7 +226,6 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     if (options.columns && Array.isArray(options.columns)) {
       columns = options.columns.map((column) => {
         if (typeof column === "object") {
-          easyLog.info(column, "Column");
           return this.makeMultiChoiceFieldQuery(
             this.schema,
             tableName,
