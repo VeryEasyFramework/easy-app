@@ -83,6 +83,7 @@ export async function getReport(
       switch (field.fieldType) {
         case "BigIntField":
         case "IntField":
+        case "CurrencyField":
         case "DecimalField":
           column.aggregate = "sum";
           column.alias = `${field.key}`;
