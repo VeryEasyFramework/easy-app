@@ -15,10 +15,7 @@ import type {
 import type { EntryConnection } from "@vef/types";
 
 import { OrmException, raiseOrmException } from "#orm/ormException.ts";
-import {
-  migrateEntryType,
-  syncEntryTypesToDatabase,
-} from "#orm/database/migrate/migrateEntryType.ts";
+import { migrateEntryType } from "#orm/database/migrate/migrateEntryType.ts";
 
 import { installDatabase } from "#orm/database/install/installDatabase.ts";
 import type { EntryType } from "#orm/entry/entry/entryType/entryType.ts";

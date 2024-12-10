@@ -793,7 +793,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     parentTableName: string,
     entryType: string,
     fieldName: string,
-  ) {
+  ): string {
     return `(SELECT string_agg(values.value, ', ') 
     FROM (SELECT value FROM ${schema}.${entryType}_${fieldName}_mc_values WHERE parent_id = ${schema}.${parentTableName}.id) AS values) AS ${fieldName}`;
   }
