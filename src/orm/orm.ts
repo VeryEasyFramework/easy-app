@@ -2,6 +2,7 @@ import { Database, type DatabaseConfig } from "#orm/database/database.ts";
 import { type BasicFgColor, ColorMe } from "@vef/easy-cli";
 
 import type {
+  DatabaseListOptions,
   EasyFieldType,
   EasyFieldTypeMap,
   EntryType as EntryTypeDef,
@@ -14,10 +15,7 @@ import type {
 import type { EntryConnection } from "@vef/types";
 
 import { OrmException, raiseOrmException } from "#orm/ormException.ts";
-import {
-  migrateEntryType,
-  syncEntryTypesToDatabase,
-} from "#orm/database/migrate/migrateEntryType.ts";
+import { migrateEntryType } from "#orm/database/migrate/migrateEntryType.ts";
 
 import { installDatabase } from "#orm/database/install/installDatabase.ts";
 import type { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
@@ -37,6 +35,7 @@ import type { Settings } from "#orm/entry/settings/settingsTypes.ts";
 import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
 import { getReport } from "#/package/reportingPack/getReport.ts";
 import { CountOptions, ReportOptions, ReportResult } from "#orm/reports.ts";
+import { easyLog } from "#/log/logging.ts";
 
 type GlobalHook = (
   entryType: string,
@@ -439,15 +438,30 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     user?: User,
   ): Promise<RowsResult<E>> {
     const entryTypeDef = this.getEntryType(entryType);
-
-    options = options || {};
-    if (!options.columns) {
-      options.columns = entryTypeDef.listFields as string[];
+    const multiChoiceFields = entryTypeDef.fields.filter((field) =>
+      field.fieldType === "MultiChoiceField"
+    );
+    const multiChoiceKeys = multiChoiceFields.map((field) => field.key);
+    const dbOptions = options || {} as DatabaseListOptions;
+    if (!dbOptions.columns) {
+      dbOptions.columns = entryTypeDef.listFields as string[];
     }
-    if (!options.limit) {
-      options.limit = 100;
+    if (!dbOptions.limit) {
+      dbOptions.limit = 100;
     }
-
+    if (Array.isArray(dbOptions.columns)) {
+      dbOptions.columns = dbOptions.columns.map((column) => {
+        if (typeof column === "string" && multiChoiceKeys.includes(column)) {
+          return {
+            key: column,
+            entryType: entryType,
+            type: "multiChoice",
+          };
+        }
+        return column;
+      });
+    }
+    easyLog.info(options);
     const result = await this.database.getRows<E>(
       entryTypeDef.config.tableName,
       options,

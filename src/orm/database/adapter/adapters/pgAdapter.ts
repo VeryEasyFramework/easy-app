@@ -1,5 +1,6 @@
 import type {
   AdvancedFilter,
+  DatabaseListOptions,
   EasyField,
   EasyFieldType,
   IdMethodType,
@@ -16,8 +17,8 @@ import { PostgresPool } from "#orm/database/adapter/adapters/postgres/pgPool.ts"
 import type { PgClientConfig } from "#orm/database/adapter/adapters/postgres/pgTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 import { easyLog } from "#/log/logging.ts";
-import { DatabaseReportOptions } from "#orm/database/database.ts";
-import {
+import type { DatabaseReportOptions } from "#orm/database/database.ts";
+import type {
   CountGroupedResult,
   CountOptions,
   ReportResult,
@@ -215,7 +216,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
 
   async getRows<T>(
     tableName: string,
-    options?: ListOptions,
+    options?: DatabaseListOptions,
   ): Promise<RowsResult<T>> {
     tableName = this.toSnake(tableName);
     if (!options) {
@@ -224,6 +225,15 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     let columns = "*";
     if (options.columns && Array.isArray(options.columns)) {
       columns = options.columns.map((column) => {
+        if (typeof column === "object") {
+          easyLog.info(column, "Column");
+          return this.makeMultiChoiceFieldQuery(
+            this.schema,
+            tableName,
+            column.entryType,
+            column.key,
+          );
+        }
         return this.formatColumnName(column);
       }).join(", ");
     }
@@ -426,9 +436,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     }
 
     if (options.orderBy) {
-      query += ` ORDER BY ${baseTableAlias}.${
-        this.formatColumnName(options.orderBy)
-      }`;
+      query += ` ORDER BY ${this.formatColumnName(options.orderBy)}`;
       const order = options.order || "ASC";
       query += ` ${order}`;
     }
@@ -778,6 +786,16 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         break;
     }
     return value;
+  }
+
+  makeMultiChoiceFieldQuery(
+    schema: string,
+    parentTableName: string,
+    entryType: string,
+    fieldName: string,
+  ): string {
+    return `(SELECT string_agg(values.value, ', ') 
+    FROM (SELECT value FROM ${schema}.${entryType}_${fieldName}_mc_values WHERE parent_id = ${schema}.${parentTableName}.id) AS values) AS ${fieldName}`;
   }
 }
 
