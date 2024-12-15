@@ -409,9 +409,15 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
           }
         }),
       ].join(", ");
-
+      let joinFilter = "";
+      if (options.joinTable.filter) {
+        joinFilter = this.makeAndFilter(options.joinTable.filter);
+        if (joinFilter) {
+          joinFilter = ` WHERE ${joinFilter}`;
+        }
+      }
       const joinQuery =
-        ` ${joinType} JOIN ( SELECT ${joinColumns} FROM ${this.schema}.${joinTableName} GROUP BY ${joinColumn} ) ${joinTableAlias} ON ${joinTableAlias}.${joinColumn}= ${baseTableAlias}.id`;
+        ` ${joinType} JOIN ( SELECT ${joinColumns} FROM ${this.schema}.${joinTableName}${joinFilter} GROUP BY ${joinColumn} ) ${joinTableAlias} ON ${joinTableAlias}.${joinColumn}= ${baseTableAlias}.id`;
       query += joinQuery;
     }
 
