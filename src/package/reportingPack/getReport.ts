@@ -55,6 +55,7 @@ export async function getReport(
     columns: Array.from(columns),
     subGroup: options.subGroup,
     filter: options.filter ?? {},
+    orFilter: options.orFilter,
     limit: options.limit ?? 100,
     offset: options.offset ?? 0,
     orderBy: options.orderBy,
@@ -97,6 +98,7 @@ export async function getReport(
       type: options.join.type,
       columns: joinColumns,
       joinColumn: joinConnection.idFieldKey,
+      filter: options.join.filter,
     };
   }
   const results = await database.getReport(tableName, report);

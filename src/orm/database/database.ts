@@ -173,6 +173,7 @@ export interface DatabaseReportOptions {
     joinColumn: string;
     type: "inner" | "left" | "right";
     columns: DatabaseReportColumn[];
+    filter?: Record<string, string | number | AdvancedFilter>;
     groupBy?: string[];
   };
   limit?: number;

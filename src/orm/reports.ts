@@ -8,6 +8,7 @@ export interface ReportOptions {
     entryType: string;
     type: "inner" | "left" | "right";
     columns: string[];
+    filter?: Record<string, string | number | AdvancedFilter>;
   };
   filter?: Record<string, string | number | AdvancedFilter>;
   orFilter?: Record<string, string | number | AdvancedFilter>;

@@ -17,6 +17,7 @@ reportingPack.addAction(
           type: params.joinType as "left" | "right" | "inner" || "left",
           columns: params.joinColumns,
           entryType: params.joinEntryType,
+          filter: params.joinFilter,
         };
       }
       const order = ["asc", "desc"].includes(params.order)
@@ -66,6 +67,10 @@ reportingPack.addAction(
       },
       joinColumns: {
         type: "ListField",
+        required: false,
+      },
+      joinFilter: {
+        type: "JSONField",
         required: false,
       },
       limit: {
