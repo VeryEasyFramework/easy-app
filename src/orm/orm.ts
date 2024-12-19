@@ -36,6 +36,7 @@ import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
 import { getReport } from "#/package/reportingPack/getReport.ts";
 import { CountOptions, ReportOptions, ReportResult } from "#orm/reports.ts";
 import { easyLog } from "#/log/logging.ts";
+import { PgError } from "#orm/database/adapter/adapters/postgres/pgError.ts";
 
 type GlobalHook = (
   entryType: string,
@@ -158,7 +159,14 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   }
 
   async init() {
-    await this.database.init();
+    try {
+      await this.database.init();
+    } catch (e) {
+      if (e instanceof PgError) {
+        raiseOrmException("DatabaseError", e.message);
+      }
+      throw e;
+    }
     this.initialized = true;
     this.buildEntryTypes();
     this.validateEntryTypes();

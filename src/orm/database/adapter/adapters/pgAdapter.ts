@@ -793,6 +793,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     entryType: string,
     fieldName: string,
   ): string {
+    fieldName = this.toSnake(fieldName);
     return `(SELECT string_agg(values.value, ', ') 
     FROM (SELECT value FROM ${schema}.${entryType}_${fieldName}_mc_values WHERE parent_id = ${schema}.${parentTableName}.id) AS values) AS ${fieldName}`;
   }

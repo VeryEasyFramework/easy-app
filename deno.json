@@ -2,27 +2,14 @@
   "name": "@vef/easy-app",
   "version": "0.5.18",
   "exports": "./mod.ts",
-  "exclude": [
-    "references",
-    "dev/public"
-  ],
+  "exclude": ["references", "dev/public"],
   "publish": {
-    "exclude": [
-      ".github",
-      "references",
-      "dev"
-    ],
-    "include": [
-      "./**/*",
-      "src/client/**/*"
-    ]
+    "exclude": [".github", "references", "dev"],
+    "include": ["./**/*", "src/client/**/*"]
   },
   "lint": {
     "rules": {
-      "exclude": [
-        "no-unused-vars",
-        "no-explicit-any"
-      ]
+      "exclude": ["no-unused-vars", "no-explicit-any"]
     }
   },
   "imports": {

@@ -19,7 +19,6 @@ export abstract class DatabaseAdapter<C> {
   protected config: C;
   constructor(config: C) {
     this.config = config;
-    this.init();
   }
   query<T>(query: string): Promise<RowsResult<T>> {
     throw new Error("Method not implemented.");

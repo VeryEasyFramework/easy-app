@@ -41,11 +41,9 @@
       "debug": true,
       "size": 1,
       "clientOptions": {
-        "user": "postgres",
-        "password": "postgres",
-        "database": "easyapp",
-        "host": "127.0.0.1",
-        "port": 5432
+        "user": "eliveffer",
+        "unixPath": "/var/run/postgresql/.s.PGSQL.5432",
+        "database": "easy_app"
       }
     }
   }
