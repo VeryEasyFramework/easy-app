@@ -6,3 +6,4 @@ deno.lock
 data
 release
 logs
+appConfig.json
