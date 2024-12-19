@@ -373,13 +373,13 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const joinTableAlias = "B";
     const aColumns = options.columns.map((column) => {
       if (typeof column === "object") {
-        const mcQuery = this.makeMultiChoiceFieldQuery(
+        return this.makeMultiChoiceFieldQuery(
           this.schema,
           tableName,
           column.entryType,
           column.key,
+          baseTableAlias,
         );
-        return mcQuery;
       }
       return `${baseTableAlias}.${this.formatColumnName(column)}`;
     });
@@ -807,10 +807,12 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     parentTableName: string,
     entryType: string,
     fieldName: string,
+    parentAlias?: string,
   ): string {
     fieldName = this.toSnake(fieldName);
+    const parentTable = parentAlias ?? `${schema}.${parentTableName}`;
     return `(SELECT string_agg(values.value, ', ') 
-    FROM (SELECT value FROM ${schema}.${entryType}_${fieldName}_mc_values WHERE parent_id = ${schema}.${parentTableName}.id) AS values) AS ${fieldName}`;
+    FROM (SELECT value FROM ${schema}.${entryType}_${fieldName}_mc_values WHERE parent_id = ${parentTable}.id) AS values) AS ${fieldName}`;
   }
 }
 

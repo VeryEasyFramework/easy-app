@@ -3,6 +3,7 @@
 .vscode/settings.json
 deno.lock
 .data
+.zed
 data
 release
 logs
