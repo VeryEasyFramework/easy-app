@@ -481,6 +481,29 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     options: ReportOptions,
     user?: User,
   ): Promise<ReportResult> {
+    const entryTypeDef = this.getEntryType(entryType);
+    const multiChoiceFields = entryTypeDef.fields.filter((field) =>
+      field.fieldType === "MultiChoiceField"
+    );
+    const multiChoiceKeys = multiChoiceFields.map((field) => field.key);
+    if (!options.columns) {
+      options.columns = entryTypeDef.listFields as string[];
+    }
+    if (!options.limit) {
+      options.limit = 100;
+    }
+    if (Array.isArray(options.columns)) {
+      options.columns = options.columns.map((column) => {
+        if (typeof column === "string" && multiChoiceKeys.includes(column)) {
+          return {
+            key: column,
+            entryType: entryType,
+            type: "multiChoice",
+          };
+        }
+        return column;
+      });
+    }
     return await getReport(this, entryType, options, user);
   }
   /**

@@ -1,7 +1,13 @@
 import type { AdvancedFilter, ListOptions } from "@vef/types";
 
 export interface ReportOptions {
-  columns?: string[];
+  columns?: Array<
+    string | {
+      key: string;
+      entryType: string;
+      type: "multiChoice";
+    }
+  >;
   subGroup?: string;
 
   join?: {

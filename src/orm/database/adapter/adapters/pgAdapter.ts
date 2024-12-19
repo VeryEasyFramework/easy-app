@@ -372,6 +372,15 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const baseTableAlias = "A";
     const joinTableAlias = "B";
     const aColumns = options.columns.map((column) => {
+      if (typeof column === "object") {
+        const mcQuery = this.makeMultiChoiceFieldQuery(
+          this.schema,
+          tableName,
+          column.entryType,
+          column.key,
+        );
+        return mcQuery;
+      }
       return `${baseTableAlias}.${this.formatColumnName(column)}`;
     });
 
