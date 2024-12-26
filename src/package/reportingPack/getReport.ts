@@ -6,7 +6,6 @@ import {
   DatabaseReportOptions,
 } from "#orm/database/database.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
-import { fieldTypeMap } from "#orm/entry/field/fieldTypeMap.ts";
 
 export async function getReport(
   orm: EasyOrm,
@@ -50,9 +49,27 @@ export async function getReport(
   for (const field of connectionFields) {
     columns.add(field.connectionTitleField!);
   }
+  const reportColumns: DatabaseReportOptions["columns"] = [];
+  if (options.groupBy) {
+    const sumFields = entryTypeDef.fields.filter((field) =>
+      ["BigIntField", "IntField", "CurrencyField", "DecimalField"].includes(
+        field.fieldType,
+      ) && columns.has(field.key)
+    ).map((f) => f.key);
+    const sumColumns: DatabaseReportColumn[] = [];
+    for (const field of sumFields) {
+      sumColumns.push({
+        name: field,
+        aggregate: "sum",
+      });
+      columns.delete(field);
+    }
+    reportColumns.push(...sumColumns);
+  }
+  reportColumns.push(...Array.from(columns));
   const tableName = entryTypeDef.config.tableName;
   const report: DatabaseReportOptions = {
-    columns: Array.from(columns),
+    columns: reportColumns,
     subGroup: options.subGroup,
     filter: options.filter ?? {},
     orFilter: options.orFilter,
@@ -60,6 +77,7 @@ export async function getReport(
     offset: options.offset ?? 0,
     orderBy: options.orderBy,
     order: options.order,
+    groupBy: options.groupBy,
   };
 
   if (options.join) {

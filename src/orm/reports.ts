@@ -22,6 +22,7 @@ export interface ReportOptions {
   offset?: number;
   orderBy?: string;
   order?: "asc" | "desc";
+  groupBy?: string;
 }
 
 export interface ReportColumn {

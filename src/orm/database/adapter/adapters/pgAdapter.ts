@@ -373,13 +373,21 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const joinTableAlias = "B";
     const aColumns = options.columns.map((column) => {
       if (typeof column === "object") {
-        return this.makeMultiChoiceFieldQuery(
-          this.schema,
-          tableName,
-          column.entryType,
-          column.key,
-          baseTableAlias,
-        );
+        if ("type" in column) {
+          return this.makeMultiChoiceFieldQuery(
+            this.schema,
+            tableName,
+            column.entryType,
+            column.key,
+            baseTableAlias,
+          );
+        }
+        const columnName = this.formatColumnName(column.name);
+        const columnAlias = this.formatColumnName(column.alias || column.name);
+        if (column.aggregate) {
+          return `${column.aggregate.toUpperCase()}(${columnName}) as ${columnAlias}`;
+        }
+        return `${baseTableAlias}.${columnName}`;
       }
       return `${baseTableAlias}.${this.formatColumnName(column)}`;
     });
@@ -449,15 +457,18 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       countQuery += ` WHERE ${orFilter}`;
     }
 
+    if (options.groupBy) {
+      query += ` GROUP BY ${this.formatColumnName(options.groupBy)}`;
+    }
+    if (options.subGroup && !options.groupBy) {
+      query += ` GROUP BY ${aColumns.join(", ")}`;
+    }
     if (options.orderBy) {
       query += ` ORDER BY ${this.formatColumnName(options.orderBy)}`;
       const order = options.order || "ASC";
       query += ` ${order}`;
     }
-    if (options.subGroup) {
-      query += ` GROUP BY ${aColumns.join(", ")}`;
-    }
-    if (options.limit) {
+    if (options.limit && options.limit >= 0) {
       query += ` LIMIT ${options.limit}`;
     }
 

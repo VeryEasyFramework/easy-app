@@ -165,7 +165,9 @@ export class Database<
 
 export interface DatabaseReportOptions {
   columns: Array<
-    string | { key: string; entryType: string; type: "multiChoice" }
+    | string
+    | { key: string; entryType: string; type: "multiChoice" }
+    | DatabaseReportColumn
   >;
   filter?: Record<string, string | number | AdvancedFilter>;
   orFilter?: Record<string, string | number | AdvancedFilter>;
@@ -182,6 +184,7 @@ export interface DatabaseReportOptions {
   offset?: number;
   orderBy?: string;
   order?: "asc" | "desc";
+  groupBy?: string;
 }
 
 export interface DatabaseReportColumn {

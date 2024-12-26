@@ -33,6 +33,7 @@ reportingPack.addAction(
         orderBy: params.orderBy,
         order: order,
         orFilter: params.orFilter,
+        groupBy: params.groupBy,
       };
       return await orm.getReport(params.entryType, options, user);
     },
@@ -86,6 +87,10 @@ reportingPack.addAction(
         required: false,
       },
       order: {
+        type: "DataField",
+        required: false,
+      },
+      groupBy: {
         type: "DataField",
         required: false,
       },
