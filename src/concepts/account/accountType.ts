@@ -3,7 +3,8 @@ import { PropertyType } from "#/concepts/property.ts";
 
 export class AccountType {
   accountName: string;
-  memberType: EntityType["entityName"];
+  ownerType: EntityType;
+  memberType: EntityType;
 
   description?: string;
   propertyGroups: Array<StatePropertyGroupConfig> = [];
@@ -27,7 +28,8 @@ export class AccountType {
   constructor(accountName: string, options: AccountTypeConfig) {
     this.accountName = accountName;
     this.description = options.description;
-    this.memberType = options.memberType.entityName;
+    this.memberType = options.memberType;
+    this.ownerType = options.ownerType;
     this.propertyGroups = options.propertyGroups || [];
   }
 }
@@ -43,6 +45,7 @@ type AccountTypeConfig = {
    * The description of the account type
    */
   description?: string;
+  ownerType: EntityType;
   /**
    * The entity type that owns the account
    */

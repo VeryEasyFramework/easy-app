@@ -40,6 +40,7 @@ import appRunner from "#/app/runner/mod.ts";
 import { workersPack } from "#/package/workersPack/workersPack.ts";
 import type { AppProcess } from "#/app/runner/begin.ts";
 import { reportingPack } from "#/package/reportingPack/reportingPack.ts";
+import { ModulePack } from "../../mod.ts";
 
 const config = await initAppConfig();
 /**
@@ -51,6 +52,7 @@ export class EasyApp {
   config!: Required<EasyAppConfig<DBType>>;
   processNumber: string = "Main";
 
+  modulePacks: Map<string, ModulePack> = new Map();
   get fullAppName(): string {
     return `${this.config.appName} (${this.processNumber})`;
   }
@@ -170,6 +172,13 @@ export class EasyApp {
           raiseEasyException(`Unknown EasyPack: ${pack}`, 500);
       }
     });
+  }
+
+  addModulePack(modulePack: ModulePack) {
+    if (this.modulePacks.has(modulePack.moduleName)) {
+      raiseEasyException(`Module ${modulePack.moduleName} already exists`, 500);
+    }
+    this.modulePacks.set(modulePack.moduleName, modulePack);
   }
   processes: Array<AppProcess> = [];
 

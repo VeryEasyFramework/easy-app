@@ -77,4 +77,16 @@ interface EntityPropertyConfig {
   propertyType: PropertyType;
 
   mandatory?: boolean;
+  autoValue?: AutoValueConfig;
 }
+
+type AutoCombined = {
+  type: "combinedProperties";
+  properties: Array<string>;
+};
+
+type AutoComputed = {
+  type: "computed";
+  computeFunction: (entity: any) => any;
+};
+type AutoValueConfig = AutoCombined;
