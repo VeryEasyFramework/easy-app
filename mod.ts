@@ -12,7 +12,7 @@ export type {
   HooksDefMap,
   HooksMap,
 } from "#orm/entry/baseDefinition.ts";
-
+export type { TypedEntry } from "#orm/entry/entry/entryType/entry.ts";
 export { OrmException, raiseOrmException } from "#orm/ormException.ts";
 
 export { SettingsType } from "#orm/entry/settings/settingsType.ts";
