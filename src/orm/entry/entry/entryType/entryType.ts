@@ -127,14 +127,19 @@ export class EntryType<T extends Record<string, any> = any>
 
       return [...doc, ...row].join("\n");
     });
+    const childFields = this.children.map((child) => {
+      const childName = toPascalCase(child.childName);
+      return `${child.childName}: ChildList[];`;
+    });
+    const fieldsWithChildren = [...fields, ...childFields];
+
     const writeFilePath =
       `${Deno.cwd()}/generatedTypes/${this.entryType}Interface.ts`;
     const name = camelToSnakeCase(this.entryType);
     const rows: string[] = [];
     rows.push(`export interface ${toPascalCase(name)} {`);
-    rows.push(...fields);
+    rows.push(...fieldsWithChildren);
     rows.push("}");
-    console.log(Deno.cwd());
     Deno.mkdirSync(`${Deno.cwd()}/generatedTypes`, {
       recursive: true,
     });

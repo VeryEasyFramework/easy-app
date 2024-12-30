@@ -12,11 +12,11 @@ export class ChildRecord {
   }
 }
 
-export class ChildList {
-  _records: ChildRecord[] = [];
+export class ChildList<T extends Record<string, any> = any> {
+  _records: Array<ChildRecord & T> = [];
   fields: Map<string, EasyField>;
 
-  get records(): ChildRecord[] {
+  get records(): Array<ChildRecord & T> {
     return this._records;
   }
 
@@ -28,7 +28,7 @@ export class ChildList {
     this.changed = true;
   }
 
-  sanitizeRecord(record: Record<string, any>): ChildRecord {
+  sanitizeRecord(record: Record<string, any>): ChildRecord & T {
     const data: Record<string, any> = {};
     for (const key in record) {
       if (this.hasField(key) || ["id", "parentId", "order"].includes(key)) {
@@ -37,7 +37,7 @@ export class ChildList {
     }
     const newChild = new ChildRecord(data);
     newChild.parentId = this.parentId;
-    return newChild;
+    return newChild as ChildRecord & T;
   }
   orm: EasyOrm;
   childDefinition!: ChildListDefinition;
@@ -69,7 +69,9 @@ export class ChildList {
       orderBy: "order",
     });
 
-    this._records = result.data.map((row) => new ChildRecord(row));
+    this._records = result.data.map((row) =>
+      new ChildRecord(row) as ChildRecord & T
+    );
   }
 
   async addRecord(data: Record<string, any>) {
