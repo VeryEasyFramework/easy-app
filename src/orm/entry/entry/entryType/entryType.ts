@@ -129,7 +129,37 @@ export class EntryType<T extends Record<string, any> = any>
     });
     const childFields = this.children.map((child) => {
       const childName = toPascalCase(child.childName);
-      return `${child.childName}: ChildList[];`;
+      const childFields = child.fields.map((field) => {
+        const fieldType = fieldTypeMap[field.fieldType];
+        if (!fieldType) {
+          raiseEasyException(
+            `Field type ${field.fieldType} does not exist`,
+            400,
+          );
+        }
+        const { label, description, required } = field;
+        const descriptionDoc = description
+          ? ` * @description ${description}`
+          : "";
+        const doc = [
+          `/**`,
+          ` * **${label || ""}** (${field.fieldType})`,
+        ];
+        if (description) {
+          doc.push(` * @description ${description}`);
+        }
+        doc.push(` * @type {${fieldType}}`);
+        if (required) {
+          doc.push(` * @required ${required}`);
+        }
+        doc.push(` */`);
+        const row = [
+          `${field.key}${required ? "" : "?"}: ${fieldType};`,
+        ];
+
+        return [...doc, ...row].join("\n");
+      });
+      return `${child.childName}: ChildList<{${childFields.join("\n")}}>;`;
     });
     const fieldsWithChildren = [...fields, ...childFields];
 
@@ -137,6 +167,9 @@ export class EntryType<T extends Record<string, any> = any>
       `${Deno.cwd()}/generatedTypes/${this.entryType}Interface.ts`;
     const name = camelToSnakeCase(this.entryType);
     const rows: string[] = [];
+    if (this.children.length > 0) {
+      rows.push(`import { ChildList } from "@vef/easy-app";`);
+    }
     rows.push(`export interface ${toPascalCase(name)} {`);
     rows.push(...fieldsWithChildren);
     rows.push("}");
