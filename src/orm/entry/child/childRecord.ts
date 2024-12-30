@@ -21,6 +21,7 @@ export class ChildList {
   }
 
   set records(value: Array<Record<string, any>>) {
+    this._records = [];
     for (const record of value) {
       this._records.push(this.sanitizeRecord(record));
     }
