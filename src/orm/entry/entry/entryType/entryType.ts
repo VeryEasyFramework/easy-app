@@ -98,7 +98,15 @@ export class EntryType<T extends Record<string, any> = any>
 
   generateType() {
     const fields = this.fields.map((field) => {
-      const fieldType = fieldTypeMap[field.fieldType];
+      let fieldType = fieldTypeMap[field.fieldType];
+      if (field.fieldType === "ChoicesField") {
+        fieldType = field.choices?.map((choice) => {
+          if (typeof choice.key === "number") {
+            return choice.key.toString();
+          }
+          return `'${choice.key as string}'`;
+        }).join(" | ") || "string";
+      }
       if (!fieldType) {
         raiseEasyException(
           `Field type ${field.fieldType} does not exist`,
@@ -130,7 +138,15 @@ export class EntryType<T extends Record<string, any> = any>
     const childFields = this.children.map((child) => {
       const childName = toPascalCase(child.childName);
       const childFields = child.fields.map((field) => {
-        const fieldType = fieldTypeMap[field.fieldType];
+        let fieldType = fieldTypeMap[field.fieldType];
+        if (field.fieldType === "ChoicesField") {
+          fieldType = field.choices?.map((choice) => {
+            if (typeof choice.key === "number") {
+              return choice.key.toString();
+            }
+            return `'${choice.key as string}'`;
+          }).join(" | ") || "string";
+        }
         if (!fieldType) {
           raiseEasyException(
             `Field type ${field.fieldType} does not exist`,
