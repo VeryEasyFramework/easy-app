@@ -12,7 +12,6 @@ import {
   type AdapterColumn,
   DatabaseAdapter,
 } from "#orm/database/adapter/databaseAdapter.ts";
-import { camelToSnakeCase, toCamelCase } from "@vef/string-utils";
 import { PostgresPool } from "#orm/database/adapter/adapters/postgres/pgPool.ts";
 import type { PgClientConfig } from "#orm/database/adapter/adapters/postgres/pgTypes.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
@@ -23,6 +22,7 @@ import type {
   CountOptions,
   ReportResult,
 } from "#orm/reports.ts";
+import { camelToSnakeCase, toCamelCase } from "#orm/utils/stringUtils.ts";
 
 export interface PostgresConfig {
   clientOptions: PgClientConfig;
