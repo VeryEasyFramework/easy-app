@@ -62,3 +62,4 @@ export type {
 export { ModulePack } from "#/concepts/modulePack.ts";
 export { AccountType } from "#/concepts/account/accountType.ts";
 export { EntityType } from "#/concepts/entity/entityType.ts";
+export { VEF } from "#/vef.ts";
