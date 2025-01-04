@@ -1,6 +1,17 @@
+import { EntityType } from "#/concepts/entity/entityType.ts";
+
 export class Entity {
-  entityId: string;
+  private static _entityType: EntityType;
+
+  static set entityType(value: EntityType) {
+    this._entityType = value;
+  }
+
+  static get entityType(): EntityType {
+    return this._entityType;
+  }
+  id: string;
   constructor() {
-    this.entityId = "1234";
+    this.id = "1234";
   }
 }

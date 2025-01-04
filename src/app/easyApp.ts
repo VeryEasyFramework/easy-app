@@ -108,8 +108,11 @@ export class EasyApp {
    * Now you can visit http://localhost:8000 to see your app in action!
    */
 
-  constructor() {
+  constructor(appName?: string) {
     this.config = config;
+    if (appName) {
+      this.config.appName = appName;
+    }
     this.actions = {};
     this.orm = new EasyOrm({
       databaseType: this.config.ormOptions.databaseType,
