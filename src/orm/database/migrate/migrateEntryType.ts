@@ -107,6 +107,7 @@ export async function migrateEntryType(options: {
   for (const child of entryType.children) {
     await migrateChild(database, child, entryType, onOutput);
   }
+  await database.adapter.vacuumAnalyze(entryType.config.tableName);
 }
 
 async function migrateMultiChoiceField(
@@ -152,6 +153,8 @@ async function migrateMultiChoiceField(
     columns: "parentId",
     include: ["value"],
   });
+
+  await database.adapter.vacuumAnalyze(valuesTableName);
 }
 async function migrateChild(
   database: Database<keyof DatabaseConfig>,

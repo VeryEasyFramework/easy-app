@@ -369,8 +369,8 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       });
     }
 
-    const result = await this.database.adapter.vacuumAnalyze();
-    progress(count, total, message("Vacuum Analyze", "brightGreen"));
+    // const result = await this.database.adapter.vacuumAnalyze();
+    // progress(count, total, message("Vacuum Analyze", "brightGreen"));
 
     // await syncEntryTypesToDatabase({
     //   orm: this,
