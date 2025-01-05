@@ -856,7 +856,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     const query = `DROP INDEX ${indexName}`;
     await this.query(query);
   }
-  async vacuumAnalyze(tableName?: string) {
+  async vacuumAnalyze(tableName?: string): Promise<RowsResult<any>> {
     if (!tableName) {
       const query = `VACUUM ANALYZE`;
       return await this.query(query);
