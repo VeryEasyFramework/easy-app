@@ -146,6 +146,12 @@ async function migrateMultiChoiceField(
       fieldType: "IntField",
     },
   ], onOutput);
+  await database.adapter.createIndex({
+    tableName: valuesTableName,
+    indexName: `${valuesTableName}_parentId`,
+    columns: "parentId",
+    include: ["value"],
+  });
 }
 async function migrateChild(
   database: Database<keyof DatabaseConfig>,

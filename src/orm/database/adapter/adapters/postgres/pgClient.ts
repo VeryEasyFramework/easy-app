@@ -24,6 +24,7 @@ import {
 } from "#orm/database/adapter/adapters/postgres/maps/maps.ts";
 import { AUTH } from "#orm/database/adapter/adapters/postgres/pgAuth.ts";
 import { ScramClient } from "#orm/database/adapter/adapters/postgres/scram.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export class PostgresClient {
   private conn!: Deno.Conn;
@@ -280,6 +281,27 @@ export class PostgresClient {
     ];
     return errorFields;
   }
+  private readNotice() {
+    const errorFields: Record<string, any> = {};
+    let offset = 0;
+    while (this.reader.offset < this.reader.messageLength) {
+      const field = this.reader.readChar() as
+        | keyof typeof errorCodeMap
+        | null;
+      if (!field) {
+        break;
+      }
+      errorFields[errorCodeMap[field]] = this.reader.readCString();
+      offset++;
+      if (offset > this.reader.messageLength) {
+        break;
+      }
+    }
+    errorFields["name"] = pgErrorMap[
+      errorFields["code"] as keyof typeof pgErrorMap
+    ];
+    return errorFields;
+  }
   private parseRowDescription(): ColumnDescription[] {
     const columnCount = this.reader.readInt16();
 
@@ -319,6 +341,7 @@ export class PostgresClient {
     const fields: ColumnDescription[] = [];
     const data: T[] = [];
     const errors: any[] = [];
+    const notices: any[] = [];
     let gotDescription = false;
     let rowCount = 0;
     while (!status) {
@@ -404,17 +427,29 @@ export class PostgresClient {
           status = "done";
           break;
         }
+        case QR_TYPE.NOTICE_RESPONSE: {
+          const notice = this.readNotice();
+          notices.push(notice);
+          break;
+        }
         default: {
           await this.terminate();
         }
       }
       if (errors.length) {
-        throw new PgError(errors[0]);
+        throw new PgError(
+          { ...errors[0], query },
+        );
       }
     }
 
     if (errors.length) {
-      throw new PgError(errors[0]);
+      throw new PgError({ ...errors[0], query });
+    }
+    if (notices.length) {
+      easyLog.debug(notices, "PostgresClient NOTICE", {
+        hideTrace: true,
+      });
     }
     return {
       rowCount: data.length,

@@ -825,6 +825,46 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     return `(SELECT string_agg(values.value, ', ') 
     FROM (SELECT value FROM ${schema}.${entryType}_${fieldName}_mc_values WHERE parent_id = ${parentTable}.id) AS values) AS ${fieldName}`;
   }
+
+  async createIndex(
+    options: {
+      tableName: string;
+      indexName: string;
+      columns: string[] | string;
+      include?: string[];
+      unique?: boolean;
+    },
+  ): Promise<void> {
+    const { tableName, indexName, columns, unique } = options;
+    const uniqueStr = unique ? "UNIQUE" : "";
+    const tableNameSnake = this.toSnake(tableName);
+
+    const fieldsStr = (Array.isArray(columns) ? columns : [columns]).map(
+      (column) => this.formatColumnName(column),
+    ).join(", ");
+    const includeStr = options.include
+      ? `INCLUDE (${
+        options.include.map((col) => this.formatColumnName(col)).join(", ")
+      })`
+      : "";
+    const query =
+      `CREATE ${uniqueStr} INDEX IF NOT EXISTS ${indexName} ON ${this.schema}.${tableNameSnake} (${fieldsStr}) ${includeStr}`;
+    await this.query(query);
+  }
+  async dropIndex(tableName: string, indexName: string): Promise<void> {
+    tableName = this.toSnake(tableName);
+    const query = `DROP INDEX ${indexName}`;
+    await this.query(query);
+  }
+  async vacuumAnalyze(tableName?: string) {
+    if (!tableName) {
+      const query = `VACUUM ANALYZE`;
+      return await this.query(query);
+    }
+    tableName = this.toSnake(tableName);
+    const query = `VACUUM ANALYZE ${this.schema}.${tableName}`;
+    return await this.query(query);
+  }
 }
 
 type ValueType<Join> = Join extends false ? Array<string> : string | number;

@@ -4,6 +4,7 @@ export class PgError extends Error {
   detail: string;
   override message: string;
   fullMessage: Record<string, string>;
+  query?: string;
 
   constructor(options: Record<string, string>) {
     super(options.message);
@@ -13,5 +14,6 @@ export class PgError extends Error {
     this.message = options.message;
     this.name = options.name;
     this.fullMessage = options;
+    this.query = options.query;
   }
 }
