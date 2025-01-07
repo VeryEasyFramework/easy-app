@@ -31,5 +31,13 @@ export function setupDbMenu(app: EasyApp): void {
       app.cli.changeView("generateTypes");
     },
   });
+
+  dbMenu.addAction({
+    name: "Get Pg Memory Settings",
+    description: "Get the recommended memory settings for Postgres",
+    action: () => {
+      app.cli.changeView("pgMemory");
+    },
+  });
   app.cli.addView(dbMenu, "database");
 }

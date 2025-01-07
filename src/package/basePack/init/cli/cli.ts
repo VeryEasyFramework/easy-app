@@ -12,6 +12,7 @@ import {
 } from "#/package/basePack/init/cli/views/migrateDbView.ts";
 import { setupGetDevUi } from "#/package/basePack/init/cli/views/getDevUiView.ts";
 import { setupGenerateTypesView } from "#/package/basePack/init/cli/views/generateTypesView.ts";
+import { setupPgMemoryView } from "#/package/basePack/init/cli/views/getPgMemoryView.ts";
 
 export const buildCli: InitAction = {
   actionName: "buildCli",
@@ -29,6 +30,7 @@ export const buildCli: InitAction = {
     setupGetDevUi(app);
     setupMigrateDbView(app);
     setupGenerateTypesView(app);
+    setupPgMemoryView(app);
     setupRunMenu(app);
     setupMainMenu(app);
     setupGroupsMenu(app);

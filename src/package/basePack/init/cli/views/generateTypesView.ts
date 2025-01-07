@@ -20,6 +20,8 @@ export function setupGenerateTypesView(app: EasyApp): void {
       success();
     },
   });
-
+  generateTypesView.onDone(() => {
+    generateTypesView.cli.changeView("main");
+  });
   app.cli.addView(generateTypesView, "generateTypes");
 }
