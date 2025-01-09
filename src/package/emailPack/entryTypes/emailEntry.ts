@@ -1,6 +1,7 @@
 import { SMTPClient } from "#/package/emailPack/smtp/smtpClient.ts";
 import type { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
 import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export const emailEntry = new EntryType("email");
 
@@ -94,6 +95,9 @@ emailEntry.addAction("send", {
         throw new Error(`SMTP Error: ${code} ${message}`);
       };
       smtpClient.onStateChange = (state, message) => {
+        easyLog.warning(message, `SMTP State: ${state}`, {
+          compact: true,
+        });
       };
       await smtpClient.sendEmail({
         body,
@@ -114,7 +118,8 @@ emailEntry.addAction("send", {
       // Send the email
       email.status = "sent";
       await email.save();
-    } catch (_e) {
+    } catch (e) {
+      easyLog.error(e, "Failed to send email");
       email.status = "failed";
       await email.save();
     }

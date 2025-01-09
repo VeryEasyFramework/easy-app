@@ -5,6 +5,7 @@ import type {
   State,
 } from "#/package/emailPack/smtp/smtpTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
+import { easyLog } from "#/log/logging.ts";
 
 // https://mailtrap.io/blog/smtp-commands-and-responses/#SMTP-response-codes
 
@@ -245,6 +246,7 @@ export class SMTPClient {
       port: this.port,
       hostname: this.smtpServer,
     });
+
     const write = (chunk: Uint8Array) => {
       this.handleChunk(chunk);
     };
@@ -298,7 +300,11 @@ export class SMTPClient {
       new WritableStream({
         write,
       }),
-    );
+    ).catch((e) => {
+      if (!this.states.disconnect) {
+        throw e;
+      }
+    });
 
     this.states.tlsConnected = true;
     this.onStateChange(

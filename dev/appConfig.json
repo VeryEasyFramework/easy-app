@@ -38,7 +38,7 @@
   "ormOptions": {
     "databaseType": "postgres",
     "databaseConfig": {
-      "debug": true,
+      "debug": false,
       "size": 1,
       "clientOptions": {
         "user": "eliveffer",

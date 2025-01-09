@@ -7,10 +7,13 @@ emailSettings.setConfig({
   description: "Settings for sending emails",
 });
 
-emailSettings.addFieldGroup({
+emailSettings.addFieldGroups([{
   key: "smtp",
   title: "SMTP Settings",
-});
+}, {
+  key: "imap",
+  title: "IMAP Settings",
+}]);
 
 emailSettings.addFields([{
   key: "emailAccount",
@@ -40,5 +43,33 @@ emailSettings.addFields([{
   key: "smtpPassword",
   fieldType: "PasswordField",
   label: "SMTP Password",
+  group: "smtp",
   description: "The password to authenticate with the SMTP server",
+}]);
+
+emailSettings.addFields([{
+  key: "imapHost",
+  fieldType: "TextField",
+  label: "IMAP Host",
+  description: "The host of the IMAP server",
+  required: true,
+  group: "imap",
+}, {
+  key: "imapPort",
+  fieldType: "IntField",
+  label: "IMAP Port",
+  description: "The port of the IMAP server",
+  group: "imap",
+}, {
+  key: "imapUser",
+  fieldType: "DataField",
+  label: "IMAP User",
+  description: "The user to authenticate with the IMAP server",
+  group: "imap",
+}, {
+  key: "imapPassword",
+  fieldType: "PasswordField",
+  label: "IMAP Password",
+  description: "The password to authenticate with the IMAP server",
+  group: "imap",
 }]);
