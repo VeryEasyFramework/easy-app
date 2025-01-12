@@ -49,6 +49,9 @@ export class EasyApp {
   private hasError: boolean = false;
   server?: Deno.HttpServer;
   config!: Required<EasyAppConfig<DBType>>;
+  get fileRoot(): string {
+    return `${this.config.appRootPath}/files`;
+  }
   processNumber: string = "Main";
 
   get fullAppName(): string {
@@ -694,6 +697,18 @@ export class EasyApp {
           return easyResponse.respond();
         } catch (e) {
           if (e instanceof EasyException) {
+            if (e.status >= 300 && e.status < 400 && e.redirect) {
+              const redirect = e.redirect;
+              try {
+                const url = new URL(redirect);
+                return easyResponse.redirect(redirect);
+              } catch (e) {
+                const url = new URL(
+                  `${easyRequest.origin}${easyRequest.prefix}${redirect}`,
+                );
+                return easyResponse.redirect(url.toString());
+              }
+            }
             const subject = `${e.status} - ${e.name}`;
             easyLog.error(e.message, subject, {
               hideTrace: false,

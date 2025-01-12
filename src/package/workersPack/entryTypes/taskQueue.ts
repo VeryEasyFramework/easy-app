@@ -1,7 +1,9 @@
 import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
+import type { EasyOrm } from "#orm/orm.ts";
+import type { TaskQueue } from "#/package/workersPack/entryTypes/taskQueueInterface.ts";
 
-export const taskQueue = new EntryType("taskQueue");
+export const taskQueue = new EntryType<TaskQueue>("taskQueue");
 taskQueue.setConfig({
   statusField: "status",
   titleField: "title",
@@ -94,11 +96,14 @@ taskQueue.addFields([{
 
 taskQueue.addHook("validate", {
   action(task) {
+    const orm = task.orm as EasyOrm;
     let title = "";
     switch (task.taskType) {
       case "entry": {
-        const entryType = task.recordType as string;
-        const entryTypeDef = task.orm.getEntryType(entryType);
+        console.log(task.entryType);
+        console.log(task.data);
+        const entryType = task.entryType as string;
+        const entryTypeDef = orm.getEntryType(entryType);
         if (!entryTypeDef) {
           raiseOrmException(
             "EntryTypeNotFound",
@@ -106,11 +111,11 @@ taskQueue.addHook("validate", {
           );
         }
         title =
-          `${entryTypeDef.config.label}: ${task.recordTitle} - ${task.action}`;
+          `${entryTypeDef.config.label}: ${task.entryTitle} - ${task.action}`;
         break;
       }
       case "settings": {
-        const settingsType = task.recordType as string;
+        const settingsType = task.entryType as string;
         const settingsTypeDef = task.orm.getSettingsType(settingsType);
 
         if (!settingsTypeDef) {
@@ -165,7 +170,7 @@ taskQueue.addAction("runTask", {
             message: result,
           };
         }
-        task.resultData = message;
+        task.resultData = message as Record<string, any>;
       }
     }
     task.status = "completed";
