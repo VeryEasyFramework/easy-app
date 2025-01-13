@@ -1,13 +1,17 @@
 import { easyLog, EntryType, raiseEasyException } from "@vef/easy-app";
-import type { GoogleUpload } from "#/package/googlePack/googleUploadInterface.ts";
 import {
   createUploadSession,
   uploadResumable,
 } from "#/package/googlePack/googleDrive.ts";
+import type { GoogleUpload } from "#/generatedTypes/googleUploadInterface.ts";
 
 export const googleUploadEntry = new EntryType<GoogleUpload>("googleUpload", {
   description: "Google Drive resumable file upload",
   label: "Google File Upload",
+});
+
+googleUploadEntry.setConfig({
+  titleField: "fileName",
 });
 
 googleUploadEntry.addFields([
@@ -15,6 +19,25 @@ googleUploadEntry.addFields([
     key: "sessionUri",
     label: "Session URI",
     fieldType: "URLField",
+  },
+  {
+    key: "uploadStatus",
+    label: "Upload Status",
+    fieldType: "ChoicesField",
+    defaultValue: "pending",
+    choices: [{
+      key: "pending",
+      label: "Pending",
+    }, {
+      key: "inProgress",
+      label: "In Progress",
+    }, {
+      key: "completed",
+      label: "Completed",
+    }, {
+      key: "failed",
+      label: "Failed",
+    }],
   },
   {
     key: "uploadType",

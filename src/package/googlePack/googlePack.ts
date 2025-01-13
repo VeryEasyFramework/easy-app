@@ -7,13 +7,14 @@ import {
 import { redirectAction } from "#/package/googlePack/actions/redirectAction.ts";
 import { getOAuthUrl } from "#/package/googlePack/actions/getOAuthUrl.ts";
 import { backUpDatabase } from "#/package/googlePack/actions/backupDatabase.ts";
+import { databaseBackupEntry } from "#/package/googlePack/databaseBackupEntry.ts";
 
 export const googlePack = new EasyPack("google", {
   description: "Google API",
 });
 
 googlePack.addEntryType(googleUploadEntry);
-
+googlePack.addEntryType(databaseBackupEntry);
 googlePack.addSettingsType(googleSettings);
 
 // googlePack.addAction("google", {
