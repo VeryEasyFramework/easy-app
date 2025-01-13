@@ -434,6 +434,9 @@ export function validateField(
     case "DecimalField":
       value = validateDecimal(field, value);
       break;
+    case "CurrencyField":
+      value = validateCurrency(field, value);
+      break;
     case "DataField":
       value = validateData(field, value);
       break;
