@@ -5,7 +5,7 @@ import type { DatabaseConfig } from "#orm/database/database.ts";
 import { joinPath } from "#/utils.ts";
 
 export async function backUpPgDatabase(app: EasyApp) {
-  const nowFormatted = dateUtils.nowFormatted("standard") as string;
+  const nowFormatted = dateUtils.nowFormatted("standard", true) as string;
   const dbName =
     (app.config.ormOptions.databaseConfig as DatabaseConfig["postgres"])
       .clientOptions.database;
@@ -16,12 +16,10 @@ export async function backUpPgDatabase(app: EasyApp) {
   const session = new CommandSession("local", {
     cwd: Deno.realPathSync(app.config.appRootPath),
   });
-  console.log("Starting backup");
-  console.log(filePath);
+
   await session.start();
   const command = ["pg_dump", "-d", dbName, "-Fc", "-f", filePath];
-  const result = await session.runCommand(command.join(" "), true);
-  console.log(result);
+  await session.runCommand(command.join(" "), true);
   session.close();
-  return filePath;
+  return backupName;
 }

@@ -370,7 +370,6 @@ export class EntryClass {
   ): Promise<Record<string, any>> {
     this.validateAction(actionKey, data);
     data = data || {};
-    console.log(this._entryType.entryType);
 
     const task = await this.orm.createEntry("taskQueue", {
       taskType: "entry",

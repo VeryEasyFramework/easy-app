@@ -38,6 +38,10 @@ async function checkForTasks(app: EasyApp) {
     easyLog.warning("No worker mode set", app.fullAppName);
     return;
   }
+  const hooks = app.workerHooks[worker];
+  for (const hook of hooks) {
+    await hook(app);
+  }
   const workerSettings = await app.orm.getSettings("workerSettings");
   const maxTasks = workerSettings.maxTaskCount as number;
   const tasks = await app.orm.getEntryList("taskQueue", {

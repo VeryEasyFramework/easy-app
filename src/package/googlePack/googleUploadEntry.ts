@@ -1,4 +1,4 @@
-import { easyLog, EntryType, raiseEasyException } from "@vef/easy-app";
+import { EntryType, raiseEasyException } from "@vef/easy-app";
 import {
   createUploadSession,
   uploadResumable,
@@ -25,6 +25,7 @@ googleUploadEntry.addFields([
     label: "Upload Status",
     fieldType: "ChoicesField",
     defaultValue: "pending",
+    inList: true,
     choices: [{
       key: "pending",
       label: "Pending",
@@ -124,7 +125,20 @@ googleUploadEntry.addAction("upload", {
   description: "Upload a file to Google Drive",
   label: "Upload",
   async action(upload) {
-    easyLog.info("Uploading file to Google Drive", upload.filePath);
+    const googleSettings = await upload.orm.getSettings("googleSettings");
+    const { orm } = upload;
+    const sessionUri = await createUploadSession(orm, {
+      fileName: upload.fileName,
+      folderId: googleSettings.dbBackupFolderId,
+      mimeType: upload.fileMimeType || "application/octet-stream",
+    });
+    if (!sessionUri) {
+      raiseEasyException("Failed to create upload session", 400);
+    }
+    upload.sessionUri = sessionUri;
+    upload.uploadStatus = "inProgress";
+    upload.folderId = googleSettings.dbBackupFolderId;
+    await upload.save();
     const filePath =
       `${upload.orm.app.config.appRootPath}/files/${upload.filePath}`;
     const file = Deno.readFileSync(filePath);
@@ -136,7 +150,7 @@ googleUploadEntry.addAction("upload", {
       `bytes 0-${file.byteLength - 1}/${file.byteLength}`,
     );
     headers.set("Content-Type", "application/octet-stream");
-    const googleSettings = await upload.orm.getSettings("googleSettings");
+
     switch (upload.uploadType) {
       case "resumable": {
         if (!upload.sessionUri) {
@@ -155,6 +169,7 @@ googleUploadEntry.addAction("upload", {
         upload.fileLink = `https://drive.google.com/file/d/${result.id}/view`;
         upload.folderLink =
           `https://drive.google.com/drive/folders/${upload.folderId}`;
+        upload.uploadStatus = "completed";
         await upload.save();
         break;
       }
@@ -216,11 +231,9 @@ googleUploadEntry.addAction("createSessionUri", {
       throw new Error("Failed to create upload session");
     }
     upload.sessionUri = sessionUri;
+    upload.uploadStatus = "inProgress";
     upload.folderId = googleSettings.dbBackupFolderId;
     upload.save();
-    return {
-      sessionUri,
-    };
   },
 });
 

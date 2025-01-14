@@ -1,6 +1,6 @@
 // https://developers.google.com/drive/api/guides/manage-uploads
 
-import { EasyApp, raiseEasyException } from "@vef/easy-app";
+import { type EasyApp, raiseEasyException } from "@vef/easy-app";
 import { refreshAccessToken } from "#/package/googlePack/googleSettings.ts";
 
 const uploadEndpoint = "https://www.googleapis.com/upload/drive/v3/files";
@@ -49,7 +49,6 @@ export async function uploadResumable(config: {
     body: file,
   });
   if (!response.ok) {
-    console.log(await response.text());
     raiseEasyException(
       `Failed to upload file to Google Drive: ${response.statusText}`,
       response.status,
@@ -95,7 +94,6 @@ async function googleApiCall(orm: EasyApp["orm"], config: {
     "Authorization",
     `Bearer ${googleSettings.accessToken}`,
   );
-  console.log({ body: config.body });
   const response = await fetch(endpoint, {
     method,
     headers,
@@ -109,7 +107,6 @@ async function googleApiCall(orm: EasyApp["orm"], config: {
         refreshToken: googleSettings.refreshToken,
       });
 
-      console.log(tokenObject);
       if (!tokenObject) {
         return;
       }

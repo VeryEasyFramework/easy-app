@@ -10,6 +10,7 @@ import { editLogEntry } from "#/package/basePack/entryTypes/editLogEntry.ts";
 import { ormGlobalHooks } from "#/package/basePack/boot/ormGlobalHooks.ts";
 import { settingsActions } from "#/package/basePack/actions/settingsActions/index.ts";
 import { entryTypeEntry } from "#/package/basePack/entryTypes/entryTypeEntry.ts";
+import { systemSettings } from "#/package/basePack/settings/systemSettings.ts";
 
 const basePack = new EasyPack("base", {
   description:
@@ -29,9 +30,10 @@ basePack.addMiddleware(requestOptionsMiddleware);
 basePack.addEntryType(editLogEntry);
 basePack.addEntryType(entryTypeEntry);
 
-basePack.setVersion(0, 1, 0);
+basePack.setVersion(0, 1, 1);
 basePack.addBootAction(bootEntryRooms);
 basePack.addBootAction(ormGlobalHooks);
+basePack.addSettingsType(systemSettings);
 basePack.addInitAction(buildCli);
 
 export { basePack };

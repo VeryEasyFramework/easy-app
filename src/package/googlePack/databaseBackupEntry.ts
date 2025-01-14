@@ -2,12 +2,13 @@ import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 import { backUpPgDatabase } from "#orm/database/backup.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
 import type { DatabaseBackup } from "#/generatedTypes/databaseBackupInterface.ts";
+import { joinPath } from "#/utils.ts";
 export const databaseBackupEntry = new EntryType<DatabaseBackup>(
   "databaseBackup",
 );
 
 databaseBackupEntry.setConfig({
-  titleField: "backupFileName",
+  statusField: "uploadStatus",
 });
 
 databaseBackupEntry.addFields([
@@ -15,6 +16,7 @@ databaseBackupEntry.addFields([
     key: "backupDate",
     label: "Backup Date",
     fieldType: "TimeStampField",
+    showTime: true,
     inList: true,
     readOnly: true,
   },
@@ -22,12 +24,15 @@ databaseBackupEntry.addFields([
     key: "backupFileName",
     label: "Backup File Name",
     fieldType: "DataField",
-    inCreate: true,
+    inList: true,
+    defaultValue: "",
   },
   {
     key: "uploadStatus",
     label: "Upload Status",
+    defaultValue: "pending",
     fieldType: "ChoicesField",
+    inList: true,
     choices: [{
       key: "pending",
       label: "Pending",
@@ -69,20 +74,81 @@ databaseBackupEntry.addFields([
     connectionEntryType: "googleUpload",
     inList: true,
   },
+  {
+    key: "savedLocally",
+    label: "Saved Locally",
+    fieldType: "BooleanField",
+    readOnly: true,
+  },
 ]);
+databaseBackupEntry.addAction("backup", {
+  label: "Backup",
+  async action(backup) {
+    await backup.enqueueAction("createBackup");
+  },
+});
 
+databaseBackupEntry.addAction("deleteLocalBackup", {
+  label: "Delete Local Backup",
+  async action(backup) {
+    const { app } = backup.orm;
+    const fileName = backup.backupFileName;
+    if (!fileName) {
+      return {
+        status: "failed",
+        message: "No backup file found",
+      };
+    }
+    const path = joinPath(app.fileRoot, fileName);
+    try {
+      await Deno.remove(path);
+      backup.savedLocally = false;
+      await backup.save();
+      return {
+        status: "completed",
+      };
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        backup.savedLocally = false;
+        await backup.save();
+        return {
+          status: "completed",
+        };
+      }
+      throw error;
+    }
+  },
+});
 databaseBackupEntry.addAction("createBackup", {
   label: "Create Backup",
+  private: true,
   async action(backup) {
     const backupFile = await backUpPgDatabase(backup.orm.app);
     backup.backupFileName = backupFile;
     backup.backupDate = dateUtils.nowTimestamp();
+    backup.savedLocally = true;
     await backup.save();
+    await backup.runAction("uploadBackup");
+    const fileUrl = await backup.orm.getValue(
+      "databaseBackup",
+      backup.id,
+      "fileUrl",
+    );
+    if (fileUrl) {
+      await backup.runAction("deleteLocalBackup");
+      const settings = await backup.orm.getSettings("systemSettings");
+      settings.lastBackupTime = backup.backupDate;
+      await settings.save();
+    }
+    return {
+      status: "completed",
+    };
   },
 });
 
-databaseBackupEntry.addAction("createGoogleUpload", {
-  label: "Create Google Upload",
+databaseBackupEntry.addAction("uploadBackup", {
+  label: "Upload Backup",
+  private: true,
   async action(backup) {
     const uploadEntry = await backup.orm.createEntry("googleUpload", {
       filePath: backup.backupFileName,
@@ -91,5 +157,7 @@ databaseBackupEntry.addAction("createGoogleUpload", {
     });
     backup.uploadEntry = uploadEntry.id;
     await backup.save();
+    await uploadEntry.runAction("upload");
+    // await backup.save();
   },
 });

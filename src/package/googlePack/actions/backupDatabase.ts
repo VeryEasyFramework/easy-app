@@ -1,29 +1,25 @@
 import { createAction } from "#/actions/createAction.ts";
-import { DatabaseConfig } from "#orm/database/database.ts";
-import { formatUtils } from "@vef/easy-cli";
-import { dateUtils } from "#orm/utils/dateUtils.ts";
-import { backUpPgDatabase } from "#orm/database/backup.ts";
+import { raiseEasyException } from "#/easyException.ts";
 
 export const backUpDatabase = createAction("backupDatabase", {
   system: false,
   description: "Backup the database",
   async action(app, data, request, response) {
-    return await backUpPgDatabase(app);
-
-    //  await process.status;
-    const result = await process.output();
-    if (result.success) {
-      const upload = await app.orm.createEntry("googleUpload", {
-        uploadType: "resumable",
-        filePath: backupName,
-        fileName: backupName,
-      });
-      await upload.runAction("createSessionUri");
-      const uploadEntry = await app.orm.getEntry("googleUpload", upload.id);
-      await uploadEntry.enqueueAction("upload");
-      return uploadEntry.data;
+    if (!request.user) {
+      raiseEasyException("Not allowed", 403);
     }
-    return result;
-    // const fileName = app.config
+    const isAdmin = await app.orm.getValue<boolean>(
+      "user",
+      request.user?.id,
+      "systemAdmin",
+    );
+    if (!isAdmin) {
+      raiseEasyException("Not allowed", 403);
+    }
+    const backup = await app.orm.createEntry("databaseBackup", {});
+    await backup.runAction("backup");
+    return {
+      message: "Database backup started",
+    };
   },
 });

@@ -1,11 +1,10 @@
 import { createAction } from "#/actions/createAction.ts";
 import { getAccessToken } from "#/package/googlePack/googleSettings.ts";
-import { raiseEasyException } from "#/easyException.ts";
+import { raiseRedirect } from "#/easyException.ts";
 
 export const redirectAction = createAction("redirect", {
   description: "Redirect from Google OAuth",
   async action(app, data, request, response) {
-    console.log(request.request.url);
     const googleSettings = await app.orm.getSettings("googleSettings");
 
     const { code, scope } = data;
@@ -14,7 +13,6 @@ export const redirectAction = createAction("redirect", {
       clientId: googleSettings.clientId,
       clientSecret: googleSettings.clientSecret,
     });
-    console.log(token);
     googleSettings.accessToken = token.access_token;
     googleSettings.acquiredTime = new Date().getTime();
     googleSettings.expireTime = googleSettings.acquiredTime +
@@ -22,9 +20,12 @@ export const redirectAction = createAction("redirect", {
     googleSettings.tokenType = token.token_type;
     googleSettings.refreshToken = token.refresh_token;
     googleSettings.scope = token.scope;
+    googleSettings.authStatus = "authorized";
 
     await googleSettings.save();
-    raiseEasyException("Access token acquired", 302, "/v2/api?group=google");
+    const redirectFinal = googleSettings.redirectFinal;
+    raiseRedirect(`${redirectFinal}`);
+    // raiseEasyException("Access token acquired", 302, "/v2/api?group=google");
   },
   params: {
     code: {

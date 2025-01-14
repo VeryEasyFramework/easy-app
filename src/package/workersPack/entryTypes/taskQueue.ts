@@ -100,8 +100,6 @@ taskQueue.addHook("validate", {
     let title = "";
     switch (task.taskType) {
       case "entry": {
-        console.log(task.entryType);
-        console.log(task.data);
         const entryType = task.entryType as string;
         const entryTypeDef = orm.getEntryType(entryType);
         if (!entryTypeDef) {
@@ -149,6 +147,7 @@ taskQueue.addHook("afterDelete", {
 });
 
 taskQueue.addAction("runTask", {
+  label: "Run Task",
   async action(task) {
     switch (task.taskType) {
       case "entry": {
@@ -160,17 +159,33 @@ taskQueue.addAction("runTask", {
         const entry = await task.orm.getEntry(entryType, entryId);
         task.status = "running";
         await task.save();
-        const result = await entry.runAction(action, data);
-        if (!result) {
-          break;
-        }
-        let message = result;
-        if (typeof result !== "object") {
-          message = {
-            message: result,
+        try {
+          const result = await entry.runAction(action, data);
+          if (!result) {
+            break;
+          }
+          let message = result;
+          if (typeof result !== "object") {
+            message = {
+              message: result,
+            };
+          }
+          task.resultData = message as Record<string, any>;
+        } catch (e: unknown) {
+          let message = "Error running task";
+          let error = "";
+          if (e instanceof Error) {
+            message = e.message;
+            error = e.name;
+          }
+          task.resultData = {
+            error,
+            message,
           };
+          task.status = "failed";
+          await task.save();
+          return;
         }
-        task.resultData = message as Record<string, any>;
       }
     }
     task.status = "completed";
