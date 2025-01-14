@@ -67,7 +67,11 @@ export class EasyApp {
     MiddleWare
   > = [];
 
-  workerHooks = {
+  workerHooks: {
+    short: Set<(app: EasyApp) => Promise<void> | void>;
+    medium: Set<(app: EasyApp) => Promise<void> | void>;
+    long: Set<(app: EasyApp) => Promise<void> | void>;
+  } = {
     short: new Set<(app: EasyApp) => Promise<void> | void>(),
     medium: new Set<(app: EasyApp) => Promise<void> | void>(),
     long: new Set<(app: EasyApp) => Promise<void> | void>(),
