@@ -23,6 +23,7 @@ export { createMiddleware } from "#/middleware/middleware.ts";
 
 export { authPack } from "#/package/authPack/authPack.ts";
 export { emailPack } from "#/package/emailPack/emailPack.ts";
+export { googlePack } from "#/package/googlePack/googlePack.ts";
 export { easyLog } from "#/log/logging.ts";
 
 export { EasyException, raiseEasyException } from "#/easyException.ts";

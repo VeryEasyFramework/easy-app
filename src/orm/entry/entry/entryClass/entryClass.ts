@@ -373,9 +373,9 @@ export class EntryClass {
 
     const task = await this.orm.createEntry("taskQueue", {
       taskType: "entry",
-      recordType: this._entryType.entryType,
-      recordId: this.id,
-      recordTitle: this._title,
+      entryType: this._entryType.entryType,
+      entryId: this.id,
+      entryTitle: this._title,
       action: actionKey,
       taskData: data,
     });

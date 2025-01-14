@@ -37,7 +37,6 @@ export async function syncEntryTypesToDatabase({
   await orm.database.deleteRows("childEntryTypeFields");
   for (const entryType of entryTypes) {
     const config = entryType.config as any;
-    console.log("Creating entry type", entryType.entryType);
     const newEntry = await orm.database.insertRow("entryType", {
       id: entryType.entryType,
       entryType: entryType.entryType,

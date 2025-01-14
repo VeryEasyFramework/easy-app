@@ -1,4 +1,8 @@
-import { EasyException, raiseEasyException } from "#/easyException.ts";
+import {
+  EasyException,
+  raiseEasyException,
+  RedirectException,
+} from "#/easyException.ts";
 import { EasyRequest } from "#/app/easyRequest.ts";
 import { EasyResponse } from "#/app/easyResponse.ts";
 
@@ -49,6 +53,9 @@ export class EasyApp {
   private hasError: boolean = false;
   server?: Deno.HttpServer;
   config!: Required<EasyAppConfig<DBType>>;
+  get fileRoot(): string {
+    return `${this.config.appRootPath}/files`;
+  }
   processNumber: string = "Main";
 
   get fullAppName(): string {
@@ -60,6 +67,22 @@ export class EasyApp {
     MiddleWare
   > = [];
 
+  workerHooks: {
+    short: Set<(app: EasyApp) => Promise<void> | void>;
+    medium: Set<(app: EasyApp) => Promise<void> | void>;
+    long: Set<(app: EasyApp) => Promise<void> | void>;
+  } = {
+    short: new Set<(app: EasyApp) => Promise<void> | void>(),
+    medium: new Set<(app: EasyApp) => Promise<void> | void>(),
+    long: new Set<(app: EasyApp) => Promise<void> | void>(),
+  };
+
+  addWorkerHook(
+    mode: "short" | "medium" | "long",
+    hook: (app: EasyApp) => Promise<void> | void,
+  ) {
+    this.workerHooks[mode].add(hook);
+  }
   mode: "development" | "production" = "development";
 
   workerMode: "short" | "medium" | "long" | undefined;
@@ -693,7 +716,28 @@ export class EasyApp {
           }
           return easyResponse.respond();
         } catch (e) {
+          if (e instanceof RedirectException) {
+            easyLog.info(e.url, "Redirect To", {
+              compact: true,
+            });
+            easyLog.info(e.message, "Redirect Message", {
+              compact: true,
+            });
+            return easyResponse.redirect(e.url);
+          }
           if (e instanceof EasyException) {
+            if (e.status >= 300 && e.status < 400 && e.redirect) {
+              const redirect = e.redirect;
+              try {
+                const url = new URL(redirect);
+                return easyResponse.redirect(redirect);
+              } catch (e) {
+                const url = new URL(
+                  `${easyRequest.origin}${easyRequest.prefix}${redirect}`,
+                );
+                return easyResponse.redirect(url.toString());
+              }
+            }
             const subject = `${e.status} - ${e.name}`;
             easyLog.error(e.message, subject, {
               hideTrace: false,

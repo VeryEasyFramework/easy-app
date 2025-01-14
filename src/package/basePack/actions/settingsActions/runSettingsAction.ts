@@ -30,7 +30,7 @@ export const runSettingsAction = createAction("runSettingsAction", {
         easyLog.error(message + e.message, e.name ? e.name : "Error");
       }
 
-      raiseEasyException(message, 400);
+      throw e;
     }
   },
   params: {
