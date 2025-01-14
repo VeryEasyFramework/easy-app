@@ -148,6 +148,7 @@ export async function getAccessToken(creds: {
   clientId: string;
   clientSecret: string;
   code: string;
+  redirectUri: string;
 }): Promise<
   {
     access_token: string;
@@ -169,7 +170,7 @@ export async function getAccessToken(creds: {
   body.append("grant_type", "authorization_code");
   body.append(
     "redirect_uri",
-    "http://localhost:8000/v2/api?group=google&action=redirect",
+    creds.redirectUri,
   );
 
   const response = await fetch(url.toString(), {

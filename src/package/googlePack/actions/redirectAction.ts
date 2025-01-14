@@ -6,12 +6,14 @@ export const redirectAction = createAction("redirect", {
   description: "Redirect from Google OAuth",
   async action(app, data, request, response) {
     const googleSettings = await app.orm.getSettings("googleSettings");
+    const redirectHost = googleSettings.redirectHost;
 
     const { code, scope } = data;
     const token = await getAccessToken({
       code,
       clientId: googleSettings.clientId,
       clientSecret: googleSettings.clientSecret,
+      redirectUri: `${redirectHost}/api?group=google&action=redirect`,
     });
     googleSettings.accessToken = token.access_token;
     googleSettings.acquiredTime = new Date().getTime();
@@ -25,7 +27,6 @@ export const redirectAction = createAction("redirect", {
     await googleSettings.save();
     const redirectFinal = googleSettings.redirectFinal;
     raiseRedirect(`${redirectFinal}`);
-    // raiseEasyException("Access token acquired", 302, "/v2/api?group=google");
   },
   params: {
     code: {
