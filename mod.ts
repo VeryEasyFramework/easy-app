@@ -1,3 +1,5 @@
+export { dateUtils } from "#orm/utils/dateUtils.ts";
+
 export { calculateMemorySettings } from "#orm/database/adapter/adapters/postgres/pgUtils.ts";
 
 export { generateId, isEmpty } from "#orm/utils/misc.ts";

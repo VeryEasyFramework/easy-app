@@ -105,6 +105,28 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       `ALTER TABLE ${this.schema}.${tableName} ADD "${columnName}" ${columnType}`;
     // return query;
     await this.query(query);
+    if (easyField.unique) {
+      await this.makeColumnUnique(tableName, columnName);
+      return;
+    }
+    await this.removeColumnUnique(tableName, columnName);
+  }
+
+  async makeColumnUnique(tableName: string, columnName: string): Promise<void> {
+    tableName = this.toSnake(tableName);
+    const query =
+      `ALTER TABLE ${this.schema}.${tableName} ADD CONSTRAINT ${tableName}_${columnName}_unique UNIQUE (${columnName})`;
+    await this.query(query);
+  }
+
+  async removeColumnUnique(
+    tableName: string,
+    columnName: string,
+  ): Promise<void> {
+    tableName = this.toSnake(tableName);
+    const query =
+      `ALTER TABLE ${this.schema}.${tableName} DROP CONSTRAINT IF EXISTS ${tableName}_${columnName}_unique`;
+    await this.query(query);
   }
   async tableExists(tableName: string): Promise<boolean> {
     tableName = this.toSnake(tableName);

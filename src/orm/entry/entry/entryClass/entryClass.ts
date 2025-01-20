@@ -125,7 +125,6 @@ export class EntryClass {
     }
   }
   async beforeSave() {
-    await this.refreshFetchedFields();
     for (const hook of this._beforeSave) {
       await hook(this);
     }
@@ -213,6 +212,7 @@ export class EntryClass {
     await this.validate();
 
     if (this._isNew) {
+      await this.refreshFetchedFields();
       await this.beforeInsert();
       await this.beforeSave();
       const changed = this.adaptChangedData(this._data);
@@ -234,6 +234,7 @@ export class EntryClass {
       );
       return changed;
     }
+    await this.refreshFetchedFields();
     await this.beforeSave();
     await this.saveMultiChoiceFields();
     await this.saveChildren();
