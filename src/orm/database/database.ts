@@ -185,10 +185,12 @@ export interface DatabaseReportOptions {
   orderBy?: string;
   order?: "asc" | "desc";
   groupBy?: string;
+  forTotals?: boolean;
 }
 
 export interface DatabaseReportColumn {
   name: string;
+  asNull?: boolean;
   aggregate?: "sum" | "avg" | "count" | "min" | "max";
   alias?: string;
 }

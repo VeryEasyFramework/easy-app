@@ -23,6 +23,7 @@ export interface ReportOptions {
   orderBy?: string;
   order?: "asc" | "desc";
   groupBy?: string;
+  withTotals?: boolean;
 }
 
 export interface ReportColumn {

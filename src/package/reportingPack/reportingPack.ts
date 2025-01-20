@@ -34,6 +34,7 @@ reportingPack.addAction(
         order: order,
         orFilter: params.orFilter,
         groupBy: params.groupBy,
+        withTotals: params.withTotals,
       };
       return await orm.getReport(params.entryType, options, user);
     },
@@ -92,6 +93,10 @@ reportingPack.addAction(
       },
       groupBy: {
         type: "DataField",
+        required: false,
+      },
+      withTotals: {
+        type: "BooleanField",
         required: false,
       },
     },

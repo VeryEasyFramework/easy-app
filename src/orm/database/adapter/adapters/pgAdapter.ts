@@ -371,6 +371,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     tableName = this.toSnake(tableName);
     const baseTableAlias = "A";
     const joinTableAlias = "B";
+
     const aColumns = options.columns.map((column) => {
       if (typeof column === "object") {
         if ("type" in column) {
@@ -385,7 +386,12 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         const columnName = this.formatColumnName(column.name);
         const columnAlias = this.formatColumnName(column.alias || column.name);
         if (column.aggregate) {
-          return `${column.aggregate.toUpperCase()}(${columnName}) as ${columnAlias}`;
+          const output =
+            `${column.aggregate.toUpperCase()}(${columnName}) as ${columnAlias}`;
+          return output;
+        }
+        if (column.asNull) {
+          return `NULL as ${columnAlias}`;
         }
         return `${baseTableAlias}.${columnName}`;
       }
@@ -399,14 +405,18 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
         if (options.subGroup) {
           fullColumn = `${column.aggregate.toUpperCase()}(${fullColumn})`;
         }
-        return `COALESCE(${fullColumn}, 0) as ${columnName}`;
+        const output = `COALESCE(${fullColumn}, 0) as ${columnName}`;
+        if (options.forTotals) {
+          return `SUM(COALESCE(${fullColumn}, 0)) as ${columnName}`;
+        }
+        return output;
       }
       return fullColumn;
     });
-
     const columns = [...aColumns, ...(bColumns || [])].join(", ");
     let query =
       `SELECT ${columns} FROM ${this.schema}.${tableName} ${baseTableAlias}`;
+
     let countQuery =
       `SELECT COUNT(*) FROM ${this.schema}.${tableName} ${baseTableAlias}`;
     if (options.joinTable) {
