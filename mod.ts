@@ -10,6 +10,7 @@ export type {
   ActionsMap,
   BaseDefinition,
   BaseDefinitionConfig,
+  EasyFieldDef,
   EasyHooksMap,
   HooksDefMap,
   HooksMap,

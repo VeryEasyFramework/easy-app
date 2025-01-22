@@ -65,6 +65,7 @@ function setFields(
         this._data[field.key] = value;
         return value;
       },
+      enumerable: true,
     });
   });
 }
@@ -106,6 +107,7 @@ function buildChildren(
       set: function (value) {
         childClass.records = value;
       },
+      enumerable: true,
     });
   });
 }

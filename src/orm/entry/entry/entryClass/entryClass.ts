@@ -2,9 +2,11 @@ import type { EntryHookFunction } from "./entryClassTypes.ts";
 import type {
   EasyFieldType,
   EasyFieldTypeMap,
+  Entry,
   EntryAction,
   EntryType as EntryTypeDef,
   FieldMethod,
+  RowsResult,
   SafeType,
   User,
 } from "@vef/types";
@@ -113,11 +115,11 @@ export class EntryClass {
     return this[titleField as keyof this] as string;
   }
   async beforeInsert() {
+    this.setCreatedAt();
     this._data = this.setDefaultValues(this._data);
     for (const hook of this._beforeInsert) {
       await hook(this);
     }
-    this.setCreatedAt();
   }
   async afterInsert() {
     for (const hook of this._afterInsert) {
@@ -125,10 +127,10 @@ export class EntryClass {
     }
   }
   async beforeSave() {
+    this.setUpdatedAt();
     for (const hook of this._beforeSave) {
       await hook(this);
     }
-    this.setUpdatedAt();
   }
 
   async beforeDelete() {
@@ -216,10 +218,18 @@ export class EntryClass {
       await this.beforeInsert();
       await this.beforeSave();
       const changed = this.adaptChangedData(this._data);
-      await this.orm.database.insertRow(
+      if (
+        changed.id === null &&
+        this._entryType.config.idMethod.type === "number" &&
+        this._entryType.config.idMethod.autoIncrement
+      ) {
+        delete changed.id;
+      }
+      const response = await this.orm.database.insertRow<RowsResult<Entry>>(
         this._entryType.config.tableName,
         changed,
       );
+      this._data.id = response.data[0].id;
 
       await this.saveChildren();
       await this.saveMultiChoiceFields();
@@ -437,6 +447,10 @@ export class EntryClass {
         id = generateId(method.hashLength);
         break;
       case "number": {
+        if (method.autoIncrement) {
+          id = null;
+          break;
+        }
         const result = await this.orm.database.getRows(
           this._entryType.config.tableName,
           {
@@ -451,6 +465,7 @@ export class EntryClass {
           break;
         }
         id = 1;
+
         break;
       }
       case "uuid":
@@ -657,7 +672,7 @@ export class EntryClass {
         continue;
       }
 
-      if (field.defaultValue) {
+      if (!isEmpty(field.defaultValue)) {
         data[field.key] = typeof field.defaultValue === "function"
           ? field.defaultValue()
           : field.defaultValue;

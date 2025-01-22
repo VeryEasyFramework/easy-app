@@ -42,7 +42,6 @@ export const ormGlobalHooks: BootAction = {
         if (entry._entryType.config.editLog) {
           const { titleField } = entry._entryType.config;
           const titleValue = titleField ? entry[titleField] : entry.id;
-
           await app.orm.createEntry("editLog", {
             entryType: entryType,
             entryId: entry.id,

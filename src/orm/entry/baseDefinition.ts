@@ -23,7 +23,7 @@ import type {
   EntryHooks,
 } from "#orm/entry/entry/entryType/entry.ts";
 
-type EasyFieldDef = Omit<EasyField, "choices"> & {
+export type EasyFieldDef = Omit<EasyField, "choices"> & {
   choices?: Array<Choice<PropertyKey>> | Array<string>;
 };
 export interface BaseDefinitionConfig {
