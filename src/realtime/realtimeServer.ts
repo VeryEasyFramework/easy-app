@@ -12,7 +12,7 @@ class SocketRoom {
   roomName: string;
 
   clients: string[] = [];
-  users: User[] = [];
+  users: Map<string, User> = new Map();
   constructor(roomName: string) {
     this.roomName = roomName;
   }
@@ -148,10 +148,10 @@ export class RealtimeServer extends WebsocketBase {
         }
         const room = this.rooms[data.room];
         if (data.event === "join") {
-          room.users.push(user);
+          room.users.set(user.id, user);
         }
         if (data.event === "leave") {
-          room.users = room.users.filter((u) => u.id !== user.id);
+          room.users.delete(user.id);
         }
       }
       this.sendToRoom(data.room, data.event, data.data);
@@ -215,13 +215,13 @@ export class RealtimeServer extends WebsocketBase {
     if (!client.rooms.includes(room)) {
       client.rooms.push(room);
     }
-    if (!this.rooms[room].users.find((u) => u.id === client.user?.id)) {
-      this.rooms[room].users.push(client.user!);
+    if (client.user) {
+      this.rooms[room].users.set(client.user.id, client.user);
     }
     this.notify(room, "join", {
       room,
       user: client.user,
-      users: this.rooms[room].users,
+      users: Array.from(this.rooms[room].users.values()),
     });
   }
 
@@ -250,11 +250,9 @@ export class RealtimeServer extends WebsocketBase {
     this.rooms[room].clients = this.rooms[room].clients.filter((c) =>
       c !== client.id
     );
-
-    this.rooms[room].users = this.rooms[room].users.filter((u) =>
-      u?.id && u.id !== client.user?.id
-    );
-
+    if (client.user) {
+      this.rooms[room].users.delete(client.user.id);
+    }
     if (client) {
       if (client.rooms.includes(room)) {
         client.rooms = client.rooms.filter((r) => r !== room);
@@ -262,7 +260,7 @@ export class RealtimeServer extends WebsocketBase {
       this.notify(room, "leave", {
         room,
         user: client.user,
-        users: this.rooms[room].users,
+        users: Array.from(this.rooms[room].users.values()),
       });
     }
   }
