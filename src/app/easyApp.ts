@@ -66,7 +66,6 @@ export class EasyApp {
   private middleware: Array<
     MiddleWare
   > = [];
-
   workerHooks: {
     short: Set<(app: EasyApp) => Promise<void> | void>;
     medium: Set<(app: EasyApp) => Promise<void> | void>;

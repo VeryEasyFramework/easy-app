@@ -714,15 +714,15 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
    * Settings Types methods
    */
 
-  async getSettings(
+  async getSettings<T = Settings>(
     settingsType: string,
     user?: User,
-  ): Promise<Settings> {
+  ): Promise<T> {
     const settingsClass = this.getSettingsClass(settingsType);
     const settings = new settingsClass();
     settings._user = user;
     await settings.load();
-    return settings;
+    return settings as T;
   }
 
   async updateSettings(
