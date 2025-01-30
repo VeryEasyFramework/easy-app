@@ -20,7 +20,6 @@ export function calculateMemorySettings(
   settings.workMem = Math.floor(total * 0.25 / settings.maxConnections);
   settings.maintenanceWorkMem = Math.floor(total * 0.05);
   settings.effectiveCacheSize = Math.floor(total * 0.5);
-  console.log("Memory Settings", settings);
   return settings;
 }
 

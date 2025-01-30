@@ -63,6 +63,7 @@ function setFields(
 
         this._prevData[field.key] = this._data[field.key];
         this._data[field.key] = value;
+
         return value;
       },
       enumerable: true,

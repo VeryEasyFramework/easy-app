@@ -47,7 +47,7 @@ export function validateDate(
   field: EasyField,
   value: string | Date,
 ): string | null {
-  if (value === null) {
+  if (value === null || value === undefined) {
     return null;
   }
   if (typeof value === "string") {
@@ -82,7 +82,7 @@ export function validateTimeStamp(
   field: EasyField,
   value: string | Date,
 ): number | null {
-  if (value === null) {
+  if (value === null || value === undefined) {
     return null;
   }
   value = new Date(value);
@@ -100,7 +100,7 @@ export function validateTimeStamp(
   return value.getTime();
 }
 export function validateInt(field: EasyField, value: any): number | null {
-  if (value === null) {
+  if (value === null || value === undefined) {
     return null;
   }
   if (typeof value === "string") {
@@ -119,7 +119,7 @@ export function validateInt(field: EasyField, value: any): number | null {
 }
 
 export function validateBigInt(field: EasyField, value: any): bigint | null {
-  if (value === null) {
+  if (value === null || value === undefined) {
     return null;
   }
   if (typeof value === "string") {
@@ -155,9 +155,9 @@ export function validateCurrency(field: EasyField, value: any): number {
   return validateDecimal(field, value);
 }
 
-export function validateData(field: EasyField, value: any): string {
-  if (value === null) {
-    return "";
+export function validateData(field: EasyField, value: any): string | null {
+  if (value === null || value === undefined) {
+    return null;
   }
 
   switch (typeof value) {
@@ -184,6 +184,7 @@ export function validateData(field: EasyField, value: any): string {
       }: ${value}. Max length is 255`,
     );
   }
+
   return value;
 }
 
@@ -240,7 +241,7 @@ export function validateURL(field: EasyField, value: any): string | null {
   }
 }
 export function validateJson(field: EasyField, value: any): string | null {
-  if (value === null) {
+  if (value === null || value === undefined) {
     return null;
   }
   try {
@@ -272,7 +273,7 @@ export function validateJson(field: EasyField, value: any): string | null {
 }
 
 export function validateTextField(field: EasyField, value: any): string {
-  if (value === null) {
+  if (value === null || value === undefined) {
     return "";
   }
   switch (typeof value) {

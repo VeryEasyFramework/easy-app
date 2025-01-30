@@ -382,7 +382,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Get an entry by id
    */
-  async getEntry<E extends Entry = Entry>(
+  async getEntry<E = Entry>(
     entryType: string,
     id: EasyFieldTypeMap["IDField"],
     user?: User,
@@ -398,14 +398,14 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Create an new entry
    */
-  async createEntry(
+  async createEntry<T extends Entry = Entry>(
     entryType: string,
     data: Record<string, SafeType | undefined>,
     user?: User,
-  ): Promise<Entry> {
+  ): Promise<T> {
     const entryClass = this.getEntryClass(entryType);
 
-    const entry = new entryClass();
+    const entry = new entryClass() as T;
     entry._user = user;
     entry.update(data);
     await entry.save();
@@ -512,10 +512,10 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
   /**
    * Find an entry by a filter. Returns the first entry that matches the filter
    */
-  async findEntry(
+  async findEntry<T extends Entry = Entry>(
     entryType: string,
     filter: Required<ListOptions["filter"]>,
-  ): Promise<Entry | null> {
+  ): Promise<T | null> {
     const entryTypeDef = this.getEntryType(entryType);
     const result = await this.database.getRows<Record<string, SafeType>>(
       entryTypeDef.config.tableName,
@@ -528,7 +528,7 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       return null;
     }
     const id = result.data[0].id as string;
-    return await this.getEntry(entryType, id);
+    return await this.getEntry<T>(entryType, id);
   }
 
   async getConnectionsCount(

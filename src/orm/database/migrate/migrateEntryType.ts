@@ -56,7 +56,6 @@ export async function syncEntryTypesToDatabase({
     for (const field of fields) {
       await orm.database.insertRow("childEntryTypeFields", field);
     }
-    // console.log(entryType.fields.map((f) => f.key));
   }
 }
 

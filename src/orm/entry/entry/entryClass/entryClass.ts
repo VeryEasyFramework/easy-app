@@ -528,6 +528,7 @@ export class EntryClass {
   getChangedData(): Record<string, any> | undefined {
     let hasChanged = false;
     const changedData: Record<string, any> = {};
+
     for (const key in this._prevData) {
       if (this._data[key] != this._prevData[key]) {
         hasChanged = true;
@@ -538,6 +539,9 @@ export class EntryClass {
       return;
     }
     return changedData;
+  }
+  isValueChanged(key: string): boolean {
+    return this._data[key] !== this._prevData[key];
   }
   private adaptChangedData(changedData: Record<string, any>) {
     const adaptedData: Record<string, any> = {};

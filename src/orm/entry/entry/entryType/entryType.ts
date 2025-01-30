@@ -183,10 +183,11 @@ export class EntryType<T extends Record<string, any> = any>
       `${Deno.cwd()}/generatedTypes/${this.entryType}Interface.ts`;
     const name = camelToSnakeCase(this.entryType);
     const rows: string[] = [];
+    rows.push('import type { Entry } from "@vef/easy-app";');
     if (this.children.length > 0) {
-      rows.push(`import { ChildList } from "@vef/easy-app";`);
+      rows.push(`import type { ChildList } from "@vef/easy-app";`);
     }
-    rows.push(`export interface ${toPascalCase(name)} {`);
+    rows.push(`export interface ${toPascalCase(name)} extends Entry {`);
     rows.push(...fieldsWithChildren);
     rows.push("}");
     Deno.mkdirSync(`${Deno.cwd()}/generatedTypes`, {
