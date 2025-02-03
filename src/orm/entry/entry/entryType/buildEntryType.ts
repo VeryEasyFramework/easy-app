@@ -137,6 +137,7 @@ function buildConnectionTitleField(
   const titleField = { ...entryTitleField };
   titleField.readOnly = true;
   titleField.inList = field.inList;
+  titleField.inConnectionList = field.inConnectionList;
   titleField.group = field.group;
   titleField.fetchOptions = {
     fetchEntryType: field.connectionEntryType,

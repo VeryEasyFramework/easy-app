@@ -3,6 +3,7 @@ import { type BasicFgColor, ColorMe } from "@vef/easy-cli";
 
 import type {
   DatabaseListOptions,
+  EasyField,
   EasyFieldType,
   EasyFieldTypeMap,
   EntryType as EntryTypeDef,
@@ -279,17 +280,61 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     >();
     for (const entryType of this.entryTypes.values()) {
       const connectionFields = entryType.fields.filter((field) =>
-        field.fieldType === "ConnectionField"
+        field.fieldType === "ConnectionField" && !field.hideConnection
       );
 
       for (const field of connectionFields) {
         if (!connections.has(field.connectionEntryType!)) {
           connections.set(field.connectionEntryType!, []);
         }
+        const listFields: EasyField[] = [{
+          key: "id",
+          fieldType: "ConnectionField",
+          label: entryType.config.label,
+          connectionEntryType: entryType.entryType,
+          connectionTitleField: entryType.config.titleField,
+        }];
+
+        entryType.config.titleField &&
+          listFields.push(
+            entryType.fields.find((f) =>
+              f.key === entryType.config.titleField
+            )!,
+          );
+
+        const bannedFields = new Set();
+        bannedFields.add(field.key);
+        if (field.connectionTitleField) {
+          bannedFields.add(field.connectionTitleField!);
+        }
+        const fetchedFields = entryType.fields.filter((f) =>
+          f.fetchOptions?.thisIdKey === field.key
+        ).map((f) => f.fetchOptions!.thisFieldKey);
+
+        fetchedFields.forEach((f) => {
+          bannedFields.add(f);
+        });
+        const fetchTitleFields = entryType.fields.filter((f) =>
+          fetchedFields.includes(f.fetchOptions?.thisFieldKey!) &&
+          field.connectionTitleField
+        ).map((f) => f.connectionTitleField);
+        fetchTitleFields.forEach((f) => {
+          bannedFields.add(f);
+        });
+        if (field.connectionEntryType === "advertiser") {
+          console.log("bannedFields", bannedFields);
+        }
+        const connectionList = entryType.fields.filter((f) =>
+          f.inConnectionList && !bannedFields.has(f.key)
+        );
+        listFields.push(...connectionList);
+
         connections.get(field.connectionEntryType!)!.push({
           entryType: entryType.entryType,
           label: entryType.config.label,
           idFieldKey: field.key,
+          fieldLabel: field.label || field.key,
+          listFields,
         });
       }
     }
@@ -539,6 +584,8 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     entryType: string;
     label: string;
     count: number;
+    fieldKey: string;
+    fieldLabel: string;
   }[]> {
     const entryTypeDef = this.getEntryType(entryType);
     const connections = entryTypeDef.connections;
@@ -553,6 +600,8 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         entryType: connection.entryType,
         label: connection.label,
         count,
+        fieldKey: connection.idFieldKey,
+        fieldLabel: connection.fieldLabel,
       });
     }
     return results;
