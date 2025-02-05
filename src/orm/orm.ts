@@ -321,9 +321,6 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
         fetchTitleFields.forEach((f) => {
           bannedFields.add(f);
         });
-        if (field.connectionEntryType === "advertiser") {
-          console.log("bannedFields", bannedFields);
-        }
         const connectionList = entryType.fields.filter((f) =>
           f.inConnectionList && !bannedFields.has(f.key)
         );

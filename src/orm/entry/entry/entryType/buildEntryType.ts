@@ -22,12 +22,14 @@ export function buildEntryType(
   buildChildren(orm, entryType);
   const groups: FieldGroup[] = buildFieldGroups(entryType);
   const listFields = buildListFields(entryType);
+  const displayFieldGroups = getFilteredDisplayFieldGroups(entryType, groups);
 
   return {
     entryType: entryType.entryType,
     statusField: entryType.statusField,
     fields: entryType.fields,
     fieldGroups: groups,
+    displayFieldGroups: displayFieldGroups,
     children: entryType.children,
     listFields: listFields,
     config: entryType.config as EntryTypeDef["config"],
@@ -57,6 +59,28 @@ function buildConnectionFields(orm: EasyOrm, entryType: EntryType) {
   }
 }
 
+function getFilteredDisplayFieldGroups(
+  entryType: EntryType,
+  groups: FieldGroup[],
+) {
+  const titleFields = entryType.fields.filter((f) =>
+    f.fieldType === "ConnectionField" && f.connectionTitleField
+  ).map((f) => f.connectionTitleField);
+  return groups.map((group) => {
+    return {
+      ...group,
+      fields: group.fields.filter((f: EasyField) => {
+        if (f.hidden) {
+          return false;
+        }
+        if (f.key === entryType.config.titleField && f.readOnly) {
+          return false;
+        }
+        return !titleFields.includes(f.key);
+      }),
+    };
+  });
+}
 function buildChildren(orm: EasyOrm, entryType: EntryType) {
   for (const child of entryType.children) {
     buildChild(orm, child);

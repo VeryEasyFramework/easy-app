@@ -53,11 +53,13 @@ export async function getReport(
   const reportColumns: DatabaseReportOptions["columns"] = [];
 
   if (options.groupBy) {
-    const sumFields = entryTypeDef.fields.filter((field) =>
-      ["BigIntField", "IntField", "CurrencyField", "DecimalField"].includes(
-        field.fieldType,
-      ) && columns.has(field.key)
-    ).map((f) => f.key);
+    const sumFields = entryTypeDef.fields.filter((field) => {
+      if (field.key === "id") return false;
+      return ["BigIntField", "IntField", "CurrencyField", "DecimalField"]
+        .includes(
+          field.fieldType,
+        ) && columns.has(field.key);
+    }).map((f) => f.key);
     const sumColumns: DatabaseReportColumn[] = [];
     for (const field of sumFields) {
       sumColumns.push({
@@ -69,7 +71,7 @@ export async function getReport(
 
     reportColumns.push(...sumColumns);
   }
-  reportColumns.push(...Array.from(columns));
+  // reportColumns.push(...Array.from(columns));
   const tableName = entryTypeDef.config.tableName;
   const report: DatabaseReportOptions = {
     columns: reportColumns,
