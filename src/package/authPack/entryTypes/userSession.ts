@@ -1,4 +1,4 @@
-import { EntryType } from "../../../orm/entry/entry/entryType/entryType.ts";
+import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 
 export const userSessionEntry = new EntryType("userSession", {
   label: "User Session",
@@ -44,4 +44,5 @@ export interface SessionData {
   firstName: string;
   lastName: string;
   sessionId: string;
+  systemAdmin: boolean;
 }

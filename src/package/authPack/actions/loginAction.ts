@@ -46,6 +46,7 @@ async function createUserSession(
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
+    systemAdmin: user.systemAdmin,
   };
   const session = await app.orm.createEntry("userSession", {
     user: user.id,
