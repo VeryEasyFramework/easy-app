@@ -16,10 +16,7 @@ export async function getReport(
 ): Promise<ReportResult> {
   const { database } = orm;
   const entryTypeDef = orm.getEntryType(entryType);
-  const columns = new Set(
-    options.columns ??
-      ["id"],
-  );
+  const columns = new Set(options.columns ?? ["id"]);
   if (entryTypeDef.config.titleField) {
     columns.add(entryTypeDef.config.titleField);
   }
@@ -42,9 +39,11 @@ export async function getReport(
     }
     columns.add(options.subGroup);
   }
-  const connectionFields = entryTypeDef.fields.filter((field) =>
-    field.fieldType === "ConnectionField" && columns.has(field.key) &&
-    field.connectionTitleField
+  const connectionFields = entryTypeDef.fields.filter(
+    (field) =>
+      field.fieldType === "ConnectionField" &&
+      columns.has(field.key) &&
+      field.connectionTitleField,
   );
 
   for (const field of connectionFields) {
@@ -53,13 +52,16 @@ export async function getReport(
   const reportColumns: DatabaseReportOptions["columns"] = [];
 
   if (options.groupBy) {
-    const sumFields = entryTypeDef.fields.filter((field) => {
-      if (field.key === "id") return false;
-      return ["BigIntField", "IntField", "CurrencyField", "DecimalField"]
-        .includes(
-          field.fieldType,
-        ) && columns.has(field.key);
-    }).map((f) => f.key);
+    const sumFields = entryTypeDef.fields
+      .filter((field) => {
+        if (field.key === "id") return false;
+        return (
+          ["BigIntField", "IntField", "CurrencyField", "DecimalField"].includes(
+            field.fieldType,
+          ) && columns.has(field.key)
+        );
+      })
+      .map((f) => f.key);
     const sumColumns: DatabaseReportColumn[] = [];
     for (const field of sumFields) {
       sumColumns.push({
@@ -71,7 +73,7 @@ export async function getReport(
 
     reportColumns.push(...sumColumns);
   }
-  // reportColumns.push(...Array.from(columns));
+  reportColumns.push(...Array.from(columns));
   const tableName = entryTypeDef.config.tableName;
   const report: DatabaseReportOptions = {
     columns: reportColumns,
@@ -87,8 +89,8 @@ export async function getReport(
 
   if (options.join) {
     const joinEntryType = orm.getEntryType(options.join.entryType);
-    const joinConnection = entryTypeDef.connections.find((c) =>
-      c.entryType === options.join?.entryType
+    const joinConnection = entryTypeDef.connections.find(
+      (c) => c.entryType === options.join?.entryType,
     );
     if (!joinConnection) {
       raiseOrmException(
@@ -155,8 +157,8 @@ export async function getReport(
     //     };
     //   }
     // }) as DatabaseReportColumn[] ?? [];
-    const totalsColumns = reportColumns.filter((column) =>
-      typeof column === "object" && "aggregate" in column
+    const totalsColumns = reportColumns.filter(
+      (column) => typeof column === "object" && "aggregate" in column,
     );
     const reportTotals: DatabaseReportOptions = {
       columns: totalsColumns,
