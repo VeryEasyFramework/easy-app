@@ -701,11 +701,20 @@ export class EasyApp {
           }
           switch (easyRequest.path) {
             case "/api":
-              easyResponse.content = await handleApi(
-                this,
-                easyRequest,
-                easyResponse,
-              );
+              {
+                const responseContent = await handleApi(
+                  this,
+                  easyRequest,
+                  easyResponse,
+                );
+                if (responseContent instanceof Response) {
+                  return responseContent;
+                }
+                if (responseContent instanceof EasyResponse) {
+                  return responseContent.respond();
+                }
+                easyResponse.content = responseContent;
+              }
               break;
             default:
               return await this.clientHandler(
@@ -737,7 +746,11 @@ export class EasyApp {
                 return easyResponse.redirect(url.toString());
               }
             }
-            const subject = `${e.status} - ${e.name}`;
+            let subject = `${e.status}`;
+            if (e.status === 401 || e.status === 403) {
+              subject = "Unauthorized";
+            }
+
             easyLog.error(e.message, subject, {
               hideTrace: false,
               stack: e.stack,

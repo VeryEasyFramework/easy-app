@@ -272,8 +272,11 @@ export function validateJson(field: EasyField, value: any): string | null {
   return value;
 }
 
-export function validateTextField(field: EasyField, value: any): string {
-  if (value === null || value === undefined) {
+export function validateTextField(field: EasyField, value: any): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (value === undefined) {
     return "";
   }
   switch (typeof value) {

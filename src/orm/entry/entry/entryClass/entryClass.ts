@@ -265,7 +265,7 @@ export class EntryClass {
     this._prevData = {};
     this._entryType.fields.forEach((field) => {
       if (field.hidden && field.key in changedData) {
-        changedData[field.key] = "********";
+        delete changedData[field.key];
       }
     });
     await this.orm.runGlobalHook(

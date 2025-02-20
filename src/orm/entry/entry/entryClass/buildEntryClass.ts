@@ -9,6 +9,7 @@ import type { EntryHookFunction } from "#orm/entry/entry/entryClass/entryClassTy
 import type { EasyOrm } from "#orm/orm.ts";
 import { validateField } from "#orm/entry/field/validateField.ts";
 import { ChildList } from "#orm/entry/child/childRecord.ts";
+import { isDifferent } from "#orm/entry/field/compareValues.ts";
 
 export function buildEntryClass(orm: EasyOrm, entryType: EntryTypeDef) {
   const hooks = extractHooks(entryType);
@@ -57,7 +58,8 @@ function setFields(
       },
       set: function (value) {
         value = validateField(field, value);
-        if (this._data[field.key] === value) {
+        console.log(field.label);
+        if (!isDifferent(field.fieldType, this._data[field.key], value)) {
           return;
         }
 

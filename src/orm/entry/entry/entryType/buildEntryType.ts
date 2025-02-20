@@ -79,7 +79,7 @@ function getFilteredDisplayFieldGroups(
         return !titleFields.includes(f.key);
       }),
     };
-  });
+  }).filter((group) => group.fields.length > 0);
 }
 function buildChildren(orm: EasyOrm, entryType: EntryType) {
   for (const child of entryType.children) {
