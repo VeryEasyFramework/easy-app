@@ -58,7 +58,6 @@ function setFields(
       },
       set: function (value) {
         value = validateField(field, value);
-        console.log(field.label);
         if (!isDifferent(field.fieldType, this._data[field.key], value)) {
           return;
         }
