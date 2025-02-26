@@ -1,4 +1,6 @@
-export interface DatabaseBackup {
+import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
+
+export interface DatabaseBackup extends Entry {
   /**
    * **Backup Date** (TimeStampField)
    * @type {number}

@@ -371,7 +371,7 @@ export class EasyPack {
    * Add an Entry Type to the EasyPack.;
    */
 
-  addEntryType<E extends EntryType>(entryType: E) {
+  addEntryType<E extends EntryType<any>>(entryType: E) {
     this.entryTypes.push(entryType);
   }
 

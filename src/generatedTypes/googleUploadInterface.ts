@@ -1,4 +1,5 @@
-export interface GoogleUpload {
+import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
+export interface GoogleUpload extends Entry {
   /**
    * **Session URI** (URLField)
    * @type {string}

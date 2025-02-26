@@ -1,7 +1,7 @@
 import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { EasyOrm } from "#orm/orm.ts";
-import type { TaskQueue } from "#/package/workersPack/entryTypes/taskQueueInterface.ts";
+import type { TaskQueue } from "#/generatedTypes/taskQueueInterface.ts";
 
 export const taskQueue = new EntryType<TaskQueue>("taskQueue");
 taskQueue.setConfig({
