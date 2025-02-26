@@ -1,4 +1,4 @@
-import { EasyFieldType } from "../../../../../vef-types/mod.ts";
+import type { EasyFieldType } from "@vef/types";
 
 export function isDifferent(
   fieldType: EasyFieldType,
@@ -10,8 +10,6 @@ export function isDifferent(
       return JSON.stringify(oldValue) !== JSON.stringify(newValue);
     case "DataField":
     case "TextField":
-      console.log(fieldType);
-      console.log(oldValue, newValue);
       return oldValue !== newValue;
     default:
       if (oldValue === newValue) {
