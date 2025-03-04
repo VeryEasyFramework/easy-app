@@ -141,13 +141,13 @@ googleUploadEntry.addAction("upload", {
     await upload.save();
     const filePath =
       `${upload.orm.app.config.appRootPath}/files/${upload.filePath}`;
-    const file = Deno.readFileSync(filePath);
+    const file = Deno.statSync(filePath);
 
     const headers = new Headers();
-    headers.set("Content-Length", file.byteLength.toString());
+    headers.set("Content-Length", file.size.toString());
     headers.set(
       "Content-Range",
-      `bytes 0-${file.byteLength - 1}/${file.byteLength}`,
+      `bytes 0-${file.size - 1}/${file.size}`,
     );
     headers.set("Content-Type", "application/octet-stream");
 

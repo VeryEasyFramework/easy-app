@@ -28,25 +28,24 @@ export async function uploadResumable(config: {
 }): Promise<GoogleDriveFileMetadata> {
   const filePath = `${config.filePath}`;
 
-  const file = Deno.readFileSync(filePath);
-
+  const file = Deno.openSync(filePath);
+  const size = file.statSync().size;
   const headers = new Headers();
 
-  headers.set("Content-Length", file.byteLength.toString());
+  headers.set("Content-Length", size.toString());
   const url = new URL(config.uploadUri);
   url.searchParams.set("supportsAllDrives", "true");
   headers.set(
     "Content-Range",
-    `bytes 0-${file.byteLength - 1}/${file.byteLength}`,
+    `bytes 0-${size - 1}/${size}`,
   );
-
   headers.set("Content-Type", config.mimeType);
   headers.set("Authorization", `Bearer ${config.accessToken}`);
 
   const response = await fetch(url.toString(), {
     method: "PUT",
     headers,
-    body: file,
+    body: file.readable,
   });
   if (!response.ok) {
     raiseEasyException(
@@ -54,6 +53,7 @@ export async function uploadResumable(config: {
       response.status,
     );
   }
+  file.close();
   return await response.json() as GoogleDriveFileMetadata;
 }
 
