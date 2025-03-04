@@ -5,6 +5,8 @@ export const getEntryInfoAction = createAction("getEntryInfo", {
   description: "Get summary information about a record",
   async action(app, { entryType, id }, request) {
     const editLog = await app.orm.getEntryList("editLog", {
+      orderBy: "createdAt",
+      order: "desc",
       filter: {
         entryType,
         entryId: id,
