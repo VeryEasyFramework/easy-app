@@ -1,6 +1,6 @@
 // https://developers.google.com/drive/api/guides/manage-uploads
 
-import { type EasyApp, raiseEasyException } from "@vef/easy-app";
+import { type EasyApp, easyLog, raiseEasyException } from "@vef/easy-app";
 import { refreshAccessToken } from "#/package/googlePack/googleSettings.ts";
 
 const uploadEndpoint = "https://www.googleapis.com/upload/drive/v3/files";
@@ -41,7 +41,6 @@ export async function uploadResumable(config: {
   );
   headers.set("Content-Type", config.mimeType);
   headers.set("Authorization", `Bearer ${config.accessToken}`);
-
   const response = await fetch(url.toString(), {
     method: "PUT",
     headers,
@@ -53,7 +52,6 @@ export async function uploadResumable(config: {
       response.status,
     );
   }
-  file.close();
   return await response.json() as GoogleDriveFileMetadata;
 }
 

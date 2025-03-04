@@ -1,4 +1,4 @@
-import { EntryType, raiseEasyException } from "@vef/easy-app";
+import { easyLog, EntryType, raiseEasyException } from "@vef/easy-app";
 import {
   createUploadSession,
   uploadResumable,
@@ -142,7 +142,6 @@ googleUploadEntry.addAction("upload", {
     const filePath =
       `${upload.orm.app.config.appRootPath}/files/${upload.filePath}`;
     const file = Deno.statSync(filePath);
-
     const headers = new Headers();
     headers.set("Content-Length", file.size.toString());
     headers.set(
