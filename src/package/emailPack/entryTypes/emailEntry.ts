@@ -1,8 +1,12 @@
 import { SMTPClient } from "#/package/emailPack/smtp/smtpClient.ts";
 import type { SMTPOptions } from "#/package/emailPack/smtp/smtpTypes.ts";
 import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
+import type { EmailAccount } from "#/package/emailPack/entryTypes/emailAccountInterface.ts";
+import { raiseEasyException } from "#/easyException.ts";
+import { dateUtils } from "#orm/utils/dateUtils.ts";
+import type { Email } from "#/generatedTypes/emailInterface.ts";
 
-export const emailEntry = new EntryType("email");
+export const emailEntry = new EntryType<Email>("email");
 
 emailEntry.setConfig({
   label: "Email",
@@ -10,6 +14,13 @@ emailEntry.setConfig({
 });
 
 emailEntry.addFields([{
+  key: "emailAccount",
+  fieldType: "ConnectionField",
+  connectionEntryType: "emailAccount",
+  label: "Email Account",
+  required: true,
+  inList: true,
+}, {
   key: "senderEmail",
   fieldType: "EmailField",
   label: "Sender's Email",
@@ -54,6 +65,14 @@ emailEntry.addFields([{
   label: "Body",
   description: "The body of the email",
 }, {
+  key: "linkEntry",
+  fieldType: "DataField",
+  label: "Link Entry",
+}, {
+  key: "linkId",
+  fieldType: "DataField",
+  label: "Link Id",
+}, {
   key: "status",
   fieldType: "ChoicesField",
   label: "Status",
@@ -68,21 +87,78 @@ emailEntry.addFields([{
   ],
 }]);
 
+emailEntry.addChild({
+  childName: "emailAttachment",
+  label: "Email Attachment",
+  fields: [{
+    key: "fileName",
+    fieldType: "TextField",
+    label: "File Name",
+    description: "The name of the file",
+    required: true,
+  }, {
+    key: "content",
+    fieldType: "TextField",
+    label: "Content",
+    description: "The content of the file",
+    required: true,
+  }, {
+    key: "contentType",
+    fieldType: "ChoicesField",
+    label: "Content Type",
+    description: "The content type of the file",
+    choices: [{
+      key: "text",
+      label: "Text",
+    }, {
+      key: "csv",
+      label: "CSV",
+    }, {
+      key: "pdf",
+      label: "PDF",
+    }],
+  }],
+});
 emailEntry.addAction("send", {
   description: "Send the email",
+  label: "Send",
   async action(email) {
     if (email.status !== "pending") {
       email.status = "pending";
       // raiseEasyException("Email has already been sent", 400);
       await email.save();
     }
+    const { orm } = email;
+    const emailAccount = await orm.getEntry<EmailAccount>(
+      "emailAccount",
+      email.emailAccount,
+    );
+
+    let password: string = emailAccount.smtpPassword || "";
+    if (emailAccount.useGmailOauth) {
+      const expireTime = emailAccount.expireTime as number;
+      const nowTime = dateUtils.nowTimestamp();
+
+      if (nowTime > expireTime) {
+        await emailAccount.runAction("refreshToken");
+      }
+      const user = emailAccount.smtpUser;
+      if (!user) {
+        raiseEasyException("SMTP user is missing", 400);
+      }
+      if (!emailAccount.accessToken) {
+        raiseEasyException("Access token is missing", 400);
+      }
+      password = emailAccount.accessToken as string;
+    }
     const settings = await email.orm.getSettings("emailSettings");
     email.senderEmail = settings.emailAccount as string;
     const config: SMTPOptions = {
       port: settings.smtpPort as number || 587,
-      smtpServer: settings.smtpHost as string,
-      userLogin: settings.smtpUser as string,
-      password: settings.smtpPassword as string,
+      smtpServer: emailAccount.smtpHost as string,
+      userLogin: emailAccount.smtpUser as string,
+      password,
+      authMethod: emailAccount.useGmailOauth ? "XOAUTH2" : "LOGIN",
       domain: "localhost",
     };
     try {
@@ -99,8 +175,8 @@ emailEntry.addAction("send", {
         body,
         header: {
           from: {
-            email: email.senderEmail as string,
-            name: email.senderName as string,
+            email: emailAccount.emailAccount as string,
+            name: emailAccount.senderName as string,
           },
           to: {
             email: email.recipientEmail as string,
@@ -110,6 +186,11 @@ emailEntry.addAction("send", {
           contentType: email.contentType as "html" | "text",
           date: new Date(),
         },
+        attachments: email.emailAttachment.records.map((attachment) => ({
+          fileName: attachment.fileName as string,
+          content: attachment.content as string,
+          contentType: attachment.contentType as string,
+        })),
       });
       // Send the email
       email.status = "sent";

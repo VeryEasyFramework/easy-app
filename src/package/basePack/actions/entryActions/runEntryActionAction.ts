@@ -30,7 +30,10 @@ export const runEntryActionAction = createAction("runEntryAction", {
         }
       }
       if (e instanceof Error) {
-        easyLog.error(message + e.message, e.name ? e.name : "Error");
+        easyLog.error(message + e.message, e.name ? e.name : "Error", {
+          stack: e.stack,
+          traceOffset: 1,
+        });
       }
 
       raiseEasyException(message, 400);
