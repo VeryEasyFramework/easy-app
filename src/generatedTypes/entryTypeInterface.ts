@@ -1,6 +1,5 @@
 import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
 import type { ChildList } from "#orm/entry/child/childRecord.ts";
-
 export interface EntryType extends Entry {
   /**
    * **Entry Type** (DataField)

@@ -47,9 +47,9 @@ export class SMTPClient {
   onStateChange(state: State, message: string) {
     console.log(message);
   }
-  onError(code: number, message: string) {
+  onError = (code: number, message: string) => {
     console.error(`Error ${code}: ${message}`);
-  }
+  };
 
   async waitForState(state: State): Promise<boolean> {
     let timeout = 0;
@@ -149,7 +149,6 @@ export class SMTPClient {
 
   handle5Error(code: number, message: string) {
     this.onError(code, message);
-    raiseEasyException(message, code);
   }
   handle4Error(code: number, message: string) {
     this.onError(code, message);
@@ -325,14 +324,7 @@ export class SMTPClient {
       if (error.name === "UnexpectedEof" && this.states.disconnecting) {
         return;
       }
-      easyLog.error(
-        `Error reading from TLS Connection: ${error.message}`,
-        error.name,
-      );
-      raiseEasyException(
-        `Error reading from TLS Connection: ${error.message}`,
-        500,
-      );
+      this.onError(500, error.message);
     });
 
     this.states.tlsConnected = true;
@@ -388,7 +380,9 @@ export class SMTPClient {
       );
       const newBody: string[] = [
         boundaryString,
-        `Content-Type: text/${bodyType}; charset=utf-8`,
+        `Content-Type: text/${
+          bodyType === "text" ? "plain" : bodyType
+        }; charset=utf-8`,
         "",
         options.body,
         "",
@@ -404,7 +398,9 @@ export class SMTPClient {
     }
     await this.connect();
     await this.sendCommand("MAIL", `FROM:<${header.from.email}>`);
-    await this.sendCommand("RCPT", `TO:<${header.to.email}>`);
+    for (const email of header.to) {
+      await this.sendCommand("RCPT", `TO:<${email}>`);
+    }
     await this.sendCommand("DATA");
     const ready = await this.waitForState("dataReady");
     if (!ready) {
@@ -435,10 +431,8 @@ interface SMTPHeader {
     name?: string;
     email: string;
   };
-  to: {
-    name?: string;
-    email: string;
-  };
+  /** An array of emails */
+  to: string[];
   date?: Date;
   subject: string;
   contentType: "text" | "html" | "multipart";
@@ -458,10 +452,10 @@ class MailHeader implements SMTPHeader {
       name: header.from?.name || "",
       email: header.from?.email || "",
     };
-    this.to = {
-      name: header.to?.name || "",
-      email: header.to?.email || "",
-    };
+    if (!header.to) {
+      raiseEasyException("Email must have a recipient", 400);
+    }
+    this.to = header.to;
     this.subject = header.subject || "";
     this.contentType = header.contentType || "text";
     this.date = header.date || new Date();
@@ -482,10 +476,7 @@ class MailHeader implements SMTPHeader {
       }
       case "to": {
         let to = "To: ";
-        if (this.to.name) {
-          to += `${this.to.name} `;
-        }
-        to += `<${this.to.email}>`;
+        to += this.to.join(", ");
         return to;
       }
       case "subject":
@@ -494,7 +485,9 @@ class MailHeader implements SMTPHeader {
         if (this.contentType === "multipart") {
           return `Content-Type: multipart/mixed; boundary="${this.boundary}"`;
         }
-        return `Content-Type: text/${this.contentType}; charset=utf-8`;
+        return `Content-Type: text/${
+          this.contentType === "text" ? "plain" : this.contentType
+        }; charset=utf-8`;
       case "date":
         return `Date: ${this.date.toUTCString()}`;
     }

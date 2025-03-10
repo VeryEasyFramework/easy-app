@@ -1,4 +1,5 @@
 import type { Entry } from "#orm/entry/entry/entryType/entry.ts";
+
 export interface User extends Entry {
   /**
    * **Password** (PasswordField)

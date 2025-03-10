@@ -5,6 +5,7 @@ import type { EmailAccount } from "#/package/emailPack/entryTypes/emailAccountIn
 import { raiseEasyException } from "#/easyException.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
 import type { Email } from "#/generatedTypes/emailInterface.ts";
+import { easyLog } from "#/log/logging.ts";
 
 export const emailEntry = new EntryType<Email>("email");
 
@@ -12,7 +13,11 @@ emailEntry.setConfig({
   label: "Email",
   description: "An email",
 });
-
+emailEntry.addFieldGroups([{
+  key: "attachment",
+  title: "Attachment",
+  description: "Attachment details",
+}]);
 emailEntry.addFields([{
   key: "emailAccount",
   fieldType: "ConnectionField",
@@ -38,10 +43,10 @@ emailEntry.addFields([{
   label: "Recipient's Name",
   description: "The name of the recipient",
 }, {
-  key: "recipientEmail",
-  fieldType: "EmailField",
-  label: "Recipient's Email",
-  description: "The email address of the recipient",
+  key: "recipientEmails",
+  fieldType: "ListField",
+  label: "Recipient's Emails",
+  description: "A list of email addresses of the recipients",
   required: true,
   inList: true,
 }, {
@@ -59,6 +64,13 @@ emailEntry.addFields([{
     { key: "html", label: "HTML", color: "success" },
     { key: "text", label: "Text", color: "warning" },
   ],
+}, {
+  key: "sendDate",
+  fieldType: "TimeStampField",
+  label: "Send Date",
+  description: "The date the email was sent",
+  readOnly: true,
+  inList: true,
 }, {
   key: "body",
   fieldType: "TextField",
@@ -87,38 +99,48 @@ emailEntry.addFields([{
   ],
 }]);
 
-emailEntry.addChild({
-  childName: "emailAttachment",
-  label: "Email Attachment",
-  fields: [{
-    key: "fileName",
-    fieldType: "TextField",
-    label: "File Name",
-    description: "The name of the file",
-    required: true,
+emailEntry.addFields([{
+  key: "hasAttachment",
+  fieldType: "BooleanField",
+  label: "Has Attachment",
+  description: "Whether the email has an attachment",
+  group: "attachment",
+}, {
+  key: "attachmentFileName",
+  fieldType: "TextField",
+  label: "File Name",
+  description: "The name of the file",
+  required: true,
+  dependsOn: "hasAttachment",
+  group: "attachment",
+}, {
+  key: "attachmentContent",
+  fieldType: "TextField",
+  label: "Content",
+  description: "The content of the file",
+  required: true,
+  dependsOn: "hasAttachment",
+  group: "attachment",
+}, {
+  key: "attachmentsContentType",
+  fieldType: "ChoicesField",
+  label: "Content Type",
+  description: "The content type of the file",
+  dependsOn: "hasAttachment",
+  group: "attachment",
+  required: true,
+  choices: [{
+    key: "text",
+    label: "Text",
   }, {
-    key: "content",
-    fieldType: "TextField",
-    label: "Content",
-    description: "The content of the file",
-    required: true,
+    key: "csv",
+    label: "CSV",
   }, {
-    key: "contentType",
-    fieldType: "ChoicesField",
-    label: "Content Type",
-    description: "The content type of the file",
-    choices: [{
-      key: "text",
-      label: "Text",
-    }, {
-      key: "csv",
-      label: "CSV",
-    }, {
-      key: "pdf",
-      label: "PDF",
-    }],
+    key: "pdf",
+    label: "PDF",
   }],
-});
+}]);
+
 emailEntry.addAction("send", {
   description: "Send the email",
   label: "Send",
@@ -165,33 +187,55 @@ emailEntry.addAction("send", {
       const body = email.body as string || "";
 
       const smtpClient = new SMTPClient(config);
+
+      const errors: string[] = [];
+
+      const addError = (message: string) => {
+        errors.push(message);
+        easyLog.error(message);
+      };
       smtpClient.onError = (code, message) => {
-        console.error(`SMTP Error: ${code} ${message}`);
-        throw new Error(`SMTP Error: ${code} ${message}`);
+        addError(`Email Error ${code}: ${message}`);
       };
       smtpClient.onStateChange = (state, message) => {
       };
-      await smtpClient.sendEmail({
+      const sendDate = new Date();
+      const attachments = [];
+      if (email.hasAttachment) {
+        if (
+          email.attachmentContent && email.attachmentFileName &&
+          email.attachmentsContentType
+        ) {
+          attachments.push({
+            fileName: email.attachmentFileName,
+            content: email.attachmentContent,
+            contentType: email.attachmentsContentType,
+          });
+        }
+      }
+
+      const result = await smtpClient.sendEmail({
         body,
         header: {
           from: {
             email: emailAccount.emailAccount as string,
             name: emailAccount.senderName as string,
           },
-          to: {
-            email: email.recipientEmail as string,
-            name: email.recipientName as string,
-          },
+          to: email.recipientEmails,
           subject: email.subject as string,
           contentType: email.contentType as "html" | "text",
-          date: new Date(),
+          date: sendDate,
         },
-        attachments: email.emailAttachment.records.map((attachment) => ({
-          fileName: attachment.fileName as string,
-          content: attachment.content as string,
-          contentType: attachment.contentType as string,
-        })),
+        attachments,
       });
+      if (errors.length > 0) {
+        email.status = "failed";
+        await email.save();
+        easyLog.error(errors.join("\n"));
+        return;
+      }
+
+      email.sendDate = sendDate.getTime();
       // Send the email
       email.status = "sent";
       await email.save();
