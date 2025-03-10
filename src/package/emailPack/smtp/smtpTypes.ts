@@ -14,6 +14,7 @@ export type State =
   | "authPassword"
   | "authenticated"
   | "dataReady"
+  | "disconnecting"
   | "disconnect";
 
 export interface SMTPCapabilities {
@@ -56,6 +57,8 @@ export interface SMTPOptions {
   port: number;
   userLogin: string;
   password: string;
+
+  authMethod?: "PLAIN" | "LOGIN" | "XOAUTH2";
 
   domain: string;
 }

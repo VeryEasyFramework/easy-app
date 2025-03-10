@@ -164,6 +164,7 @@ workerSettings.addHook("beforeSave", {
 });
 
 workerSettings.addAction("updateTaskCount", {
+  label: "Refresh Task Count",
   async action(settings) {
     const results = await settings.orm.countGrouped("taskQueue", [
       "worker",

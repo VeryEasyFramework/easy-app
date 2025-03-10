@@ -6,11 +6,44 @@ emailSettings.setConfig({
   label: "Email Settings",
   description: "Settings for sending emails",
 });
-
+emailSettings.addFieldGroups([
+  {
+    key: "google",
+    title: "Google Settings",
+  },
+]);
 emailSettings.addFieldGroup({
   key: "smtp",
   title: "SMTP Settings",
 });
+
+emailSettings.addFields([
+  {
+    key: "clientId",
+    label: "Client ID",
+    fieldType: "TextField",
+    group: "google",
+  },
+  {
+    key: "clientSecret",
+    label: "Client Secret",
+    fieldType: "TextField",
+    group: "google",
+  },
+  {
+    key: "redirectHost",
+    label: "Redirect Host",
+    description:
+      "The host to redirect to after Google OAuth (e.g. http://localhost:8000)",
+    fieldType: "URLField",
+  },
+  {
+    key: "redirectFinal",
+    label: "Final Redirect",
+    fieldType: "URLField",
+    description: "The final url to redirect to after Google OAuth completes",
+  },
+]);
 
 emailSettings.addFields([{
   key: "emailAccount",

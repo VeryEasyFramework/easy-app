@@ -5,6 +5,9 @@ import type {
   State,
 } from "#/package/emailPack/smtp/smtpTypes.ts";
 import { raiseEasyException } from "#/easyException.ts";
+import { easyLog } from "#/log/logging.ts";
+import { generateId } from "#orm/utils/misc.ts";
+import { inferMimeType } from "#/staticFiles/mimeTypes.ts";
 
 // https://mailtrap.io/blog/smtp-commands-and-responses/#SMTP-response-codes
 
@@ -13,6 +16,8 @@ export class SMTPClient {
   domain: string;
   port: number;
   userLogin: string;
+  // https://developers.google.com/gmail/imap/xoauth2-protocol#smtp_protocol_exchange
+  authMethod?: "PLAIN" | "LOGIN" | "XOAUTH2";
   password: string;
   private waitDuration = 10;
   private timeoutDuration = 5000;
@@ -35,15 +40,16 @@ export class SMTPClient {
     authPassword: false,
     authenticated: false,
     dataReady: false,
+    disconnecting: false,
     disconnect: false,
   };
 
   onStateChange(state: State, message: string) {
     console.log(message);
   }
-  onError(code: number, message: string) {
+  onError = (code: number, message: string) => {
     console.error(`Error ${code}: ${message}`);
-  }
+  };
 
   async waitForState(state: State): Promise<boolean> {
     let timeout = 0;
@@ -89,6 +95,7 @@ export class SMTPClient {
     this.userLogin = config.userLogin;
     this.password = config.password;
     this.domain = config.domain;
+    this.authMethod = config.authMethod;
   }
 
   handleChunk(chunk: Uint8Array) {
@@ -142,7 +149,6 @@ export class SMTPClient {
 
   handle5Error(code: number, message: string) {
     this.onError(code, message);
-    raiseEasyException(message, code);
   }
   handle4Error(code: number, message: string) {
     this.onError(code, message);
@@ -217,18 +223,34 @@ export class SMTPClient {
 
   async authLogin() {
     this.states.authenticating = true;
-    await this.sendCommand("AUTH", "LOGIN");
-    await this.waitForState("authUsername");
+    switch (this.authMethod) {
+      case "LOGIN": {
+        await this.sendCommand("AUTH", "LOGIN");
+        await this.waitForState("authUsername");
 
-    const username = btoa(this.userLogin);
-    await this.sendCommand(username);
-    await this.waitForState("authPassword");
-    const password = btoa(this.password);
-    await this.sendCommand(password);
-    await this.waitForState("authenticated");
+        const username = btoa(this.userLogin);
+        await this.sendCommand(username);
+        await this.waitForState("authPassword");
+        const password = btoa(this.password);
+        await this.sendCommand(password);
+        await this.waitForState("authenticated");
+        break;
+      }
+      case "XOAUTH2": {
+        const authString =
+          `user=${this.userLogin}\u0001auth=Bearer ${this.password}\u0001\u0001`;
+        const base64Auth = btoa(authString);
+        await this.sendCommand("AUTH", `XOAUTH2 ${base64Auth}`);
+        await this.waitForState("authenticated");
+        break;
+      }
+      default:
+        raiseEasyException("Unsupported auth method", 400);
+    }
   }
 
   async disconnect() {
+    this.states.disconnecting = true;
     this.onStateChange("disconnect", "Disconnecting from SMTP Server...");
     await this.sendCommand("QUIT");
     this.onStateChange(
@@ -298,7 +320,12 @@ export class SMTPClient {
       new WritableStream({
         write,
       }),
-    );
+    ).catch((error) => {
+      if (error.name === "UnexpectedEof" && this.states.disconnecting) {
+        return;
+      }
+      this.onError(500, error.message);
+    });
 
     this.states.tlsConnected = true;
     this.onStateChange(
@@ -332,11 +359,48 @@ export class SMTPClient {
   async sendEmail(options: {
     header: SMTPHeader;
     body: string;
+    attachments?: Array<
+      { fileName: string; contentType: string; content: string }
+    >;
   }) {
+    let body = options.body;
+    const bodyType = options.header.contentType;
+    if (options.attachments) {
+      options.header.contentType = "multipart";
+    }
     const header = new MailHeader(options.header);
+    if (options.attachments) {
+      header.contentType = "multipart";
+      const boundaryString = `--${header.boundary}`;
+      const attachments = options.attachments.map((attachment) =>
+        makeAttachment(
+          attachment.fileName,
+          attachment.content,
+        )
+      );
+      const newBody: string[] = [
+        boundaryString,
+        `Content-Type: text/${
+          bodyType === "text" ? "plain" : bodyType
+        }; charset=utf-8`,
+        "",
+        options.body,
+        "",
+      ];
+
+      for (const attachment of attachments) {
+        newBody.push(boundaryString);
+        newBody.push(attachment);
+      }
+      newBody.push(`${boundaryString}--`);
+
+      body = newBody.join("\r\n");
+    }
     await this.connect();
     await this.sendCommand("MAIL", `FROM:<${header.from.email}>`);
-    await this.sendCommand("RCPT", `TO:<${header.to.email}>`);
+    for (const email of header.to) {
+      await this.sendCommand("RCPT", `TO:<${email}>`);
+    }
     await this.sendCommand("DATA");
     const ready = await this.waitForState("dataReady");
     if (!ready) {
@@ -345,38 +409,35 @@ export class SMTPClient {
     const headerString = header.getHeader();
     this.onStateChange("dataReady", headerString);
     await this.sendCommand(headerString);
-    await this.sendCommand(options.body);
+    await this.sendCommand(body);
     await this.sendCommand(".");
     await this.disconnect();
   }
-  async send(from: string, to: string, subject: string, body: string) {
-    if (!this.states.authenticated) {
-      throw new Error("Not authenticated");
-    }
-    const header = `From: ${from}\r\nTo: ${to}\r\nSubject: ${subject}\r\n`;
-    await this.sendCommand("MAIL", `FROM:<${from}>`);
-    await this.sendCommand("RCPT", `TO:<${to}>`);
-    await this.sendCommand("DATA");
-    await this.waitForState("dataReady");
-    await this.sendCommand(header);
-    await this.sendCommand(body);
-    await this.sendCommand(".");
-  }
 }
 
+function makeAttachment(fileName: string, content: string) {
+  const mimeType = getMimeType(fileName);
+  return [
+    `Content-Type: ${mimeType};`,
+    "Content-Transfer-Encoding: 7bit",
+    `Content-Disposition: attachment; filename="${fileName}"`,
+    "",
+    content,
+    "",
+  ].join("\r\n");
+}
 interface SMTPHeader {
   from: {
     name?: string;
     email: string;
   };
-  to: {
-    name?: string;
-    email: string;
-  };
+  /** An array of emails */
+  to: string[];
   date?: Date;
   subject: string;
-  contentType: "text" | "html";
+  contentType: "text" | "html" | "multipart";
 }
+
 class MailHeader implements SMTPHeader {
   from: SMTPHeader["from"];
   to: SMTPHeader["to"];
@@ -384,18 +445,23 @@ class MailHeader implements SMTPHeader {
   date: Date;
   contentType: SMTPHeader["contentType"];
 
+  boundary?: string;
+
   constructor(header: Partial<SMTPHeader>) {
     this.from = {
       name: header.from?.name || "",
       email: header.from?.email || "",
     };
-    this.to = {
-      name: header.to?.name || "",
-      email: header.to?.email || "",
-    };
+    if (!header.to) {
+      raiseEasyException("Email must have a recipient", 400);
+    }
+    this.to = header.to;
     this.subject = header.subject || "";
     this.contentType = header.contentType || "text";
     this.date = header.date || new Date();
+    if (this.contentType === "multipart") {
+      this.boundary = generateId(24);
+    }
   }
 
   getHeaderPart(attribute: keyof SMTPHeader) {
@@ -410,16 +476,18 @@ class MailHeader implements SMTPHeader {
       }
       case "to": {
         let to = "To: ";
-        if (this.to.name) {
-          to += `${this.to.name} `;
-        }
-        to += `<${this.to.email}>`;
+        to += this.to.join(", ");
         return to;
       }
       case "subject":
         return `Subject: ${this.subject}`;
       case "contentType":
-        return `Content-Type: text/${this.contentType}; charset=utf-8`;
+        if (this.contentType === "multipart") {
+          return `Content-Type: multipart/mixed; boundary="${this.boundary}"`;
+        }
+        return `Content-Type: text/${
+          this.contentType === "text" ? "plain" : this.contentType
+        }; charset=utf-8`;
       case "date":
         return `Date: ${this.date.toUTCString()}`;
     }
@@ -429,9 +497,28 @@ class MailHeader implements SMTPHeader {
       this.getHeaderPart("from"),
       this.getHeaderPart("to"),
       this.getHeaderPart("subject"),
-      this.getHeaderPart("contentType"),
       this.getHeaderPart("date"),
+      this.getHeaderPart("contentType"),
     ].join("\r\n");
     return `${header}\r\n\r\n`;
   }
+}
+const mimTypeMap = new Map<string, string>(Object.entries({
+  csv: "text/csv",
+  html: "text/html",
+  txt: "text/plain",
+  pdf: "application/pdf",
+  json: "application/json",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  svg: "image/svg+xml",
+}));
+
+function getMimeType(fileName: string) {
+  const extension = fileName.split(".").pop();
+  if (!extension) {
+    return "text/plain";
+  }
+  return mimTypeMap.get(extension) || "text/plain";
 }

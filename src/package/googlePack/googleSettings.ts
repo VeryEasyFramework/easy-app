@@ -119,7 +119,13 @@ export async function refreshAccessToken(creds: {
   clientId: string;
   clientSecret: string;
   refreshToken: string;
-}) {
+}): Promise<{
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+  refresh_token?: string;
+  scope?: string;
+}> {
   const { clientId, clientSecret, refreshToken } = creds;
   const url = new URL("https://oauth2.googleapis.com/token");
   const headers = new Headers();
