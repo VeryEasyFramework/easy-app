@@ -3,14 +3,15 @@ import { createAction } from "#/actions/createAction.ts";
 export const updateEntryAction = createAction("updateEntry", {
   description: "Update an entry",
   action: async (app, { entryType, id, data }, request) => {
-    const updatedEntry = await app.orm.updateEntry(
+    await app.orm.updateEntry(
       entryType,
       id,
       data,
       request.user,
     );
 
-    return updatedEntry.data;
+    const entry = await app.orm.getEntry(entryType, id);
+    return entry.data;
   },
   params: {
     entryType: {
