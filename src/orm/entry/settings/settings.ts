@@ -170,7 +170,7 @@ export class SettingsClass {
         if (param.required && !data?.[param.key]) {
           raiseOrmException(
             "MissingActionParam",
-            `Missing required param ${param.key} for action ${actionKey}`,
+            `Missing  required param ${param.key} for action ${actionKey}`,
           );
         }
       }
