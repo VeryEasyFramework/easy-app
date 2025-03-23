@@ -2,6 +2,8 @@ import { EntryType } from "#orm/entry/entry/entryType/entryType.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import type { TaskQueue } from "#/generatedTypes/taskQueueInterface.ts";
+import { EasyRequest } from "#/app/easyRequest.ts";
+import { EasyResponse } from "#/app/easyResponse.ts";
 
 export const taskQueue = new EntryType<TaskQueue>("taskQueue");
 taskQueue.setConfig({
@@ -34,6 +36,10 @@ taskQueue.addFields([{
   readOnly: true,
 }, {
   key: "entryTitle",
+  fieldType: "DataField",
+  readOnly: true,
+}, {
+  key: "group",
   fieldType: "DataField",
   readOnly: true,
 }, {
@@ -149,46 +155,67 @@ taskQueue.addHook("afterDelete", {
 taskQueue.addAction("runTask", {
   label: "Run Task",
   async action(task) {
-    switch (task.taskType) {
-      case "entry": {
-        const entryType = task.entryType as string;
-        const entryId = task.entryId as string;
-        const action = task.action as string;
-        const data = task.taskData as Record<string, any>;
+    try {
+      let result;
+      const entryType = task.entryType as string;
+      const entryId = task.entryId as string;
+      const group = task.group as string;
+      const action = task.action as string;
+      const data = task.taskData as Record<string, any>;
+      task.status = "running";
+      await task.save();
 
-        const entry = await task.orm.getEntry(entryType, entryId);
-        task.status = "running";
-        await task.save();
-        try {
-          const result = await entry.runAction(action, data);
-          if (!result) {
-            break;
-          }
-          let message = result;
-          if (typeof result !== "object") {
-            message = {
-              message: result,
-            };
-          }
-          task.resultData = message as Record<string, any>;
-        } catch (e: unknown) {
-          let message = "Error running task";
-          let error = "";
-          if (e instanceof Error) {
-            message = e.message;
-            error = e.name;
-          }
-          task.resultData = {
-            error,
-            message,
-          };
-          task.status = "failed";
-          await task.save();
-          return;
+      switch (task.taskType) {
+        case "entry": {
+          const entry = await task.orm.getEntry(entryType, entryId);
+          result = await entry.runAction(action, data);
+
+          break;
+        }
+        case "settings": {
+          const settings = await task.orm.getSettings(entryType);
+          result = await settings.runAction(action, data);
+          break;
+        }
+        case "app": {
+          const app = task.orm.app;
+          result = await app.runAction(group, action, {
+            data,
+            request: new EasyRequest(new Request("")),
+            response: new EasyResponse(),
+          });
+          break;
         }
       }
+      switch (typeof result) {
+        case "object":
+          task.resultData = result;
+          break;
+        case "string":
+        case "number":
+          task.resultData = {
+            message: result,
+          };
+          break;
+        default:
+          break;
+      }
+
+      task.status = "completed";
+      await task.save();
+    } catch (e: unknown) {
+      let message = "Error running task";
+      let error = "";
+      if (e instanceof Error) {
+        message = e.message;
+        error = e.name;
+      }
+      task.resultData = {
+        error,
+        message,
+      };
+      task.status = "failed";
+      await task.save();
     }
-    task.status = "completed";
-    await task.save();
   },
 });

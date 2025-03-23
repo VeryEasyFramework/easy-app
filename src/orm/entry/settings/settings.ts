@@ -157,11 +157,7 @@ export class SettingsClass {
     }
     return changedData;
   }
-
-  async runAction(
-    actionKey: string,
-    data?: Record<string, SafeType>,
-  ): Promise<any> {
+  private validateAction(actionKey: string, data?: Record<string, any>) {
     const action = this.actions[actionKey];
     if (!action) {
       raiseOrmException(
@@ -179,7 +175,30 @@ export class SettingsClass {
         }
       }
     }
+    return action;
+  }
+  async runAction(
+    actionKey: string,
+    data?: Record<string, SafeType>,
+  ): Promise<any> {
+    const action = this.validateAction(actionKey, data);
     data = data || {};
     return await action.action(this, data);
+  }
+
+  async enqueueAction(
+    action: string,
+    data: Record<string, any>,
+  ): Promise<void> {
+    this.validateAction(action, data);
+    await this.orm.createEntry("taskQueue", {
+      taskType: "settings",
+      entryType: this._settingsType.settingsType,
+      worker: "medium",
+      status: "queued",
+      title: this._settingsType.config.label,
+      action,
+      taskData: data,
+    });
   }
 }
