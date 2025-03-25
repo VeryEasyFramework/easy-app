@@ -43,49 +43,41 @@ async function checkForTasks(app: EasyApp) {
     await hook(app);
   }
   const workerSettings = await app.orm.getSettings("workerSettings");
-  const maxTasks = workerSettings.maxTaskCount as number;
   const tasks = await app.orm.getEntryList("taskQueue", {
     filter: {
       status: "queued",
       worker,
     },
+    orderBy: "createdAt",
+    order: "asc",
     columns: ["id"],
-    limit: maxTasks < 1 ? 1 : maxTasks,
+    limit: 1,
   });
-  let count = tasks.data.length;
-  const currentCount = count;
-  const totalCount = tasks.totalCount;
-  const done = new Promise<void>((resolve) => {
-    if (count === 0) {
-      resolve();
-    }
+  if (tasks.rowCount > 0) {
     workerSettings[`${worker}WorkerStatus`] = "running";
-    workerSettings.save().then(() => {
-      for (const item of tasks.data) {
-        app.orm.getEntry<Task>("taskQueue", item.id).then(async (task) => {
-          await task.runAction("runTask");
-          count--;
-          if (count === 0) {
-            resolve();
-          }
-        });
+    await workerSettings.save();
+    const task = await app.orm.getEntry<Task>("taskQueue", tasks.data[0].id);
+    try {
+      await task.runAction("runTask");
+    } catch (e) {
+      let message = `Error running task ${task.id}`;
+      if (e instanceof Error) {
+        message += `: ${e.message}`;
       }
-    });
-  });
-  await done;
-  await workerSettings.load();
+      easyLog.error(message);
+    }
+    await workerSettings.load();
+    workerSettings[`${worker}WorkerStatus`] = "ready";
+    await workerSettings.save();
+  }
 
-  workerSettings[`${worker}WorkerStatus`] = "ready";
-  await workerSettings.save();
   let seconds = workerSettings.waitInterval as number || 10;
 
   if (seconds < 5) {
     seconds = 5;
   }
 
-  if (totalCount === currentCount) {
-    await asyncPause(seconds * 1000);
-  }
+  await asyncPause(seconds * 1000);
   checkForTasks(app);
 }
 
