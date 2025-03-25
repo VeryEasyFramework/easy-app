@@ -2,6 +2,7 @@ import type { EasyApp } from "#/app/easyApp.ts";
 import { easyLog } from "#/log/logging.ts";
 import type { EntryClass } from "#orm/entry/entry/entryClass/entryClass.ts";
 import { asyncPause } from "#/utils.ts";
+import { dateUtils } from "#orm/utils/dateUtils.ts";
 
 export default function runWorker(
   app: EasyApp,
@@ -51,24 +52,43 @@ async function checkForTasks(app: EasyApp) {
     orderBy: "createdAt",
     order: "asc",
     columns: ["id"],
-    limit: 1,
   });
   if (tasks.rowCount > 0) {
-    workerSettings[`${worker}WorkerStatus`] = "running";
-    await workerSettings.save();
-    const task = await app.orm.getEntry<Task>("taskQueue", tasks.data[0].id);
-    try {
-      await task.runAction("runTask");
-    } catch (e) {
-      let message = `Error running task ${task.id}`;
-      if (e instanceof Error) {
-        message += `: ${e.message}`;
-      }
-      easyLog.error(message);
+    for (const item of tasks.data) {
+      workerSettings[`${worker}WorkerStatus`] = "running";
+      await workerSettings.save();
+      const task = await app.orm.getEntry<Task>("taskQueue", item.id);
+
+      const result = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error("Task timed out"));
+        }, 60000);
+        task.runAction("runTask").then((result) => {
+          clearTimeout(timeout);
+          resolve(result);
+        }).catch((e) => {
+          clearTimeout(timeout);
+          reject(e);
+        });
+      });
+      await result.catch(async (e) => {
+        let message = `Error running task ${task.id}`;
+        if (e instanceof Error) {
+          message += `: ${e.message}`;
+        }
+        easyLog.error(message);
+        task.status = "failed";
+        task.taskData = {
+          ...task.taskData,
+          error: e.message,
+        };
+        await task.save();
+      });
+
+      await workerSettings.load();
+      workerSettings[`${worker}WorkerStatus`] = "ready";
+      await workerSettings.save();
     }
-    await workerSettings.load();
-    workerSettings[`${worker}WorkerStatus`] = "ready";
-    await workerSettings.save();
   }
 
   let seconds = workerSettings.waitInterval as number || 10;

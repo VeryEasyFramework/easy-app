@@ -32,15 +32,6 @@ const workerFields: Record<string, EasyField[]> = {
 };
 workerSettings.addFields([
   {
-    key: "maxTaskCount",
-    fieldType: "IntField",
-    label: "Max Concurrent Tasks",
-    description:
-      `The maximum number of tasks that can be run concurrently for each worker`,
-    defaultValue: 5,
-    group: "shared",
-  },
-  {
     key: "waitInterval",
     fieldType: "IntField",
     label: "Wait Interval",
