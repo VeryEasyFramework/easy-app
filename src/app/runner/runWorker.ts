@@ -44,6 +44,8 @@ async function checkForTasks(app: EasyApp) {
     await hook(app);
   }
   const workerSettings = await app.orm.getSettings("workerSettings");
+  const workerTimeout = (workerSettings[`${worker}Timeout`] as number || 90) *
+    1000;
   const tasks = await app.orm.getEntryList("taskQueue", {
     filter: {
       status: "queued",
@@ -62,7 +64,7 @@ async function checkForTasks(app: EasyApp) {
       const result = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error("Task timed out"));
-        }, 60000);
+        }, workerTimeout);
         task.runAction("runTask").then((result) => {
           clearTimeout(timeout);
           resolve(result);

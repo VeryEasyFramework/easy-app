@@ -53,6 +53,13 @@ Object.keys(workerFields).forEach((worker) => {
       group: `${worker}Worker`,
     },
     {
+      key: `${worker}Timeout`,
+      fieldType: "IntField",
+      label: "Timeout(seconds)",
+      description: `The timeout in seconds for the ${worker} worker`,
+      defaultValue: 90,
+    },
+    {
       key: `${worker}WorkerStatus`,
       fieldType: "ChoicesField",
       label: "Status",
