@@ -8,12 +8,12 @@
  */
 function camelToSnakeCase(inputString: string): string {
   // strip leading and trailing whitespace and delimiters
-  inputString = inputString.trim().replace(/[^a-zA-Z0-9_]/g, "_");
+  inputString = inputString.trim().replaceAll(/[^a-zA-Z0-9_]/g, "_");
   // substitute capital letters with underscore and lowercase
-  inputString = inputString.replace(/(?<!^)(?=[A-Z])/g, "_").toLowerCase();
+  inputString = inputString.replaceAll(/(?<!^)(?=[A-Z])/g, "_").toLowerCase();
 
   //insert an underscore before any digit that is preceded by a letter
-  inputString = inputString.replace(/(?<=[a-zA-Z])(?=\d)/g, "_");
+  inputString = inputString.replaceAll(/(?<=[a-zA-Z])(?=\d)/g, "_");
   return sanitizeString(inputString);
 }
 
@@ -78,7 +78,7 @@ function toSnakeCase(inputString: string): string {
  */
 function toTitleCase(inputString: string): string {
   inputString = sanitizeString(inputString);
-  inputString = inputString.replace("_", " ");
+  inputString = inputString.replaceAll("_", " ");
   return inputString.split(" ").map((word) =>
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(" ");
@@ -114,13 +114,13 @@ export {
  */
 function sanitizeString(inputString: string): string {
   // strip leading and trailing whitespace and delimiters
-  inputString = inputString.trim().replace(/[^a-zA-Z0-9_]/g, "_");
+  inputString = inputString.trim().replaceAll(/[^a-zA-Z0-9_]/g, "_");
   // replace spaces with underscores
-  inputString = inputString.replace(" ", "_");
+  inputString = inputString.replaceAll(" ", "_");
   // replace hyphens with underscores
-  inputString = inputString.replace("-", "_");
+  inputString = inputString.replaceAll("-", "_");
   // replace multiple underscores with a single underscore
-  inputString = inputString.replace(/_+/g, "_");
+  inputString = inputString.replaceAll(/_+/g, "_");
   // convert to lowercase
   inputString = inputString.toLowerCase();
   return inputString;
@@ -154,3 +154,15 @@ function addLeadingZeros(value: number | string, length: number = 2): string {
 }
 
 export { addLeadingZeros, generateRandomString, sanitizeString };
+
+export const stringUtils = {
+  addLeadingZeros,
+  camelToSnakeCase,
+  camelToTitleCase,
+  generateRandomString,
+  sanitizeString,
+  toCamelCase,
+  toPascalCase,
+  toSnakeCase,
+  toTitleCase,
+};

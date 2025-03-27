@@ -1,3 +1,5 @@
+export { stringUtils } from "#orm/utils/stringUtils.ts";
+
 export type { EasyOrm } from "#orm/orm.ts";
 
 export { dateUtils } from "#orm/utils/dateUtils.ts";
