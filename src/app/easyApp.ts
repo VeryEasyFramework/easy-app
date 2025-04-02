@@ -388,6 +388,7 @@ export class EasyApp {
       const params: DocsActionParam[] = [];
       for (const param in action.params) {
         params.push({
+          ...action.params[param],
           paramName: param,
           required: action.params[param].required || false,
           type: action.params[param].type,
