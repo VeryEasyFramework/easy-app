@@ -22,6 +22,11 @@ export interface TaskQueue extends Entry {
    */
   entryTitle?: string;
   /**
+   * **Group** (DataField)
+   * @type {string}
+   */
+  group?: string;
+  /**
    * **Action** (DataField)
    * @type {string}
    */
@@ -49,8 +54,23 @@ export interface TaskQueue extends Entry {
   resultData?: Record<string, any>;
   /**
    * **Status** (ChoicesField)
-   * @type {'queued' | 'running' | 'completed' | 'failed'}
+   * @type {'queued' | 'running' | 'cancelled' | 'completed' | 'failed'}
    * @required true
    */
-  status: "queued" | "running" | "completed" | "failed";
+  status: "queued" | "running" | "cancelled" | "completed" | "failed";
+  /**
+   * **Queued At** (TimeStampField)
+   * @type {number}
+   */
+  queuedAt?: number;
+  /**
+   * **Start Time** (TimeStampField)
+   * @type {number}
+   */
+  startTime?: number;
+  /**
+   * **End Time** (TimeStampField)
+   * @type {number}
+   */
+  endTime?: number;
 }

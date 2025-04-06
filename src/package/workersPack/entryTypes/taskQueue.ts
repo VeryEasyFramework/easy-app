@@ -4,18 +4,28 @@ import type { EasyOrm } from "#orm/orm.ts";
 import type { TaskQueue } from "#/generatedTypes/taskQueueInterface.ts";
 import { EasyRequest } from "#/app/easyRequest.ts";
 import { EasyResponse } from "#/app/easyResponse.ts";
+import { dateUtils } from "#orm/utils/dateUtils.ts";
 
 export const taskQueue = new EntryType<TaskQueue>("taskQueue");
 taskQueue.setConfig({
   statusField: "status",
   titleField: "title",
+  orderField: "queuedAt",
+  orderDirection: "desc",
 });
+
+taskQueue.addFieldGroups([{
+  key: "details",
+  title: "Details",
+}]);
 taskQueue.addFields([{
   key: "taskType",
   fieldType: "ChoicesField",
   defaultValue: "entry",
   required: true,
   readOnly: true,
+  inList: true,
+  group: "details",
   choices: [{
     key: "entry",
     label: "Entry",
@@ -29,6 +39,7 @@ taskQueue.addFields([{
 }, {
   key: "entryType",
   fieldType: "DataField",
+  inList: true,
   readOnly: true,
 }, {
   key: "entryId",
@@ -41,9 +52,11 @@ taskQueue.addFields([{
 }, {
   key: "group",
   fieldType: "DataField",
+  inList: true,
   readOnly: true,
 }, {
   key: "action",
+  inList: true,
   fieldType: "DataField",
   readOnly: true,
 }, {
@@ -90,6 +103,10 @@ taskQueue.addFields([{
     label: "Running",
     color: "warning",
   }, {
+    key: "cancelled",
+    label: "Cancelled",
+    color: "error",
+  }, {
     key: "completed",
     label: "Completed",
     color: "success",
@@ -98,6 +115,30 @@ taskQueue.addFields([{
     label: "Failed",
     color: "error",
   }],
+}, {
+  key: "queuedAt",
+  label: "Queued At",
+  fieldType: "TimeStampField",
+  readOnly: true,
+  inList: true,
+  showTime: true,
+  group: "details",
+}, {
+  key: "startTime",
+  label: "Start Time",
+  fieldType: "TimeStampField",
+  readOnly: true,
+  inList: true,
+  showTime: true,
+  group: "details",
+}, {
+  key: "endTime",
+  label: "End Time",
+  fieldType: "TimeStampField",
+  readOnly: true,
+  inList: true,
+  showTime: true,
+  group: "details",
 }]);
 
 taskQueue.addHook("validate", {
@@ -141,17 +182,63 @@ taskQueue.addHook("validate", {
 taskQueue.addHook("afterSave", {
   async action(task) {
     const settings = await task.orm.getSettings("workerSettings");
-    settings.runAction("updateTaskCount");
+    await settings.runAction("updateTaskCount");
   },
 });
 
 taskQueue.addHook("afterDelete", {
   async action(task) {
     const settings = await task.orm.getSettings("workerSettings");
-    settings.runAction("updateTaskCount");
+    await settings.runAction("updateTaskCount");
+  },
+});
+taskQueue.addHook("beforeSave", {
+  label: "Set Times",
+  action(task) {
+    if (task.isValueChanged("status")) {
+      switch (task.status) {
+        case "running":
+          task.startTime = dateUtils.nowTimestamp();
+          break;
+        case "completed":
+        case "failed":
+          task.endTime = dateUtils.nowTimestamp();
+          if (!task.startTime) {
+            task.startTime = dateUtils.nowTimestamp();
+          }
+          break;
+        case "queued":
+          task.queuedAt = dateUtils.nowTimestamp();
+          break;
+        default:
+          break;
+      }
+    }
   },
 });
 
+taskQueue.addHook("beforeInsert", {
+  label: "Set Queued At",
+  action(task) {
+    if (!task.queuedAt) {
+      task.queuedAt = dateUtils.nowTimestamp();
+    }
+  },
+});
+taskQueue.addAction("cancel", {
+  label: "Cancel Task",
+  async action(task) {
+    switch (task.status) {
+      case "queued":
+      case "running":
+        task.status = "cancelled";
+        await task.save();
+        break;
+      default:
+        break;
+    }
+  },
+});
 taskQueue.addAction("runTask", {
   label: "Run Task",
   async action(task) {

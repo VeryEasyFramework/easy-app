@@ -1,24 +1,16 @@
 import type { EasyApp } from "#/app/easyApp.ts";
 import { easyLog } from "#/log/logging.ts";
 import type { EntryClass } from "#orm/entry/entry/entryClass/entryClass.ts";
-import { asyncPause } from "#/utils.ts";
-import { dateUtils } from "#orm/utils/dateUtils.ts";
 
-export default function runWorker(
+export default async function runWorker(
   app: EasyApp,
   mode: "short" | "medium" | "long",
 ) {
   app.workerMode = mode;
   app.processNumber = `${mode} worker`;
-
-  const { workers } = app.config;
-
-  app.config.serverOptions.port = workers[mode].port;
-  app.config.serverOptions.hostname = "127.0.0.1";
-
-  app.serve({
-    name: `${mode} worker`,
-  });
+  await app.init();
+  await app.boot();
+  easyLog.info(`Starting ${mode} worker`, "~~~~~");
 
   Deno.addSignalListener("SIGINT", async () => {
     await app.orm.updateSettings("workerSettings", {
@@ -31,9 +23,9 @@ export default function runWorker(
     });
     app.exit(0);
   });
-  checkForTasks(app);
+  await checkForTasks(app);
 }
-async function checkForTasks(app: EasyApp) {
+export async function checkForTasks(app: EasyApp) {
   const worker = app.workerMode;
   if (!worker) {
     easyLog.warning("No worker mode set", app.fullAppName);
@@ -51,7 +43,7 @@ async function checkForTasks(app: EasyApp) {
       status: "queued",
       worker,
     },
-    orderBy: "createdAt",
+    orderBy: "queuedAt",
     order: "asc",
     columns: ["id"],
   });
@@ -86,21 +78,10 @@ async function checkForTasks(app: EasyApp) {
         };
         await task.save();
       });
-
-      await workerSettings.load();
       workerSettings[`${worker}WorkerStatus`] = "ready";
       await workerSettings.save();
     }
   }
-
-  let seconds = workerSettings.waitInterval as number || 10;
-
-  if (seconds < 5) {
-    seconds = 5;
-  }
-
-  await asyncPause(seconds * 1000);
-  checkForTasks(app);
 }
 
 interface Task extends EntryClass {

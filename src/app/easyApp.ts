@@ -53,6 +53,15 @@ export class EasyApp {
   private hasError: boolean = false;
   server?: Deno.HttpServer;
   config!: Required<EasyAppConfig<DBType>>;
+  #initialized: boolean = false;
+
+  #booted: boolean = false;
+  get booted(): boolean {
+    return this.#booted;
+  }
+  get initialized(): boolean {
+    return this.#initialized;
+  }
   get fileRoot(): string {
     return `${this.config.appRootPath}/files`;
   }
@@ -285,10 +294,14 @@ export class EasyApp {
   }
 
   async init(): Promise<void> {
+    if (this.initialized) {
+      return;
+    }
     // this.actions = {};
     for (const action of this.initActions) {
       await action.action(this);
     }
+    this.#initialized = true;
   }
   get apiDocs(): DocsActionGroup[] {
     const fullDocs: DocsActionGroup[] = [];
@@ -589,6 +602,9 @@ export class EasyApp {
   }
 
   async boot(): Promise<void> {
+    if (this.booted) {
+      return;
+    }
     if (this.hasError) {
       easyLog.message("App has errors. Exiting...", "Boot");
       prompt("Press any key to exit...");
@@ -637,6 +653,7 @@ export class EasyApp {
       }
       throw e;
     }
+    this.#booted = true;
   }
   stop() {
     this.server?.shutdown();
