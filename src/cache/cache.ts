@@ -1,4 +1,4 @@
-import type { SafeType } from "@vef/types";
+import type { SafeType } from "#/vef-types/mod.ts";
 import { easyLog } from "#/log/logging.ts";
 
 /**

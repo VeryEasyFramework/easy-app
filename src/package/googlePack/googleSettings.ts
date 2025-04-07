@@ -1,6 +1,5 @@
-import { raiseEasyException, SettingsType } from "@vef/easy-app";
-import { raiseRedirect } from "#/easyException.ts";
-//https://console.cloud.google.com/iam-admin/serviceaccounts/details/111419913115489213035?inv=1&invt=AbmSPw&project=vdm-app-447209&supportedpurview=project
+import { SettingsType } from "#orm/entry/settings/settingsType.ts";
+import { raiseEasyException } from "#/easyException.ts";
 
 export const googleSettings = new SettingsType("googleSettings", {
   description: "Google API settings",

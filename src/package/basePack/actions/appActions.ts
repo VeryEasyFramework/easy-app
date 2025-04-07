@@ -2,7 +2,7 @@ import { createAction } from "#/actions/createAction.ts";
 import type { EasyPackInfo } from "#/package/easyPack.ts";
 import type { RealtimeRoomDef } from "#/realtime/realtimeTypes.ts";
 import type { DocsActionGroup } from "#/actions/actionTypes.ts";
-import type { EntryType as EntryTypeDef } from "@vef/types";
+import type { EntryType as EntryTypeDef } from "#/vef-types/mod.ts";
 
 export const appActions = [
   createAction("apiDocs", {

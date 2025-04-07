@@ -4,7 +4,7 @@ import type { EasyRequest } from "#/app/easyRequest.ts";
 import type { EasyApp } from "#/app/easyApp.ts";
 
 import type { SessionData } from "#/package/authPack/entryTypes/userSession.ts";
-import type { User } from "@vef/types";
+import type { User } from "#/vef-types/mod.ts";
 import { OrmException } from "#orm/ormException.ts";
 
 export const authMiddleware = createMiddleware(async (

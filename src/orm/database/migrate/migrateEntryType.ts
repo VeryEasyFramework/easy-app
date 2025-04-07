@@ -3,7 +3,7 @@ import type {
   ChildListDefinition,
   EasyField,
   EntryType as EntryTypeDef,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 import { EasyOrm } from "#orm/orm.ts";
 import { fieldTypeMap } from "#orm/entry/field/fieldTypeMap.ts";
 import { generateId } from "#orm/utils/misc.ts";

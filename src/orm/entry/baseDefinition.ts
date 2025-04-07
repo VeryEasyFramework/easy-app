@@ -4,7 +4,7 @@ import type {
   EasyField,
   FieldGroupDefinition,
   SettingsHook,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 import {
   camelToSnakeCase,
   camelToTitleCase,

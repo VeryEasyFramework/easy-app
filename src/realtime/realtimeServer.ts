@@ -5,7 +5,7 @@ import type {
   RealtimeRoomDef,
 } from "#/realtime/realtimeTypes.ts";
 import { asyncPause } from "#/utils.ts";
-import type { SafeType, User } from "@vef/types";
+import type { SafeType, User } from "#/vef-types/mod.ts";
 import type { EasyCache } from "#/cache/cache.ts";
 
 class SocketRoom {

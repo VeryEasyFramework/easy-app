@@ -3,7 +3,7 @@ import type {
   EntryHook,
   EntryHookDefinition,
   EntryType as EntryTypeDef,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 import { EntryClass } from "#orm/entry/entry/entryClass/entryClass.ts";
 import type { EntryHookFunction } from "#orm/entry/entry/entryClass/entryClassTypes.ts";
 import type { EasyOrm } from "#orm/orm.ts";

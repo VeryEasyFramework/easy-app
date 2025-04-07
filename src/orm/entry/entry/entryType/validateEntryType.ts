@@ -1,4 +1,4 @@
-import type { EasyField, EntryType as EntryTypeDef } from "@vef/types";
+import type { EasyField, EntryType as EntryTypeDef } from "#/vef-types/mod.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 

@@ -1,4 +1,3 @@
-import type { EntryHookFunction } from "./entryClassTypes.ts";
 import type {
   EasyFieldType,
   EasyFieldTypeMap,
@@ -9,13 +8,14 @@ import type {
   RowsResult,
   SafeType,
   User,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { dateUtils } from "#orm/utils/dateUtils.ts";
 import { generateId, isEmpty } from "#orm/utils/misc.ts";
 import type { ChildList } from "#orm/entry/child/childRecord.ts";
+import type { EntryHookFunction } from "#orm/entry/entry/entryClass/entryClassTypes.ts";
 
 export class EntryClass {
   private _data: Record<string, any> = {};

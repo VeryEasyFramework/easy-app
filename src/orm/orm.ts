@@ -12,8 +12,8 @@ import type {
   SafeType,
   SettingsType as SettingsTypeDef,
   User,
-} from "@vef/types";
-import type { EntryConnection } from "@vef/types";
+} from "#/vef-types/mod.ts";
+import type { EntryConnection } from "#/vef-types/mod.ts";
 
 import { OrmException, raiseOrmException } from "#orm/ormException.ts";
 import { migrateEntryType } from "#orm/database/migrate/migrateEntryType.ts";

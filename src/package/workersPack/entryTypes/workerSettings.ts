@@ -1,5 +1,5 @@
 import { SettingsType } from "#orm/entry/settings/settingsType.ts";
-import type { EasyField } from "@vef/types";
+import type { EasyField } from "#/vef-types/mod.ts";
 import startProcess from "#/app/runner/startProcess.ts";
 import { toTitleCase } from "@vef/string-utils";
 

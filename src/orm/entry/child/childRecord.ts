@@ -1,4 +1,4 @@
-import type { ChildListDefinition, EasyField } from "@vef/types";
+import type { ChildListDefinition, EasyField } from "#/vef-types/mod.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 import { generateId } from "#orm/utils/misc.ts";
 

@@ -3,7 +3,7 @@ import type {
   EasyField,
   EasyFieldTypeMap,
   SafeReturnType,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 import type { EntryClass } from "../entryClass/entryClass.ts";
 
 export interface Entry extends EntryClass {

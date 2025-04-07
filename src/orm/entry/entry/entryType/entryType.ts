@@ -1,5 +1,5 @@
 import { BaseDefinition } from "#orm/entry/baseDefinition.ts";
-import type { Choice, EasyField, EntryTypeConfig } from "@vef/types";
+import type { Choice, EasyField, EntryTypeConfig } from "#/vef-types/mod.ts";
 import type {
   Entry,
   Entry as EntryInstance,

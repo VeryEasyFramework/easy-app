@@ -1,4 +1,4 @@
-import type { User } from "@vef/types";
+import type { User } from "#/vef-types/mod.ts";
 
 export interface RealtimeClient {
   id: string;

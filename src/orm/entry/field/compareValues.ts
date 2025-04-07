@@ -1,4 +1,4 @@
-import type { EasyFieldType } from "@vef/types";
+import type { EasyFieldType } from "#/vef-types/mod.ts";
 
 export function isDifferent(
   fieldType: EasyFieldType,

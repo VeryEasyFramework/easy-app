@@ -35,7 +35,7 @@ import type {
   EntryType as EntryTypeDef,
   SafeType,
   SettingsType as SettingsTypeDef,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 import { OrmException } from "#orm/ormException.ts";
 import { PgError } from "#orm/database/adapter/adapters/postgres/pgError.ts";
 import { authPack } from "#/package/authPack/authPack.ts";

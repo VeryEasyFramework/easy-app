@@ -1,5 +1,5 @@
 import { raiseOrmException } from "#orm/ormException.ts";
-import type { EasyField, EasyFieldType } from "@vef/types";
+import type { EasyField, EasyFieldType } from "#/vef-types/mod.ts";
 import type { EasyOrm } from "#orm/orm.ts";
 
 export function validateBoolean(field: EasyField, value: any): boolean {

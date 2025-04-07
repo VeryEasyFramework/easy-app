@@ -1,4 +1,4 @@
-import type { EasyFieldType } from "@vef/types";
+import type { EasyFieldType } from "#/vef-types/mod.ts";
 
 export const fieldTypeMap: Record<EasyFieldType, string> = {
   IDField: "string",

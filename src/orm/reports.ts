@@ -1,4 +1,4 @@
-import type { AdvancedFilter, ListOptions } from "@vef/types";
+import type { AdvancedFilter, ListOptions } from "#/vef-types/mod.ts";
 
 export interface ReportOptions {
   columns?: Array<

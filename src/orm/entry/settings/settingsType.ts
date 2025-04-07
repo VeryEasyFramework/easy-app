@@ -1,5 +1,10 @@
 import { BaseDefinition } from "#orm/entry/baseDefinition.ts";
-import type { Choice, EasyField, SettingsHook, SettingsTypeConfig, } from "@vef/types";
+import type {
+  Choice,
+  EasyField,
+  SettingsHook,
+  SettingsTypeConfig,
+} from "#/vef-types/mod.ts";
 import type {
   Settings,
   SettingsActionDefinition,

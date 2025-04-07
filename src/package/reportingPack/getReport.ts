@@ -1,6 +1,6 @@
 import type { EasyOrm } from "#orm/orm.ts";
 import type { ReportOptions, ReportResult } from "#orm/reports.ts";
-import type { RowsResult, User } from "@vef/types";
+import type { RowsResult, User } from "#/vef-types/mod.ts";
 import {
   DatabaseReportColumn,
   DatabaseReportOptions,

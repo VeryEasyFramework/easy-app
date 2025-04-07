@@ -1,7 +1,7 @@
 import type { SettingsType } from "../settings/settingsType.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 import type { EntryType } from "../entry/entryType/entryType.ts";
-import type { FieldGroup } from "@vef/types";
+import type { FieldGroup } from "#/vef-types/mod.ts";
 
 export function buildFieldGroups(
   entryType: EntryType | SettingsType,

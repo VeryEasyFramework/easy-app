@@ -4,7 +4,7 @@ import type {
   IdMethodType,
   ListOptions,
   RowsResult,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 
 export interface AdapterColumn {
   name: string;

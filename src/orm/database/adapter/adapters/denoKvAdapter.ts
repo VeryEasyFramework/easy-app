@@ -8,7 +8,7 @@ import type {
   EntryType as EntryTypeDef,
   ListOptions,
   RowsResult,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 import { raiseOrmException } from "#orm/ormException.ts";
 
 export interface DenoKvConfig {

@@ -4,7 +4,7 @@ import type {
   EasyFieldType,
   EntryType as EntryTypeDef,
   FieldGroup,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 import { camelToSnakeCase, toPascalCase } from "@vef/string-utils";
 import type { EasyOrm } from "#orm/orm.ts";
 import { buildFieldGroups } from "#orm/entry/field/buildFieldGroups.ts";

@@ -1,5 +1,5 @@
 import { createAction } from "#/actions/createAction.ts";
-import type { ListOptions } from "@vef/types";
+import type { ListOptions } from "#/vef-types/mod.ts";
 import { raiseEasyException } from "#/easyException.ts";
 
 export const getEntryListAction = createAction("getList", {

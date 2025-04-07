@@ -1,5 +1,5 @@
 import type { Database, DatabaseConfig } from "#orm/database/database.ts";
-import type { EasyField } from "@vef/types";
+import type { EasyField } from "#/vef-types/mod.ts";
 
 export async function installDatabase(options: {
   database: Database<keyof DatabaseConfig>;

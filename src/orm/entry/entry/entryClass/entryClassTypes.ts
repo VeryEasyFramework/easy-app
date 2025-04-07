@@ -1,5 +1,5 @@
 import type { EntryClass } from "#orm/entry/entry/entryClass/entryClass.ts";
-import type { SafeReturnType, SafeType } from "@vef/types";
+import type { SafeReturnType, SafeType } from "#/vef-types/mod.ts";
 
 export type EntryHookFunction = (
   entry: EntryClass,

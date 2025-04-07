@@ -1,7 +1,7 @@
 import type { Database } from "#orm/database/database.ts";
 import type { SettingsType } from "#orm/entry/settings/settingsType.ts";
 import { OrmException } from "#orm/ormException.ts";
-import type { EasyField } from "@vef/types";
+import type { EasyField } from "#/vef-types/mod.ts";
 import { validateField } from "#orm/entry/field/validateField.ts";
 
 export async function migrateSettingsType(options: {

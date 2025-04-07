@@ -7,7 +7,7 @@ import type {
   SettingsHook,
   SettingsType,
   SettingsTypeHookDefinition,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 import type { SettingsHookFunction } from "./settingsTypes.ts";
 
 export function buildSettingsClass(

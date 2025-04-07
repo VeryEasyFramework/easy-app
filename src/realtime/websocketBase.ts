@@ -1,6 +1,6 @@
 import type { RealtimeClient } from "#/realtime/realtimeTypes.ts";
 import type { EasyRequest } from "#/app/easyRequest.ts";
-import type { User } from "@vef/types";
+import type { User } from "#/vef-types/mod.ts";
 
 export abstract class WebsocketBase {
   clients: Map<string, RealtimeClient>;

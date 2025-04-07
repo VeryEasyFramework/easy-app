@@ -10,7 +10,7 @@ import type {
   ListOptions,
   RowsResult,
   SafeType,
-} from "@vef/types";
+} from "#/vef-types/mod.ts";
 import type {
   DenoKvAdapter,
   DenoKvConfig,
