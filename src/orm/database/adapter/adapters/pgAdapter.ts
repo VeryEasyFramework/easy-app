@@ -344,7 +344,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
   }
   private formatColumnName(column: string): string {
     column = camelToSnakeCase(column);
-    const reservedWords = ["order", "user"];
+    const reservedWords = ["order", "user", "group"];
     if (reservedWords.includes(column)) {
       return `"${column}"`;
     }

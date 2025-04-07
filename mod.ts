@@ -1,3 +1,5 @@
+import runWorker from "#/app/runner/runWorker.ts";
+export { runWorker };
 export { stringUtils } from "#orm/utils/stringUtils.ts";
 
 export type { EasyOrm } from "#orm/orm.ts";

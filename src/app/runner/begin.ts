@@ -8,6 +8,7 @@ import type { EasyApp } from "#/app/easyApp.ts";
 interface BeginOptions {
   multiProcess: EasyAppConfig<"postgres">["multiProcessing"];
   flags?: string[];
+  workers?: boolean;
   app: EasyApp;
 }
 
@@ -34,9 +35,10 @@ export default async function begin(
     flags: options.flags,
   });
   processes.push(broker);
-
-  const workers = await startWorkers(app, options.flags);
-  processes.push(...workers);
+  if (options.workers) {
+    const workers = await startWorkers(app, options.flags);
+    processes.push(...workers);
+  }
   return processes;
 }
 

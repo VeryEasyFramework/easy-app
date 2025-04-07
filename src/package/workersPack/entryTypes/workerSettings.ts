@@ -30,17 +30,17 @@ const workerFields: Record<string, EasyField[]> = {
   medium: [],
   long: [],
 };
-workerSettings.addFields([
-  {
-    key: "waitInterval",
-    fieldType: "IntField",
-    label: "Wait Interval",
-    description:
-      `The interval in seconds to wait before checking for new tasks`,
-    defaultValue: 60,
-    group: "shared",
-  },
-]);
+// workerSettings.addFields([
+//   {
+//     key: "waitInterval",
+//     fieldType: "IntField",
+//     label: "Wait Interval",
+//     description:
+//       `The interval in seconds to wait before checking for new tasks`,
+//     defaultValue: 60,
+//     group: "shared",
+//   },
+// ]);
 Object.keys(workerFields).forEach((worker) => {
   const title = toTitleCase(worker);
   workerFields[worker] = [
@@ -81,14 +81,14 @@ Object.keys(workerFields).forEach((worker) => {
       }],
       group: `${worker}Worker`,
     },
-    {
-      key: `${worker}WorkerPid`,
-      fieldType: "IntField",
-      label: "Worker PID",
-      description: `The PID of the ${worker} worker`,
-      readOnly: true,
-      group: `${worker}Worker`,
-    },
+    // {
+    //   key: `${worker}WorkerPid`,
+    //   fieldType: "IntField",
+    //   label: "Worker PID",
+    //   description: `The PID of the ${worker} worker`,
+    //   readOnly: true,
+    //   group: `${worker}Worker`,
+    // },
     {
       key: `${worker}QueuedTasks`,
       fieldType: "IntField",
@@ -124,43 +124,43 @@ Object.keys(workerFields).forEach((worker) => {
   ];
 });
 
-workerSettings.addFields(workerFields.short);
+// workerSettings.addFields(workerFields.short);
 workerSettings.addFields(workerFields.medium);
-workerSettings.addFields(workerFields.long);
+// workerSettings.addFields(workerFields.long);
 
-workerSettings.addHook("beforeSave", {
-  label: "Toggle Workers",
-  action(settings) {
-    const workers = ["short", "medium", "long"];
+// workerSettings.addHook("beforeSave", {
+//   label: "Toggle Workers",
+//   action(settings) {
+//     const workers = ["short", "medium", "long"];
 
-    for (const worker of workers) {
-      const enabled = settings[`${worker}WorkerEnabled`] as boolean;
-      const pid = settings[`${worker}WorkerPid`] as number;
-      if (enabled && !pid) {
-        const title = `Worker - ${toTitleCase(worker)}`;
-        const process = startProcess(title, {
-          args: ["--worker", worker],
-        });
-        settings[`${worker}WorkerStatus`] = "ready";
-        settings[`${worker}WorkerPid`] = process.process.pid;
-        settings.orm.app.processes.push(process);
-      }
-      if (!enabled && pid) {
-        try {
-          Deno.kill(pid, "SIGINT");
-        } catch (e) {
-          if (e instanceof Deno.errors.NotFound) {
-            // Worker already stopped
-          } else {
-            throw e;
-          }
-        }
-        settings[`${worker}WorkerPid`] = null;
-        settings[`${worker}WorkerStatus`] = "stopped";
-      }
-    }
-  },
-});
+//     for (const worker of workers) {
+//       const enabled = settings[`${worker}WorkerEnabled`] as boolean;
+//       const pid = settings[`${worker}WorkerPid`] as number;
+//       if (enabled && !pid) {
+//         const title = `Worker - ${toTitleCase(worker)}`;
+//         const process = startProcess(title, {
+//           args: ["--worker", worker],
+//         });
+//         settings[`${worker}WorkerStatus`] = "ready";
+//         settings[`${worker}WorkerPid`] = process.process.pid;
+//         settings.orm.app.processes.push(process);
+//       }
+//       if (!enabled && pid) {
+//         try {
+//           Deno.kill(pid, "SIGINT");
+//         } catch (e) {
+//           if (e instanceof Deno.errors.NotFound) {
+//             // Worker already stopped
+//           } else {
+//             throw e;
+//           }
+//         }
+//         settings[`${worker}WorkerPid`] = null;
+//         settings[`${worker}WorkerStatus`] = "stopped";
+//       }
+//     }
+//   },
+// });
 
 workerSettings.addAction("updateTaskCount", {
   label: "Refresh Task Count",
