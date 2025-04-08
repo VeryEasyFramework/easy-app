@@ -423,6 +423,7 @@ export interface ListOptions {
   offset?: number;
   orderBy?: string;
   order?: "asc" | "desc";
+  withTotals?: string[];
 }
 
 export interface DatabaseListOptions {
@@ -441,6 +442,7 @@ export interface DatabaseListOptions {
   offset?: number;
   orderBy?: string;
   order?: "asc" | "desc";
+  withTotals?: string[];
 }
 
 export interface AdvancedFilter {
@@ -476,6 +478,7 @@ export interface RowsResult<T> {
   totalCount: number;
   data: T[];
   columns: string[];
+  totals?: Record<string, number>;
 }
 
 /**

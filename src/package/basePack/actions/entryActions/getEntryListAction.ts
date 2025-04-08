@@ -33,6 +33,9 @@ export const getEntryListAction = createAction("getList", {
     if (data.columns) {
       options.columns = data.columns as unknown as string[];
     }
+    if (data.withTotals) {
+      options.withTotals = data.withTotals;
+    }
     return await app.orm.getEntryList(data.entryType, options, request.user);
   },
   params: {
@@ -67,6 +70,10 @@ export const getEntryListAction = createAction("getList", {
     columns: {
       required: false,
       type: "DataField",
+    },
+    withTotals: {
+      required: false,
+      type: "ListField",
     },
   },
   response: "any[]",

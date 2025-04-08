@@ -112,6 +112,20 @@ export class Database<
         options.filter = undefined;
       }
     }
+    if (Array.isArray(options?.withTotals)) {
+      const totals = [];
+      if (options.columns) {
+        for (const column of options.columns) {
+          if (
+            typeof column === "string" && options.withTotals.includes(column)
+          ) {
+            totals.push(column);
+          }
+        }
+      }
+      options.withTotals = totals;
+    }
+
     return await this.adapter.getRows(tableName, options);
   }
   async getRow<T extends Record<string, SafeType>>(

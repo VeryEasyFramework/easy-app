@@ -262,6 +262,15 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     let countQuery = `SELECT COUNT(*) FROM ${this.schema}.${tableName}`;
     let andFilter = "";
     let orFilter = "";
+    let totalsQuery = "";
+    if (options.withTotals) {
+      const totalsCols = options.withTotals.map((column) => {
+        const columnName = this.formatColumnName(column);
+        return `SUM(${columnName}) as ${columnName}`;
+      }).join(", ");
+      totalsQuery = `SELECT ${totalsCols} FROM ${this.schema}.${tableName}
+        `;
+    }
     if (options.filter) {
       andFilter = this.makeAndFilter(options.filter);
     }
@@ -271,12 +280,15 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     if (andFilter && orFilter) {
       query += ` WHERE ${andFilter} AND (${orFilter})`;
       countQuery += ` WHERE ${andFilter} AND (${orFilter})`;
+      totalsQuery += ` WHERE ${andFilter} AND (${orFilter})`;
     } else if (andFilter) {
       query += ` WHERE ${andFilter}`;
       countQuery += ` WHERE ${andFilter}`;
+      totalsQuery += ` WHERE ${andFilter}`;
     } else if (orFilter) {
       query += ` WHERE ${orFilter}`;
       countQuery += ` WHERE ${orFilter}`;
+      totalsQuery += ` WHERE ${orFilter}`;
     }
 
     if (options.orderBy) {
@@ -297,6 +309,12 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     if (options.limit) {
       const countResult = await this.query<{ count: number }>(countQuery);
       result.totalCount = countResult.data[0].count;
+    }
+    if (options.withTotals) {
+      const totalsResult = await this.query<{ [key: string]: number }>(
+        totalsQuery,
+      );
+      result.totals = totalsResult.data[0];
     }
 
     return result;
@@ -854,7 +872,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
   ): string {
     fieldName = this.toSnake(fieldName);
     const parentTable = parentAlias ?? `${schema}.${parentTableName}`;
-    return `(SELECT string_agg(values.value, ', ') 
+    return `(SELECT string_agg(values.value, ', ')
     FROM (SELECT value FROM ${schema}.${entryType}_${fieldName}_mc_values WHERE parent_id = ${parentTable}.id) AS values) AS ${fieldName}`;
   }
 
