@@ -241,6 +241,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     options?: DatabaseListOptions,
   ): Promise<RowsResult<T>> {
     tableName = this.toSnake(tableName);
+    let withTotals = false;
     if (!options) {
       options = {} as ListOptions;
     }
@@ -263,7 +264,8 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
     let andFilter = "";
     let orFilter = "";
     let totalsQuery = "";
-    if (options.withTotals) {
+    if (options.withTotals && options.withTotals.length > 0) {
+      withTotals = true;
       const totalsCols = options.withTotals.map((column) => {
         const columnName = this.formatColumnName(column);
         return `SUM(${columnName}) as ${columnName}`;
@@ -310,7 +312,7 @@ export class PostgresAdapter extends DatabaseAdapter<PostgresConfig> {
       const countResult = await this.query<{ count: number }>(countQuery);
       result.totalCount = countResult.data[0].count;
     }
-    if (options.withTotals) {
+    if (withTotals) {
       const totalsResult = await this.query<{ [key: string]: number }>(
         totalsQuery,
       );

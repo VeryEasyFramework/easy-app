@@ -491,7 +491,15 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
     user?: User,
   ): Promise<RowsResult<E>> {
     const entryTypeDef = this.getEntryType(entryType);
-
+    if (options?.withTotals && Array.isArray(options.columns)) {
+      const totals: string[] = [];
+      options.columns.forEach((c) => {
+        if (typeof c === "string" && options.withTotals?.includes(c)) {
+          totals.push(c);
+        }
+      });
+      options.withTotals = totals;
+    }
     const multiChoiceFields = entryTypeDef.fields.filter((field) =>
       field.fieldType === "MultiChoiceField"
     );
@@ -519,7 +527,6 @@ export class EasyOrm<D extends keyof DatabaseConfig = keyof DatabaseConfig> {
       entryTypeDef.config.tableName,
       options,
     );
-
     return result;
   }
 
