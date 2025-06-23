@@ -767,6 +767,7 @@ export class EasyApp {
             let subject = `${e.status}`;
             if (e.status === 401 || e.status === 403) {
               subject = "Unauthorized";
+              return easyResponse.error(e.message, e.status, subject);
             }
 
             easyLog.error(e.message, subject, {
