@@ -89,7 +89,7 @@ export class SettingsClass {
         }),
       });
     }
-    await this.reload();
+    await this.load();
 
     await this.afterSave();
 
@@ -103,19 +103,6 @@ export class SettingsClass {
   }
 
   async load(): Promise<void> {
-    const data = this.orm.app.cacheGet<typeof this._data>(
-      "settings",
-      this._settingsType.settingsType,
-    );
-    if (data) {
-      this._data = data;
-    } else {
-      await this.reload();
-    }
-  }
-  async reload(): Promise<void> {
-    // load data from db
-
     const results = await this.orm.database.getRows<{
       key: string;
       value: {
@@ -141,12 +128,6 @@ export class SettingsClass {
         row.value.value,
       );
     }
-
-    this.orm.app.cacheSet(
-      "settings",
-      this._settingsType.settingsType,
-      this._data,
-    );
   }
   private getChangedData(): Record<string, any> | undefined {
     let hasChanged = false;
