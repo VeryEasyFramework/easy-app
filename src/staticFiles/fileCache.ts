@@ -13,6 +13,10 @@ export class FileCache {
   constructor(skipCache?: boolean) {
     this.skipCache = skipCache || false;
   }
+
+  clearCache() {
+    this.cache.clear();
+  }
   private async getFile(
     root: string,
     path: string,

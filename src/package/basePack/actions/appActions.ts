@@ -52,7 +52,12 @@ export const appActions = [
     },
     response: "EntryTypeDef[]",
   }),
-
+  createAction("clearStaticCache", {
+    description: "Clear the cached static files",
+    action(app) {
+      app.staticFileHandler.cache.clearCache();
+    },
+  }),
   createAction("settingsTypes", {
     description: "Get the settings types for the app",
     action(app) {

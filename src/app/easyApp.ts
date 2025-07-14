@@ -70,7 +70,7 @@ export class EasyApp {
   get fullAppName(): string {
     return `${this.config.appName} (${this.processNumber})`;
   }
-  private staticFileHandler!: StaticFileHandler;
+  staticFileHandler!: StaticFileHandler;
   private devStaticFileHandler!: StaticFileHandler;
   private middleware: Array<
     MiddleWare
